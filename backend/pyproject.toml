@@ -1,0 +1,39 @@
+[project]
+name = "backend"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "parame5h", email = "paramesh@duck.com" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.162.0",
+    "google-api-python-client>=2.201.0",
+    "httpx>=0.28.1",
+    "langchain>=1.4.7",
+    "langchain-anthropic>=1.7.7",
+    "langchain-openai>=1.7.3",
+    "langchain-tavily>=0.2.18",
+    "langgraph>=1.2.18",
+    "motor>=3.7.1",
+    "pydantic-settings>=2.16.2",
+    "pymongo[srv]>=4.19.0",
+    "uvicorn[standard]>=0.54.0",
+    "youtube-transcript-api>=1.2.4",
+]
+
+[project.scripts]
+backend = "backend:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+    "pytest-asyncio>=1.4.1",
+]
+
+
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

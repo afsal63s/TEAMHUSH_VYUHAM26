@@ -1,0 +1,17 @@
+# secrets
+.env
+!.env.example
+
+# python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# local generation cache and eval output
+.cache/
+results/
+
+# node
+node_modules/
+.next/

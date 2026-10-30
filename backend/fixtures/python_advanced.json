@@ -1,0 +1,2271 @@
+{
+  "course_id": "fd072c2a",
+  "prompt": "Python",
+  "level": "advanced",
+  "graph": {
+    "topic": "Python",
+    "concepts": [
+      {
+        "id": "closures_scope",
+        "name": "Closures and scope resolution",
+        "description": "Free variables, LEGB lookup, and late binding in nested functions.",
+        "prerequisites": []
+      },
+      {
+        "id": "context_managers_basics",
+        "name": "Context manager protocol",
+        "description": "The with statement, __enter__/__exit__, and exception suppression.",
+        "prerequisites": []
+      },
+      {
+        "id": "iterator_protocol",
+        "name": "Iterator protocol",
+        "description": "The iter/next contract, iterables versus iterators, and exhaustion semantics.",
+        "prerequisites": [
+          "closures_scope"
+        ]
+      },
+      {
+        "id": "generators_lifecycle",
+        "name": "Generator lifecycle",
+        "description": "Suspension, send/throw/close, and generator state across yields.",
+        "prerequisites": [
+          "iterator_protocol"
+        ]
+      },
+      {
+        "id": "attribute_lookup_mro",
+        "name": "Attribute lookup and MRO",
+        "description": "Instance versus class lookup, __getattr__ fallback, and C3 method resolution order.",
+        "prerequisites": [
+          "closures_scope"
+        ]
+      },
+      {
+        "id": "descriptor_protocol",
+        "name": "Descriptor protocol",
+        "description": "__get__, __set__, __set_name__, and how properties and methods are built on descriptors.",
+        "prerequisites": [
+          "attribute_lookup_mro"
+        ]
+      },
+      {
+        "id": "metaclasses",
+        "name": "Metaclasses and class creation",
+        "description": "type as metaclass, __new__ versus __init__ at class creation, and __init_subclass__ as a lighter alternative.",
+        "prerequisites": [
+          "descriptor_protocol"
+        ]
+      },
+      {
+        "id": "gil_and_threading",
+        "name": "GIL and threading trade-offs",
+        "description": "What the GIL protects, when threads help, and when processes or C extensions are needed.",
+        "prerequisites": [
+          "context_managers_basics"
+        ]
+      },
+      {
+        "id": "asyncio_event_loop",
+        "name": "asyncio event loop",
+        "description": "Coroutines, awaitables, task scheduling, and cooperative concurrency trade-offs.",
+        "prerequisites": [
+          "generators_lifecycle",
+          "gil_and_threading"
+        ]
+      },
+      {
+        "id": "memory_management",
+        "name": "Memory management and references",
+        "description": "Reference counting, the cyclic collector, object identity, and weakref trade-offs.",
+        "prerequisites": [
+          "attribute_lookup_mro"
+        ]
+      }
+    ],
+    "misconceptions": [
+      {
+        "tag": "closures_scope__late_binding_surprise",
+        "concept_id": "closures_scope",
+        "description": "Believes loop-created lambdas capture each loop value, but actually they all share the variable's final value."
+      },
+      {
+        "tag": "closures_scope__nonlocal_optional",
+        "concept_id": "closures_scope",
+        "description": "Believes assigning to an outer variable inside a nested function works without nonlocal, but actually it creates a new local."
+      },
+      {
+        "tag": "closures_scope__closure_copies_value",
+        "concept_id": "closures_scope",
+        "description": "Believes closures snapshot variables at definition time, but actually they hold references to the enclosing cell."
+      },
+      {
+        "tag": "context_managers_basics__exit_always_suppresses",
+        "concept_id": "context_managers_basics",
+        "description": "Believes __exit__ swallows exceptions by default, but actually it only suppresses when it returns a truthy value."
+      },
+      {
+        "tag": "context_managers_basics__with_is_just_finally",
+        "concept_id": "context_managers_basics",
+        "description": "Believes with is equivalent to try/finally, but actually __exit__ receives exception info and can alter control flow."
+      },
+      {
+        "tag": "context_managers_basics__enter_returns_self",
+        "concept_id": "context_managers_basics",
+        "description": "Believes the as target is always the context manager, but actually __enter__ return value can be anything."
+      },
+      {
+        "tag": "iterator_protocol__iterable_is_iterator",
+        "concept_id": "iterator_protocol",
+        "description": "Believes every iterable can be advanced with next(), but actually iterables like lists need iter() first."
+      },
+      {
+        "tag": "iterator_protocol__reusable_iterators",
+        "concept_id": "iterator_protocol",
+        "description": "Believes iterators can be looped over repeatedly, but actually they are exhausted after one pass."
+      },
+      {
+        "tag": "iterator_protocol__stopiteration_is_error",
+        "concept_id": "iterator_protocol",
+        "description": "Believes StopIteration signals a bug, but actually it is the normal end-of-iteration signal."
+      },
+      {
+        "tag": "generators_lifecycle__generator_runs_on_call",
+        "concept_id": "generators_lifecycle",
+        "description": "Believes calling a generator function executes its body, but actually it only creates a generator object."
+      },
+      {
+        "tag": "generators_lifecycle__send_before_start",
+        "concept_id": "generators_lifecycle",
+        "description": "Believes send(value) works on a fresh generator, but actually the first send must be None."
+      },
+      {
+        "tag": "generators_lifecycle__close_is_harmless",
+        "concept_id": "generators_lifecycle",
+        "description": "Believes close() just discards a generator, but actually it raises GeneratorExit inside it so finally blocks run."
+      },
+      {
+        "tag": "attribute_lookup_mro__instance_shadows_always",
+        "concept_id": "attribute_lookup_mro",
+        "description": "Believes instance attributes always win, but actually data descriptors on the class take precedence."
+      },
+      {
+        "tag": "attribute_lookup_mro__mro_is_depth_first",
+        "concept_id": "attribute_lookup_mro",
+        "description": "Believes multiple inheritance resolves depth-first left-to-right, but actually Python uses C3 linearization."
+      },
+      {
+        "tag": "attribute_lookup_mro__getattr_called_always",
+        "concept_id": "attribute_lookup_mro",
+        "description": "Believes __getattr__ runs for every attribute access, but actually it runs only when normal lookup fails."
+      },
+      {
+        "tag": "descriptor_protocol__property_is_special_syntax",
+        "concept_id": "descriptor_protocol",
+        "description": "Believes property is a language special case, but actually it is a descriptor class like any other."
+      },
+      {
+        "tag": "descriptor_protocol__non_data_descriptor_overridden",
+        "concept_id": "descriptor_protocol",
+        "description": "Believes non-data descriptors override instance dict entries, but actually instance attributes shadow them."
+      },
+      {
+        "tag": "descriptor_protocol__descriptor_on_instance_works",
+        "concept_id": "descriptor_protocol",
+        "description": "Believes a descriptor stored on an instance is invoked on access, but actually the protocol only applies to class attributes."
+      },
+      {
+        "tag": "metaclasses__metaclass_for_every_hook",
+        "concept_id": "metaclasses",
+        "description": "Believes metaclasses are needed to customize subclassing, but actually __init_subclass__ covers most cases."
+      },
+      {
+        "tag": "metaclasses__metaclass_is_inherited_freely",
+        "concept_id": "metaclasses",
+        "description": "Believes subclasses can pick any metaclass freely, but actually metaclass conflicts arise when bases use incompatible metaclasses."
+      },
+      {
+        "tag": "metaclasses__class_body_runs_lazily",
+        "concept_id": "metaclasses",
+        "description": "Believes class bodies execute only when instantiated, but actually they run once at definition time."
+      },
+      {
+        "tag": "gil_and_threading__threads_always_parallel",
+        "concept_id": "gil_and_threading",
+        "description": "Believes threads speed up any CPU-bound Python code, but actually the GIL serializes bytecode execution."
+      },
+      {
+        "tag": "gil_and_threading__gil_makes_code_thread_safe",
+        "concept_id": "gil_and_threading",
+        "description": "Believes the GIL makes compound operations atomic, but actually a read-modify-write can still interleave between bytecodes."
+      },
+      {
+        "tag": "gil_and_threading__io_bound_no_benefit",
+        "concept_id": "gil_and_threading",
+        "description": "Believes threads are useless in Python, but actually they help I/O-bound work since the GIL is released while waiting."
+      },
+      {
+        "tag": "asyncio_event_loop__async_def_runs_immediately",
+        "concept_id": "asyncio_event_loop",
+        "description": "Believes calling an async function starts running it, but actually it returns a coroutine that runs only when awaited or scheduled."
+      },
+      {
+        "tag": "asyncio_event_loop__blocking_call_is_fine",
+        "concept_id": "asyncio_event_loop",
+        "description": "Believes a blocking call inside a coroutine only slows that coroutine, but actually it stalls the entire event loop."
+      },
+      {
+        "tag": "asyncio_event_loop__asyncio_replaces_threads",
+        "concept_id": "asyncio_event_loop",
+        "description": "Believes asyncio makes CPU-bound work parallel, but actually a single event loop runs one task at a time."
+      },
+      {
+        "tag": "memory_management__del_frees_memory",
+        "concept_id": "memory_management",
+        "description": "Believes del frees an object's memory immediately, but actually it only removes a name and the object lives while any reference remains."
+      },
+      {
+        "tag": "memory_management__cycles_leak_forever",
+        "concept_id": "memory_management",
+        "description": "Believes reference cycles always leak, but actually the cyclic garbage collector reclaims unreachable cycles."
+      },
+      {
+        "tag": "memory_management__is_equals_value",
+        "concept_id": "memory_management",
+        "description": "Believes is compares values, but actually it compares object identity and small-int caching can mislead."
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "fd072c2a-closures_scope-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "diagnostic",
+      "prompt": "def make():\n    x = 1\n    def f():\n        return x\n    x = 2\n    return f\nprint(make()())",
+      "options": [
+        {
+          "text": "2",
+          "misconception_tag": null
+        },
+        {
+          "text": "NameError",
+          "misconception_tag": "closures_scope__nonlocal_optional"
+        },
+        {
+          "text": "3",
+          "misconception_tag": "closures_scope__late_binding_surprise"
+        },
+        {
+          "text": "1",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The closure f reads x through a reference to the enclosing variable, so it sees the value 2 assigned after f was defined.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-closures_scope-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "diagnostic",
+      "prompt": "funcs = [lambda: i for i in range(3)]\nprint([f() for f in funcs])",
+      "options": [
+        {
+          "text": "[0, 1, 2]",
+          "misconception_tag": "closures_scope__late_binding_surprise"
+        },
+        {
+          "text": "[0, 0, 0]",
+          "misconception_tag": "closures_scope__late_binding_surprise"
+        },
+        {
+          "text": "[2, 1, 0]",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        },
+        {
+          "text": "[2, 2, 2]",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "All lambdas share the single loop variable i, which holds 2 after the loop ends, so each call returns 2.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-closures_scope-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "diagnostic",
+      "prompt": "def outer():\n    count = 0\n    def inc():\n        count += 1\n        return count\n    return inc\nf = outer()\nf()",
+      "options": [
+        {
+          "text": "Returns 0 on each call",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        },
+        {
+          "text": "UnboundLocalError",
+          "misconception_tag": null
+        },
+        {
+          "text": "Returns 1 after update",
+          "misconception_tag": "closures_scope__nonlocal_optional"
+        },
+        {
+          "text": "SyntaxError at definition",
+          "misconception_tag": "closures_scope__nonlocal_optional"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Augmented assignment makes count local to inc, so reading it before assignment raises UnboundLocalError.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-closures_scope-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "practice",
+      "prompt": "def outer():\n    count = 0\n    def inc():\n        count += 1\n        return count\n    return inc\nWhich change makes inc() update the count from outer?",
+      "options": [
+        {
+          "text": "Add nonlocal count in inc",
+          "misconception_tag": null
+        },
+        {
+          "text": "Make count a default arg",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        },
+        {
+          "text": "Use global count in inc",
+          "misconception_tag": "closures_scope__nonlocal_optional"
+        },
+        {
+          "text": "Replace count with a list",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "nonlocal tells inc that count refers to the enclosing function's variable rather than creating a new local.",
+      "difficulty": 0.75,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-closures_scope-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "practice",
+      "prompt": "def make_adders():\n    return [lambda x: x + i for i in range(3)]\nprint(make_adders()[0](10))",
+      "options": [
+        {
+          "text": "10",
+          "misconception_tag": "closures_scope__late_binding_surprise"
+        },
+        {
+          "text": "2",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        },
+        {
+          "text": "12",
+          "misconception_tag": null
+        },
+        {
+          "text": "11",
+          "misconception_tag": "closures_scope__late_binding_surprise"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Every lambda reads the shared i, which is 2 after the loop, so the first lambda returns 10 plus 2.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-closures_scope-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "transfer",
+      "prompt": "buttons = []\nfor i in range(3):\n    buttons.append(lambda: print(i))\nWhich change makes each callback print its own index?",
+      "options": [
+        {
+          "text": "Add nonlocal i before lambda",
+          "misconception_tag": "closures_scope__nonlocal_optional"
+        },
+        {
+          "text": "lambda i=i: print(i)",
+          "misconception_tag": null
+        },
+        {
+          "text": "Reassign i = int(i) first",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        },
+        {
+          "text": "Wrap the loop in a list comp",
+          "misconception_tag": "closures_scope__late_binding_surprise"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "A default argument is evaluated at definition time, binding the current i to each lambda and avoiding the shared loop variable.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-closures_scope-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "closures_scope",
+      "kind": "transfer",
+      "prompt": "x = 'global'\ndef outer():\n    x = 'outer'\n    def inner():\n        return x\n    x = 'changed'\n    return inner\nprint(outer()())",
+      "options": [
+        {
+          "text": "global",
+          "misconception_tag": "closures_scope__nonlocal_optional"
+        },
+        {
+          "text": "outer",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        },
+        {
+          "text": "changed",
+          "misconception_tag": null
+        },
+        {
+          "text": "NameError",
+          "misconception_tag": "closures_scope__closure_copies_value"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "inner resolves x through the enclosing function's scope, which holds 'changed' when inner is called.",
+      "difficulty": 0.9,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "diagnostic",
+      "prompt": "A class's __exit__ returns True. What happens when an exception is raised inside its with block?",
+      "options": [
+        {
+          "text": "The exception is suppressed but the block's remaining lines still run",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        },
+        {
+          "text": "The exception is suppressed regardless of what __exit__ returns",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        },
+        {
+          "text": "The exception is re-raised once the with block finishes",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        },
+        {
+          "text": "The exception is suppressed and execution continues after the with block",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "A truthy return value from __exit__ tells the with statement to suppress the exception, so execution resumes after the block.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "diagnostic",
+      "prompt": "class T: def __enter__(self): return 42 / def __exit__(self, *a): return False. After 'with T() as t: pass', what is t?",
+      "options": [
+        {
+          "text": "The return value of __exit__",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        },
+        {
+          "text": "The T instance",
+          "misconception_tag": "context_managers_basics__enter_returns_self"
+        },
+        {
+          "text": "The T class itself",
+          "misconception_tag": "context_managers_basics__enter_returns_self"
+        },
+        {
+          "text": "The integer 42",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The as target is bound to whatever __enter__ returns, here 42, not to the context manager object.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "diagnostic",
+      "prompt": "Which statement best distinguishes a with statement from try/finally?",
+      "options": [
+        {
+          "text": "A finally clause can suppress exceptions just like __exit__ returning True",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        },
+        {
+          "text": "__exit__ receives the exception details and can suppress them",
+          "misconception_tag": null
+        },
+        {
+          "text": "They are identical, so either form works in every case",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        },
+        {
+          "text": "__exit__ is skipped when the block raises an exception",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Unlike a plain finally block, __exit__ gets the exception info and its return value decides whether the exception continues.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "practice",
+      "prompt": "class Q: def __enter__(self): return self / def __exit__(self, t, v, tb): print('exit', t.__name__); return 0. Then 'with Q(): raise ValueError' followed by print('after'). What happens?",
+      "options": [
+        {
+          "text": "Prints 'exit ValueError', then ValueError propagates",
+          "misconception_tag": null
+        },
+        {
+          "text": "Prints 'exit ValueError' and then raises TypeError",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        },
+        {
+          "text": "Prints 'after' with no error shown",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        },
+        {
+          "text": "Prints 'exit ValueError' then 'after'",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "__exit__ returns 0, which is falsy, so the ValueError is not suppressed and propagates after __exit__ runs.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "practice",
+      "prompt": "def f(): with CM(): return 'x'. CM.__exit__ prints 'exit' and returns True. What does f() return?",
+      "options": [
+        {
+          "text": "'x', after 'exit' prints",
+          "misconception_tag": null
+        },
+        {
+          "text": "'x', with no exit call since nothing raised",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        },
+        {
+          "text": "None, because with blocks cannot return values",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        },
+        {
+          "text": "None, because __exit__ returned True",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "A return inside the block triggers __exit__ before the function returns; no exception occurs, so the return value 'x' is kept.",
+      "difficulty": 0.88,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "transfer",
+      "prompt": "A transaction manager's __exit__ returns False. Inside its with block a KeyError is raised. What happens?",
+      "options": [
+        {
+          "text": "Rollback runs, then the KeyError propagates to the caller",
+          "misconception_tag": null
+        },
+        {
+          "text": "Commit runs, then the KeyError is ignored",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        },
+        {
+          "text": "Rollback runs, then the error becomes a RuntimeError",
+          "misconception_tag": "context_managers_basics__with_is_just_finally"
+        },
+        {
+          "text": "The KeyError is silently suppressed after rollback",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Returning False from __exit__ lets the exception continue after the cleanup logic finishes.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-context_managers_basics-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "context_managers_basics",
+      "kind": "transfer",
+      "prompt": "class Tag: def __init__(self,n): self.n=n / def __enter__(self): return self.n / def __exit__(self,*a): return False. What does 'with Tag('x') as n: print(n)' print?",
+      "options": [
+        {
+          "text": "Prints the Tag instance object",
+          "misconception_tag": "context_managers_basics__enter_returns_self"
+        },
+        {
+          "text": "Prints x, the string returned by __enter__",
+          "misconception_tag": null
+        },
+        {
+          "text": "Prints Tag, the class name",
+          "misconception_tag": "context_managers_basics__enter_returns_self"
+        },
+        {
+          "text": "Prints False, the value from __exit__",
+          "misconception_tag": "context_managers_basics__exit_always_suppresses"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The as target receives __enter__'s return value, which here is the string 'x', not the Tag object.",
+      "difficulty": 0.9,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "diagnostic",
+      "prompt": "What does next(my_list) do when my_list = [1, 2, 3]?",
+      "options": [
+        {
+          "text": "Raises TypeError",
+          "misconception_tag": null
+        },
+        {
+          "text": "Returns 1",
+          "misconception_tag": "iterator_protocol__iterable_is_iterator"
+        },
+        {
+          "text": "Raises StopIteration",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "Returns [1, 2, 3]",
+          "misconception_tag": "iterator_protocol__iterable_is_iterator"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "A list is an iterable, not an iterator, so it has no __next__. You must call iter() on it first to get an iterator that next() can advance.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "diagnostic",
+      "prompt": "it = iter([1, 2]). What do these two lines print? print(list(it)) then print(list(it))",
+      "options": [
+        {
+          "text": "[1, 2] then [1, 2]",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "[1, 2] then []",
+          "misconception_tag": null
+        },
+        {
+          "text": "[1, 2] then StopIteration",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "[] then [1, 2]",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The first list() consumes every item, leaving the iterator exhausted. The second call finds nothing left and returns an empty list.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "diagnostic",
+      "prompt": "A for loop calls next() on an iterator, which raises StopIteration. What happens?",
+      "options": [
+        {
+          "text": "The iterator restarts from the beginning",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "A warning prints and the loop continues",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "The error is re-raised to the caller",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "The loop ends quietly",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The for loop catches StopIteration internally as the normal end-of-iteration signal. It exits without any error being shown.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "practice",
+      "prompt": "def gen(): yield 1; yield 2. g = gen(). Then for x in g: pass, followed by for y in g: print(y). What prints?",
+      "options": [
+        {
+          "text": "Nothing, g is exhausted",
+          "misconception_tag": null
+        },
+        {
+          "text": "A StopIteration error",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "1 and 2 again",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "1 and 2, since generators restart",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "A generator is an iterator, so it can be consumed only once. After the first loop it is exhausted, and the second loop ends immediately without printing.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "practice",
+      "prompt": "it = iter(range(3)). a = sum(it), then b = sum(it). What are a and b?",
+      "options": [
+        {
+          "text": "a is 3 and b is 3, since range restarts",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "a is 3 and b is 3",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "a is 3 and b raises StopIteration",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "a is 3 and b is 0",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "sum() consumes the iterator fully, so a is 0+1+2=3. The iterator is then exhausted, and the second sum sees no items and returns 0.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "transfer",
+      "prompt": "class Bag has __iter__ returning iter(self.items), where items = [1, 2]. b = Bag(). Which expression gets the first item?",
+      "options": [
+        {
+          "text": "next(iter(b))",
+          "misconception_tag": null
+        },
+        {
+          "text": "next(b)",
+          "misconception_tag": "iterator_protocol__iterable_is_iterator"
+        },
+        {
+          "text": "next(b) after b.reset()",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "next(b.items)",
+          "misconception_tag": "iterator_protocol__iterable_is_iterator"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Bag is an iterable whose __iter__ builds a fresh iterator. next() needs an actual iterator, so iter(b) must be called first.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-iterator_protocol-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "iterator_protocol",
+      "kind": "transfer",
+      "prompt": "def g(): return; yield. What does next(g()) do?",
+      "options": [
+        {
+          "text": "Raises StopIteration",
+          "misconception_tag": null
+        },
+        {
+          "text": "Returns None to the caller",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        },
+        {
+          "text": "Restarts at the top of g",
+          "misconception_tag": "iterator_protocol__reusable_iterators"
+        },
+        {
+          "text": "Raises RuntimeError, a generator bug",
+          "misconception_tag": "iterator_protocol__stopiteration_is_error"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The return statement ends the generator before any yield runs. next() then raises StopIteration, which is the normal signal that there are no more items.",
+      "difficulty": 0.75,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "diagnostic",
+      "prompt": "def gen():\n    print('start')\n    yield 1\n\ng = gen()\nWhat is printed?",
+      "options": [
+        {
+          "text": "Nothing prints; gen() returns a generator.",
+          "misconception_tag": null
+        },
+        {
+          "text": "'start' is printed, and 1 is returned.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        },
+        {
+          "text": "A TypeError, since no value was sent.",
+          "misconception_tag": "generators_lifecycle__send_before_start"
+        },
+        {
+          "text": "'start' is printed right away.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "A generator function returns a generator object when called; the body runs only when next() or send() resumes it.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "diagnostic",
+      "prompt": "def g():\n    x = yield 1\n    print(x)\n\ngen = g()\nWhat happens on the first call gen.send(5)?",
+      "options": [
+        {
+          "text": "It runs to the first yield, then raises.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        },
+        {
+          "text": "It assigns 5 to x and resumes.",
+          "misconception_tag": "generators_lifecycle__send_before_start"
+        },
+        {
+          "text": "It yields 5 as the first value.",
+          "misconception_tag": "generators_lifecycle__send_before_start"
+        },
+        {
+          "text": "TypeError: non-None send to a fresh generator.",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "A fresh generator is suspended before its first yield, so the first send must be None; anything else raises TypeError.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "diagnostic",
+      "prompt": "def g():\n    try:\n        yield 1\n    finally:\n        print('cleanup')\n\ngen = g()\nnext(gen)\ngen.close()\nWhat is printed?",
+      "options": [
+        {
+          "text": "Nothing, since the body already ran on call.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        },
+        {
+          "text": "Nothing, since close() just discards the generator.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "Nothing, since close() skips finally blocks.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "cleanup",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "close() raises GeneratorExit at the paused yield, so the finally block runs and prints cleanup.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "practice",
+      "prompt": "def g():\n    x = yield\n    print(x)\n\nWhich code correctly prints 10 from a fresh generator gen = g()?",
+      "options": [
+        {
+          "text": "gen.close() then gen.send(10)",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "gen.send(10) then next(gen)",
+          "misconception_tag": "generators_lifecycle__send_before_start"
+        },
+        {
+          "text": "gen.send(10) alone",
+          "misconception_tag": "generators_lifecycle__send_before_start"
+        },
+        {
+          "text": "next(gen) then gen.send(10)",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "next() advances the generator to its first yield so it can receive 10 via send; closing first ends the generator.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "practice",
+      "prompt": "def g():\n    try:\n        yield 1\n        yield 2\n    finally:\n        print('A')\n\ngen = g()\nnext(gen)\ngen.close()\nWhat does next(gen) do now?",
+      "options": [
+        {
+          "text": "Prints A and yields 2.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "Yields 2, since close merely pauses it.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "Restarts the body and yields 1.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        },
+        {
+          "text": "Raises StopIteration.",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "After close() the generator is finished, so next() raises StopIteration without resuming the body.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "transfer",
+      "prompt": "def lines():\n    try:\n        for i in range(3):\n            yield i\n    finally:\n        print('closed')\n\nfor x in lines():\n    break\nWhen is 'closed' printed?",
+      "options": [
+        {
+          "text": "As soon as lines() is called, since its body starts.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        },
+        {
+          "text": "Right at the break, before the loop exits.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "After the program exits, since finally waits.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "When the generator is garbage-collected, calling close().",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The loop drops its reference to the generator, and garbage collection calls close(), which runs the finally block.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-generators_lifecycle-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "generators_lifecycle",
+      "kind": "transfer",
+      "prompt": "def prime(f):\n    def wrapper(*a, **k):\n        g = f(*a, **k)\n        next(g)\n        return g\n    return wrapper\n\nWhat does the prime decorator accomplish?",
+      "options": [
+        {
+          "text": "It advances the generator to its first yield so send works.",
+          "misconception_tag": null
+        },
+        {
+          "text": "It calls close so the generator is cleaned up.",
+          "misconception_tag": "generators_lifecycle__close_is_harmless"
+        },
+        {
+          "text": "It runs the whole body to completion.",
+          "misconception_tag": "generators_lifecycle__generator_runs_on_call"
+        },
+        {
+          "text": "It lets send accept non-None values on a fresh generator.",
+          "misconception_tag": "generators_lifecycle__send_before_start"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Calling next() once moves the generator to its first yield, which is the state send needs to accept a value.",
+      "difficulty": 0.9,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "diagnostic",
+      "prompt": "class Logger:\n    def __getattr__(self, name):\n        return 'fallback'\nl = Logger()\nl.level = 3\nprint(l.level)",
+      "options": [
+        {
+          "text": "AttributeError",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "3",
+          "misconception_tag": null
+        },
+        {
+          "text": "None",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        },
+        {
+          "text": "fallback",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Setting l.level stores an instance attribute, so normal lookup finds it and __getattr__ never runs.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "diagnostic",
+      "prompt": "class Config:\n    debug = False\nc = Config()\nc.debug = True\nprint(Config.debug)",
+      "options": [
+        {
+          "text": "None",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        },
+        {
+          "text": "True",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        },
+        {
+          "text": "AttributeError",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "False",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Assigning c.debug creates an instance attribute and leaves the class attribute unchanged.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "diagnostic",
+      "prompt": "class A:\n    x = 'A'\n    def __getattr__(self, n):\n        return 'fallback'\nclass B(A): pass\nclass C(A):\n    x = 'C'\nclass D(B, C): pass\nprint(D().x)",
+      "options": [
+        {
+          "text": "A",
+          "misconception_tag": "attribute_lookup_mro__mro_is_depth_first"
+        },
+        {
+          "text": "AttributeError",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "C",
+          "misconception_tag": null
+        },
+        {
+          "text": "fallback",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "C3 gives D, B, C, A, so C's x is found before A's, and __getattr__ only runs if the whole lookup fails.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "practice",
+      "prompt": "class Desc:\n    def __get__(self, obj, cls):\n        return 'from descriptor'\n    def __set__(self, obj, v):\n        pass\nclass Holder:\n    attr = Desc()\nh = Holder()\nh.__dict__['attr'] = 'from instance'\nprint(h.attr)",
+      "options": [
+        {
+          "text": "AttributeError",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "from instance",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        },
+        {
+          "text": "from descriptor",
+          "misconception_tag": null
+        },
+        {
+          "text": "the Desc object",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "A data descriptor on the class, one defining __set__, takes precedence over a same-named entry in the instance __dict__.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "practice",
+      "prompt": "class X:\n    who = 'X'\n    def __getattr__(self, n):\n        return 'fallback'\nclass Y(X): pass\nclass Z(X):\n    who = 'Z'\nclass W(Y, Z): pass\nprint(W().who)",
+      "options": [
+        {
+          "text": "Y",
+          "misconception_tag": "attribute_lookup_mro__mro_is_depth_first"
+        },
+        {
+          "text": "X",
+          "misconception_tag": "attribute_lookup_mro__mro_is_depth_first"
+        },
+        {
+          "text": "fallback",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "Z",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "C3 linearizes W, Y, Z, X, so Z's who is found before X's even though Y comes first.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "transfer",
+      "prompt": "class Temp:\n    @property\n    def unit(self):\n        return 'C'\nt = Temp()\nt.__dict__['unit'] = 'F'\nprint(t.unit)",
+      "options": [
+        {
+          "text": "None",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        },
+        {
+          "text": "AttributeError",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "F",
+          "misconception_tag": "attribute_lookup_mro__instance_shadows_always"
+        },
+        {
+          "text": "C",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "A property is a data descriptor, so it takes precedence over a same-named entry in the instance __dict__.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-attribute_lookup_mro-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "attribute_lookup_mro",
+      "kind": "transfer",
+      "prompt": "class Base:\n    def __getattr__(self, n):\n        return 'dyn:' + n\nclass Mixin:\n    greet = 'hi'\nclass Child(Base, Mixin): pass\nprint(Child().greet)",
+      "options": [
+        {
+          "text": "AttributeError",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "dyn:greet",
+          "misconception_tag": "attribute_lookup_mro__getattr_called_always"
+        },
+        {
+          "text": "hi",
+          "misconception_tag": null
+        },
+        {
+          "text": "Base fallback first",
+          "misconception_tag": "attribute_lookup_mro__mro_is_depth_first"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Child's MRO is Child, Base, Mixin, object, and __getattr__ runs only after the full search fails, so Mixin's greet is found first.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "diagnostic",
+      "prompt": "A class defines __get__ and __set__ on a descriptor attribute x. What happens on obj.x = 5?",
+      "options": [
+        {
+          "text": "The value 5 is stored on the class instead.",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        },
+        {
+          "text": "The value 5 is stored in obj.__dict__['x'] directly.",
+          "misconception_tag": "descriptor_protocol__non_data_descriptor_overridden"
+        },
+        {
+          "text": "The descriptor's __set__ runs with the value 5.",
+          "misconception_tag": null
+        },
+        {
+          "text": "The descriptor is replaced on the instance by 5.",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "A data descriptor defines __set__, which takes priority over the instance dictionary on assignment.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "diagnostic",
+      "prompt": "What is @property in Python?",
+      "options": [
+        {
+          "text": "A special method run once at class creation.",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        },
+        {
+          "text": "A descriptor class whose __get__ runs on attribute access.",
+          "misconception_tag": null
+        },
+        {
+          "text": "A built-in keyword that bypasses attribute lookup.",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        },
+        {
+          "text": "A decorator that caches results in the instance dict.",
+          "misconception_tag": "descriptor_protocol__non_data_descriptor_overridden"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "property is a built-in descriptor class, so its behavior comes from the same __get__ and __set__ protocol as any custom descriptor.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "diagnostic",
+      "prompt": "When is __set_name__ called on a descriptor?",
+      "options": [
+        {
+          "text": "When the owning class is created, receiving the attribute name.",
+          "misconception_tag": null
+        },
+        {
+          "text": "When the descriptor is stored on an instance.",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        },
+        {
+          "text": "The first time the attribute is set on an instance.",
+          "misconception_tag": "descriptor_protocol__non_data_descriptor_overridden"
+        },
+        {
+          "text": "Each time an instance of the class is created.",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "type creation calls __set_name__ on each class attribute that defines it, passing the owner class and attribute name.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "practice",
+      "prompt": "class N:\n    def __get__(self, obj, cls): return 'descriptor'\nclass C:\n    x = N()\nc = C()\nc.__dict__['x'] = 1\nprint(c.x)",
+      "options": [
+        {
+          "text": "1",
+          "misconception_tag": null
+        },
+        {
+          "text": "descriptor",
+          "misconception_tag": "descriptor_protocol__non_data_descriptor_overridden"
+        },
+        {
+          "text": "<__main__.N object>",
+          "misconception_tag": "descriptor_protocol__non_data_descriptor_overridden"
+        },
+        {
+          "text": "AttributeError",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "N defines only __get__, so it is a non-data descriptor, and the instance dictionary entry shadows it.",
+      "difficulty": 0.75,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "practice",
+      "prompt": "class N:\n    def __get__(self, obj, cls): return 'descriptor'\nclass C: pass\nc = C()\nc.y = N()\nprint(type(c.y).__name__)",
+      "options": [
+        {
+          "text": "C",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        },
+        {
+          "text": "descriptor",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        },
+        {
+          "text": "N",
+          "misconception_tag": null
+        },
+        {
+          "text": "AttributeError",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "The protocol applies only to class attributes, so c.y returns the stored N object and its __get__ is not called.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "transfer",
+      "prompt": "A class defines a descriptor Ro with only __get__, assigned as class attribute val. After c = C(), what does c.val = 3 do?",
+      "options": [
+        {
+          "text": "Raises AttributeError because the descriptor blocks writes.",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        },
+        {
+          "text": "Stores 3 in the Ro object's own attribute dict.",
+          "misconception_tag": "descriptor_protocol__non_data_descriptor_overridden"
+        },
+        {
+          "text": "Calls Ro.__get__ with 3 as the value.",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        },
+        {
+          "text": "Stores 3 in c.__dict__ under 'val'.",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Without __set__, Ro is a non-data descriptor, so the assignment goes into the instance dictionary.",
+      "difficulty": 0.75,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-descriptor_protocol-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "descriptor_protocol",
+      "kind": "transfer",
+      "prompt": "class Field:\n    def __set_name__(self, owner, name): self.name = name\nclass Model:\n    a = Field()\n    b = Field()\nprint(Model.b.name)",
+      "options": [
+        {
+          "text": "'b'",
+          "misconception_tag": null
+        },
+        {
+          "text": "'Field'",
+          "misconception_tag": "descriptor_protocol__property_is_special_syntax"
+        },
+        {
+          "text": "None, until __set__ is called",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        },
+        {
+          "text": "'a'",
+          "misconception_tag": "descriptor_protocol__descriptor_on_instance_works"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "type creation calls __set_name__ on each descriptor with its attribute name, so the second Field receives 'b'.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "diagnostic",
+      "prompt": "A module defines class Config whose body calls print('loaded'). Config is never instantiated. When is 'loaded' printed?",
+      "options": [
+        {
+          "text": "When a metaclass is attached to Config",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "When a Config method is first called",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        },
+        {
+          "text": "When the first Config instance is created",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        },
+        {
+          "text": "Right away, when the class statement runs",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The class body executes once at definition time, when the class statement runs, regardless of whether instances exist.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "diagnostic",
+      "prompt": "Without a metaclass, how can a base class run code each time a subclass is defined?",
+      "options": [
+        {
+          "text": "Define __init_subclass__ on the base class",
+          "misconception_tag": null
+        },
+        {
+          "text": "Define __new__ on a metaclass",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "Override __call__ on the base class",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "Pass metaclass= in the subclass header",
+          "misconception_tag": "metaclasses__metaclass_is_inherited_freely"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "__init_subclass__ is called on the base whenever a subclass is created, giving a lighter alternative to a metaclass.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "diagnostic",
+      "prompt": "class Counter: print('defining') is followed by c1 = Counter() and c2 = Counter(). How many times is 'defining' printed?",
+      "options": [
+        {
+          "text": "Zero times until an instance exists",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        },
+        {
+          "text": "Once, when the class statement runs",
+          "misconception_tag": null
+        },
+        {
+          "text": "Twice, once for each Counter() call",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        },
+        {
+          "text": "Once, after any metaclass __init__ runs",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The class body runs once at definition; instantiating the class does not re-execute it.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "practice",
+      "prompt": "class M1(type): pass\nclass M2(type): pass\nclass A(metaclass=M1): pass\nclass B(metaclass=M2): pass\nclass C(A, B): pass\nWhat happens when C is defined?",
+      "options": [
+        {
+          "text": "C gets a merged metaclass of M1 and M2",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "TypeError: M1 and M2 are unrelated",
+          "misconception_tag": null
+        },
+        {
+          "text": "C uses M2, since B is the last base",
+          "misconception_tag": "metaclasses__metaclass_is_inherited_freely"
+        },
+        {
+          "text": "C uses M1, since A is the first base",
+          "misconception_tag": "metaclasses__metaclass_is_inherited_freely"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Python picks the most derived metaclass among the bases; if neither metaclass derives from the other, the class statement raises a metaclass conflict TypeError.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "practice",
+      "prompt": "You want every subclass of Plugin added to a registry when it is defined. Which approach fits best?",
+      "options": [
+        {
+          "text": "Define __init_subclass__ on Plugin that adds cls to a registry",
+          "misconception_tag": null
+        },
+        {
+          "text": "Give Plugin a metaclass whose __new__ registers each class",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "Call registry.add in Plugin's class body once",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        },
+        {
+          "text": "Override Plugin.__init__ to register type(self)",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "__init_subclass__ runs for each new subclass at its definition, which handles this without a metaclass; __init__ runs per instance, not per subclass.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "transfer",
+      "prompt": "class Meta(type):\n    def __new__(mcls, name, bases, ns):\n        print('A')\n        return super().__new__(mcls, name, bases, ns)\n    def __init__(cls, name, bases, ns):\n        print('B')\n        super().__init__(name, bases, ns)\nclass X(metaclass=Meta):\n    print('C')\nWhat is printed when X is defined?",
+      "options": [
+        {
+          "text": "C, A, B",
+          "misconception_tag": null
+        },
+        {
+          "text": "A, C, B",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        },
+        {
+          "text": "C, B, A",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "A, B, C",
+          "misconception_tag": "metaclasses__class_body_runs_lazily"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The class body runs first to fill the namespace, then Meta.__new__ runs, then Meta.__init__ runs on the created class.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-metaclasses-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "metaclasses",
+      "kind": "transfer",
+      "prompt": "class Abc1(type): pass\nclass Abc2(Abc1): pass\nclass Base(metaclass=Abc1): pass\nclass Child(Base, metaclass=Abc2): pass\nWhat is type(Child)?",
+      "options": [
+        {
+          "text": "type, because an explicit metaclass resets it",
+          "misconception_tag": "metaclasses__metaclass_for_every_hook"
+        },
+        {
+          "text": "Abc2, a subclass of Abc1",
+          "misconception_tag": null
+        },
+        {
+          "text": "TypeError, since Child cannot change Base's metaclass",
+          "misconception_tag": "metaclasses__metaclass_is_inherited_freely"
+        },
+        {
+          "text": "Abc1, inherited from Base",
+          "misconception_tag": "metaclasses__metaclass_is_inherited_freely"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "A subclass may name a metaclass that derives from the metaclasses of its bases, so Abc2 is chosen; the conflict only arises when the metaclasses are unrelated.",
+      "difficulty": 0.9,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "diagnostic",
+      "prompt": "Two threads each run a CPU-bound pure-Python loop on CPython. Compared with running them one after another, what is the most likely result?",
+      "options": [
+        {
+          "text": "About the same time, since the GIL keeps each counter update atomic",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "About the same total time, since the GIL lets one thread run bytecode at a time",
+          "misconception_tag": null
+        },
+        {
+          "text": "Much less time, since the GIL is released during arithmetic",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Roughly half the total time, since both threads run in parallel",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The GIL serializes execution of Python bytecode, so CPU-bound threads gain no parallel speedup in CPython.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "diagnostic",
+      "prompt": "What does the GIL primarily protect in CPython?",
+      "options": [
+        {
+          "text": "Internal interpreter state such as object reference counts",
+          "misconception_tag": null
+        },
+        {
+          "text": "Network sockets during blocking reads",
+          "misconception_tag": "gil_and_threading__io_bound_no_benefit"
+        },
+        {
+          "text": "Thread creation overhead, so threads start faster",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Shared user variables from interleaving at any point in the code",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The GIL protects CPython's internal structures, like reference counts, from concurrent corruption, not the user's program-level logic.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "diagnostic",
+      "prompt": "Ten threads each download a different URL with blocking requests calls. Why can this finish much faster than one thread doing them in turn?",
+      "options": [
+        {
+          "text": "The GIL is released while each thread waits on the network",
+          "misconception_tag": null
+        },
+        {
+          "text": "The GIL makes the shared response buffer updates atomic",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "Each thread runs on its own core without needing the GIL",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Threads cannot speed this up, since the GIL blocks all of them",
+          "misconception_tag": "gil_and_threading__io_bound_no_benefit"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Blocking I/O calls release the GIL, so while one thread waits, others can run Python code and issue their own requests.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "practice",
+      "prompt": "A pure-Python image filter loop over millions of pixels is CPU-bound. Which change most likely gives a real speedup on CPython?",
+      "options": [
+        {
+          "text": "Raise the thread switch interval to ten seconds",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Wrap the whole loop in a threading.Lock",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "Split the pixel work across processes with multiprocessing",
+          "misconception_tag": null
+        },
+        {
+          "text": "Use more threads, since each thread gets its own GIL",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Separate processes each have their own interpreter and GIL, so CPU-bound work can run truly in parallel across cores.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "practice",
+      "prompt": "Two threads each run counter += 1 on a shared int 100000 times with no lock. What is the likely final value?",
+      "options": [
+        {
+          "text": "Exactly 200000, since the GIL makes each += atomic",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "Exactly 100000, since one thread's writes overwrite the other's",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "Exactly 200000, since the threads run the loops in parallel without interference",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Possibly below 200000, since increments can interleave",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The += reads, adds, and writes in separate bytecodes, so a thread switch between them can lose updates even under the GIL.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "transfer",
+      "prompt": "A service uses a thread pool for 500 slow REST API calls and also runs a pure-Python checksum loop over large files. Which split is best?",
+      "options": [
+        {
+          "text": "Threads for the API calls, processes for the checksum loop",
+          "misconception_tag": null
+        },
+        {
+          "text": "Threads for both, since the GIL is released during the checksum loop",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Threads for both, since the GIL protects the shared checksum state",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "Processes for both, since threads cannot overlap network waits",
+          "misconception_tag": "gil_and_threading__io_bound_no_benefit"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Network waits release the GIL so threads help there, while the pure-Python CPU loop needs processes to use multiple cores.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-gil_and_threading-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "gil_and_threading",
+      "kind": "transfer",
+      "prompt": "Many threads run d[k] = d.get(k, 0) + 1 on one shared dict. Which statement is correct?",
+      "options": [
+        {
+          "text": "Safe, since get and set each run as one bytecode",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "Safe on multicore, since the GIL does not apply there",
+          "misconception_tag": "gil_and_threading__threads_always_parallel"
+        },
+        {
+          "text": "Safe under the GIL, since dict operations are atomic",
+          "misconception_tag": "gil_and_threading__gil_makes_code_thread_safe"
+        },
+        {
+          "text": "A lock is still needed, since get and set can interleave",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The read and write are separate steps, so another thread can switch in between and cause a lost update despite the GIL.",
+      "difficulty": 0.75,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "diagnostic",
+      "prompt": "What does calling `fetch()` return when `fetch` is defined as `async def` and called without await?",
+      "options": [
+        {
+          "text": "The fetched result, computed immediately",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "A coroutine object whose body has not started",
+          "misconception_tag": null
+        },
+        {
+          "text": "A finished Task already running in the background",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "The result after its body blocks the thread",
+          "misconception_tag": "asyncio_event_loop__blocking_call_is_fine"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Calling an async function only creates a coroutine object. Its body runs when it is awaited or wrapped in a task and scheduled on the loop.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "diagnostic",
+      "prompt": "Two tasks run under asyncio. One calls time.sleep(2) inside a coroutine. What happens to a third ready task meanwhile?",
+      "options": [
+        {
+          "text": "It runs on another thread automatically",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "It runs normally, since the loop preempts sleeping tasks",
+          "misconception_tag": "asyncio_event_loop__blocking_call_is_fine"
+        },
+        {
+          "text": "It runs normally, since just one coroutine is delayed",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "It waits, because the loop thread is blocked",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "time.sleep blocks the single thread running the event loop, so no other task can run until it returns. Use await asyncio.sleep to yield control instead.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "diagnostic",
+      "prompt": "What does `await other_coro()` do inside a coroutine?",
+      "options": [
+        {
+          "text": "Suspends this coroutine so the loop can run other tasks",
+          "misconception_tag": null
+        },
+        {
+          "text": "Runs the awaited call on a separate CPU core",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "Schedules the call and continues without waiting",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "Starts the awaited call in a new thread",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Await hands control back to the event loop until the awaited coroutine finishes. The loop uses that time to run other ready tasks on the same thread.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "practice",
+      "prompt": "Four coroutines each run a pure-Python loop of 10 million iterations with no awaits, all in one event loop. What total speedup over running them sequentially is realistic?",
+      "options": [
+        {
+          "text": "About 4x, since each task gets its own core",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "About 1x, since one task runs at a time",
+          "misconception_tag": null
+        },
+        {
+          "text": "About 2x, since the loop runs two tasks at once",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "About 4x, since awaiting each coroutine starts it early",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "A single event loop runs one task at a time on one thread, and these tasks never yield. CPU-bound work gains no parallel speedup from asyncio.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "practice",
+      "prompt": "Code calls `x = job()` on an `async def job()` and does nothing else. What happens?",
+      "options": [
+        {
+          "text": "The body runs in the background until it finishes",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "The body runs once synchronously before returning",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "The main thread blocks until the body completes",
+          "misconception_tag": "asyncio_event_loop__blocking_call_is_fine"
+        },
+        {
+          "text": "Nothing runs, and Python warns the coroutine was never awaited",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Calling an async function returns an unstarted coroutine object. Without await or scheduling, its body never executes and Python emits a warning.",
+      "difficulty": 0.75,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "transfer",
+      "prompt": "An async web handler calls json.loads on a 200 MB payload synchronously. Other requests on the same server slow down. Why?",
+      "options": [
+        {
+          "text": "asyncio moves the parse to a separate thread, so the server should not stall",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "The synchronous parse blocks the loop, so no other coroutine runs",
+          "misconception_tag": null
+        },
+        {
+          "text": "The parse slows just this handler, and others keep running",
+          "misconception_tag": "asyncio_event_loop__blocking_call_is_fine"
+        },
+        {
+          "text": "Calling the async handler ran the parse before the loop started",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The parse is a blocking call on the single event loop thread. While it runs, the loop cannot switch to other requests, so all of them stall.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-asyncio_event_loop-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "asyncio_event_loop",
+      "kind": "transfer",
+      "prompt": "Eight CPU-bound image resizes run as tasks in one asyncio loop. Which change best uses all cores?",
+      "options": [
+        {
+          "text": "Add more tasks so the loop spreads the work",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "Call each resize without await to start it now",
+          "misconception_tag": "asyncio_event_loop__async_def_runs_immediately"
+        },
+        {
+          "text": "Gather the eight coroutines to run in parallel",
+          "misconception_tag": "asyncio_event_loop__asyncio_replaces_threads"
+        },
+        {
+          "text": "Offload each resize to a process pool with run_in_executor",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Processes run in parallel on separate cores, and run_in_executor hands the CPU work off without blocking the loop. Gathering or adding tasks still runs them one at a time on one thread.",
+      "difficulty": 0.9,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-d1",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "diagnostic",
+      "prompt": "x = [1]; y = x; del x. Is the list still alive?",
+      "options": [
+        {
+          "text": "No, del frees the list immediately",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "Yes, y still references it",
+          "misconception_tag": null
+        },
+        {
+          "text": "Yes, but y holds a separate copy",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "No, the list was moved over to y",
+          "misconception_tag": "memory_management__del_frees_memory"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "del only removes the name x. The list stays alive because y still refers to it, so it is freed only when no references remain.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-d2",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "diagnostic",
+      "prompt": "p = [1]; q = [1]; print(p is q)",
+      "options": [
+        {
+          "text": "True, equal contents means same object",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "True, both lists hold 1",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "True, p was freed when q was made",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "False, they are two separate list objects",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "is compares identity, and each list literal creates a new object. Equal contents do not make two objects identical.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-d3",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "diagnostic",
+      "prompt": "a = []; a.append(a); del a. Is the list reclaimed without manual help?",
+      "options": [
+        {
+          "text": "Yes, because del frees the list at once",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "No, the self-reference keeps it alive forever",
+          "misconception_tag": "memory_management__cycles_leak_forever"
+        },
+        {
+          "text": "Yes, the cyclic collector frees it",
+          "misconception_tag": null
+        },
+        {
+          "text": "No, a list referencing itself cannot be freed",
+          "misconception_tag": "memory_management__cycles_leak_forever"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "After del, the list is unreachable but its reference count stays above zero. The cyclic garbage collector detects and reclaims it.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-p1",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "practice",
+      "prompt": "a = int('1000'); b = int('1000'); print(a is b)",
+      "options": [
+        {
+          "text": "False, two separate int objects exist",
+          "misconception_tag": null
+        },
+        {
+          "text": "True, the first int was freed",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "True, the values are equal",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "True, equal ints are cached",
+          "misconception_tag": "memory_management__is_equals_value"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "CPython caches only small ints, roughly -5 to 256, so 1000 is a new object each time. is compares identity, not value.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-p2",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "practice",
+      "prompt": "Two objects reference each other in a cycle, and all outside references are dropped. What frees them?",
+      "options": [
+        {
+          "text": "Calling del on each object immediately",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "Nothing, cyclic references leak permanently",
+          "misconception_tag": "memory_management__cycles_leak_forever"
+        },
+        {
+          "text": "The cyclic garbage collector, in a collection pass",
+          "misconception_tag": null
+        },
+        {
+          "text": "Reference counting, once both counts hit zero",
+          "misconception_tag": "memory_management__cycles_leak_forever"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Mutual references keep each count above zero, so plain reference counting cannot free them. The cyclic collector finds the unreachable cycle and reclaims it.",
+      "difficulty": 0.85,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-t1",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "transfer",
+      "prompt": "f is held by local name f and inside lst. You run lst.remove(f). Is the object freed?",
+      "options": [
+        {
+          "text": "Yes, remove compares values and drops it",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "No, the name f still refers to it",
+          "misconception_tag": null
+        },
+        {
+          "text": "Yes, remove calls del on the object",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "Yes, removing it from the list frees it",
+          "misconception_tag": "memory_management__del_frees_memory"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Removing an item drops only one reference. The object lives on while the name f still refers to it.",
+      "difficulty": 0.8,
+      "variant_of": null
+    },
+    {
+      "id": "fd072c2a-memory_management-t2",
+      "course_id": "fd072c2a",
+      "concept_id": "memory_management",
+      "kind": "transfer",
+      "prompt": "x = (1, 2); y = (1, 2); z = x; print(x is y, x is z)",
+      "options": [
+        {
+          "text": "False False, assignment makes a copy",
+          "misconception_tag": "memory_management__del_frees_memory"
+        },
+        {
+          "text": "True False, equal values match",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "True True, equal tuples are shared",
+          "misconception_tag": "memory_management__is_equals_value"
+        },
+        {
+          "text": "False True",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "x and y are separate tuple objects, so x is y is False. z = x binds the same object, so x is z is True.",
+      "difficulty": 0.85,
+      "variant_of": null
+    }
+  ]
+}

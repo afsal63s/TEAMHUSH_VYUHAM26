@@ -1,0 +1,2274 @@
+{
+  "course_id": "e221eb0a",
+  "prompt": "Python",
+  "level": "novice",
+  "graph": {
+    "topic": "Python",
+    "concepts": [
+      {
+        "id": "running_python_code",
+        "name": "Running Python code",
+        "description": "Writing instructions in a file or interpreter and getting Python to run them.",
+        "prerequisites": []
+      },
+      {
+        "id": "variables_and_values",
+        "name": "Variables and values",
+        "description": "A variable is a name that stores a value, which can be changed by assigning a new one.",
+        "prerequisites": []
+      },
+      {
+        "id": "data_types",
+        "name": "Basic data types",
+        "description": "Values have types such as integers, floats, strings and booleans, which determine what operations work.",
+        "prerequisites": [
+          "variables_and_values"
+        ]
+      },
+      {
+        "id": "expressions_and_operators",
+        "name": "Expressions and operators",
+        "description": "Combining values with operators like + - * / to produce a new value.",
+        "prerequisites": [
+          "variables_and_values"
+        ]
+      },
+      {
+        "id": "strings",
+        "name": "Strings",
+        "description": "Text values written in quotes, which can be joined, sliced and measured.",
+        "prerequisites": [
+          "data_types"
+        ]
+      },
+      {
+        "id": "lists",
+        "name": "Lists",
+        "description": "Ordered collections of values that can be read by position and changed.",
+        "prerequisites": [
+          "data_types"
+        ]
+      },
+      {
+        "id": "conditionals",
+        "name": "Conditionals",
+        "description": "Using if, elif and else to run different code depending on whether a condition is true.",
+        "prerequisites": [
+          "expressions_and_operators",
+          "data_types"
+        ]
+      },
+      {
+        "id": "loops",
+        "name": "Loops",
+        "description": "Repeating code with for and while, often over each item in a list.",
+        "prerequisites": [
+          "conditionals",
+          "lists"
+        ]
+      },
+      {
+        "id": "functions",
+        "name": "Functions",
+        "description": "Named reusable blocks of code that take inputs and may return a result.",
+        "prerequisites": [
+          "variables_and_values",
+          "expressions_and_operators"
+        ]
+      },
+      {
+        "id": "error_messages",
+        "name": "Reading error messages",
+        "description": "Interpreting tracebacks to find the line and type of a problem in a program.",
+        "prerequisites": [
+          "running_python_code",
+          "data_types"
+        ]
+      }
+    ],
+    "misconceptions": [
+      {
+        "tag": "running_python_code__code_runs_by_itself",
+        "concept_id": "running_python_code",
+        "description": "Believes saving a file runs it automatically, but actually Python only runs code when you execute it."
+      },
+      {
+        "tag": "running_python_code__output_is_the_code",
+        "concept_id": "running_python_code",
+        "description": "Believes the text printed on screen is the program itself, but actually it is only the result of running the program."
+      },
+      {
+        "tag": "running_python_code__any_text_is_valid",
+        "concept_id": "running_python_code",
+        "description": "Believes any text typed into a file is a valid program, but actually Python requires exact syntax to run."
+      },
+      {
+        "tag": "variables_and_values__equals_is_comparison",
+        "concept_id": "variables_and_values",
+        "description": "Believes the = sign checks equality, but actually it assigns a value to a name."
+      },
+      {
+        "tag": "variables_and_values__variable_is_fixed_forever",
+        "concept_id": "variables_and_values",
+        "description": "Believes a variable can only hold the value it was first given, but actually reassigning replaces it."
+      },
+      {
+        "tag": "variables_and_values__variable_holds_formula",
+        "concept_id": "variables_and_values",
+        "description": "Believes a variable keeps a link to the formula used to set it, but actually it stores only the computed value."
+      },
+      {
+        "tag": "data_types__numbers_and_text_mix",
+        "concept_id": "data_types",
+        "description": "Believes '5' and 5 behave the same, but actually text and numbers are different types."
+      },
+      {
+        "tag": "data_types__float_is_exact",
+        "concept_id": "data_types",
+        "description": "Believes decimal numbers are stored exactly, but actually floats can have small rounding errors."
+      },
+      {
+        "tag": "data_types__true_is_text",
+        "concept_id": "data_types",
+        "description": "Believes True is the word 'true' in quotes, but actually it is a boolean value."
+      },
+      {
+        "tag": "expressions_and_operators__division_gives_integer",
+        "concept_id": "expressions_and_operators",
+        "description": "Believes / always returns a whole number, but actually it returns a float result."
+      },
+      {
+        "tag": "expressions_and_operators__operator_order_ignored",
+        "concept_id": "expressions_and_operators",
+        "description": "Believes Python evaluates operators strictly left to right, but actually multiplication and division come before addition and subtraction."
+      },
+      {
+        "tag": "expressions_and_operators__plus_always_adds",
+        "concept_id": "expressions_and_operators",
+        "description": "Believes + means addition for every type, but actually with strings it joins text."
+      },
+      {
+        "tag": "strings__strings_change_in_place",
+        "concept_id": "strings",
+        "description": "Believes string methods modify the original text, but actually they return a new string."
+      },
+      {
+        "tag": "strings__index_starts_at_one",
+        "concept_id": "strings",
+        "description": "Believes the first character is at index 1, but actually Python indexes start at 0."
+      },
+      {
+        "tag": "strings__quotes_are_content",
+        "concept_id": "strings",
+        "description": "Believes the quote marks are part of the stored text, but actually they only delimit it."
+      },
+      {
+        "tag": "lists__list_copy_by_assignment",
+        "concept_id": "lists",
+        "description": "Believes assigning a list to a new name makes a separate copy, but actually both names refer to the same list."
+      },
+      {
+        "tag": "lists__list_index_from_one",
+        "concept_id": "lists",
+        "description": "Believes list positions begin at 1, but actually they begin at 0."
+      },
+      {
+        "tag": "lists__append_returns_list",
+        "concept_id": "lists",
+        "description": "Believes append returns the updated list, but actually it changes the list and returns None."
+      },
+      {
+        "tag": "conditionals__if_runs_all_branches",
+        "concept_id": "conditionals",
+        "description": "Believes every branch of an if chain runs, but actually only the first true branch runs."
+      },
+      {
+        "tag": "conditionals__single_equals_in_condition",
+        "concept_id": "conditionals",
+        "description": "Believes = works for comparing values in an if, but actually comparisons use ==."
+      },
+      {
+        "tag": "conditionals__else_needs_condition",
+        "concept_id": "conditionals",
+        "description": "Believes else must have its own condition, but actually it runs when no earlier condition was true."
+      },
+      {
+        "tag": "loops__loop_variable_persists_wrongly",
+        "concept_id": "loops",
+        "description": "Believes the loop variable is a copy of the list, but actually it takes each item's value in turn."
+      },
+      {
+        "tag": "loops__while_runs_once",
+        "concept_id": "loops",
+        "description": "Believes a while loop always runs at least once, but actually it checks the condition first."
+      },
+      {
+        "tag": "loops__forgot_loop_end",
+        "concept_id": "loops",
+        "description": "Believes a loop stops by itself when the list is empty, but actually a while loop without a changing condition runs forever."
+      },
+      {
+        "tag": "functions__defining_runs_function",
+        "concept_id": "functions",
+        "description": "Believes writing a def line runs the function, but actually it only defines it until it is called."
+      },
+      {
+        "tag": "functions__print_is_return",
+        "concept_id": "functions",
+        "description": "Believes print sends a value back to the caller, but actually return does that and print only shows it."
+      },
+      {
+        "tag": "functions__parameters_change_outside",
+        "concept_id": "functions",
+        "description": "Believes changing a parameter changes the caller's variable, but actually it changes only the local name."
+      },
+      {
+        "tag": "error_messages__error_means_broken_python",
+        "concept_id": "error_messages",
+        "description": "Believes an error means Python is broken, but actually it reports a mistake in your code."
+      },
+      {
+        "tag": "error_messages__read_bottom_only",
+        "concept_id": "error_messages",
+        "description": "Believes the last line is always the cause, but actually the traceback shows the path to the failing line above it."
+      },
+      {
+        "tag": "error_messages__fix_random_lines",
+        "concept_id": "error_messages",
+        "description": "Believes changing random lines will fix an error, but actually the message points to where to look."
+      }
+    ]
+  },
+  "questions": [
+    {
+      "id": "e221eb0a-running_python_code-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "diagnostic",
+      "prompt": "You save a file named hello.py containing print('Hi') but never run it. What appears on screen?",
+      "options": [
+        {
+          "text": "Hi appears when the editor closes",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "Hi appears as soon as the file is saved",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "Nothing appears, because the code has not run",
+          "misconception_tag": null
+        },
+        {
+          "text": "The line print('Hi') appears as text",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Python only runs code when you execute it, so saving the file alone produces no output.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-running_python_code-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "diagnostic",
+      "prompt": "Which command runs a script saved as hello.py from a terminal?",
+      "options": [
+        {
+          "text": "Save hello.py again in the editor",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "Open hello.py in a text editor",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "python hello.py",
+          "misconception_tag": null
+        },
+        {
+          "text": "print hello.py",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Running python followed by the file name tells the interpreter to execute the script.",
+      "difficulty": 0.25,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-running_python_code-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "diagnostic",
+      "prompt": "What is printed when you run a file containing print(2 + 3)?",
+      "options": [
+        {
+          "text": "5",
+          "misconception_tag": null
+        },
+        {
+          "text": "Nothing, saving the file runs it",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "print(2 + 3)",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        },
+        {
+          "text": "2 + 3",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The print call evaluates 2 + 3 and displays the result, which is 5.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-running_python_code-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "practice",
+      "prompt": "You change 'Bye' to 'Hi' in script.py, save it, but the terminal still shows Bye. What explains this?",
+      "options": [
+        {
+          "text": "Python reruns when the file name changes",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "The printed text is stored in the file, so Bye remains",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        },
+        {
+          "text": "Execute the script again to see the new output",
+          "misconception_tag": null
+        },
+        {
+          "text": "Saving the file reruns the script in the background",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Terminal output is a result of a past run, so the script must be executed again to reflect the edit.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-running_python_code-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "practice",
+      "prompt": "Which file content will Python run without a syntax error?",
+      "options": [
+        {
+          "text": "x = 5 print(x)",
+          "misconception_tag": "running_python_code__any_text_is_valid"
+        },
+        {
+          "text": "Print x equals five",
+          "misconception_tag": "running_python_code__any_text_is_valid"
+        },
+        {
+          "text": "x = 5, print(x) output",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        },
+        {
+          "text": "x = 5; print(x)",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Statements separated by a semicolon are valid, while missing separators or stray words cause syntax errors.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-running_python_code-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "transfer",
+      "prompt": "In a notebook cell containing print(3 + 4), you press run and see 7 below the cell. What is that 7?",
+      "options": [
+        {
+          "text": "The code itself, displayed as output",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        },
+        {
+          "text": "Text saved into the notebook file automatically",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "A copy of the cell made when you typed it",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "The result of running the code",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Running the cell executes print, and the 7 is the evaluated result shown after execution.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-running_python_code-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "running_python_code",
+      "kind": "transfer",
+      "prompt": "A file contains Print(\"done\") and was saved, but running it gives an error. What is the likely cause?",
+      "options": [
+        {
+          "text": "Saving the file should have run it again",
+          "misconception_tag": "running_python_code__code_runs_by_itself"
+        },
+        {
+          "text": "The file is missing the output text",
+          "misconception_tag": "running_python_code__output_is_the_code"
+        },
+        {
+          "text": "Python ignores capital letters in names",
+          "misconception_tag": "running_python_code__any_text_is_valid"
+        },
+        {
+          "text": "Python is case-sensitive; print is lowercase",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Python requires exact spelling, so Print is not recognized and must be written as print.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "diagnostic",
+      "prompt": "What does the line total = 10 do?",
+      "options": [
+        {
+          "text": "Links total to the expression 10",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "Checks whether total equals 10",
+          "misconception_tag": "variables_and_values__equals_is_comparison"
+        },
+        {
+          "text": "Makes total fixed at 10 for good",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        },
+        {
+          "text": "Stores the value 10 under the name total",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The = sign assigns the value 10 to the name total. It does not compare or link anything.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "diagnostic",
+      "prompt": "After a = 3 and then a = 7, what is a?",
+      "options": [
+        {
+          "text": "Error, since a cannot be assigned twice",
+          "misconception_tag": "variables_and_values__equals_is_comparison"
+        },
+        {
+          "text": "3, because the first value stays",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        },
+        {
+          "text": "7",
+          "misconception_tag": null
+        },
+        {
+          "text": "3 and 7 kept together in a",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Assigning a new value replaces the old one, so a holds 7 afterwards.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "diagnostic",
+      "prompt": "After x = 4, y = x, x = 9, what is y?",
+      "options": [
+        {
+          "text": "Error, y cannot copy x",
+          "misconception_tag": "variables_and_values__equals_is_comparison"
+        },
+        {
+          "text": "4",
+          "misconception_tag": null
+        },
+        {
+          "text": "9, because y stays linked to x",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "9, because y = x compares them",
+          "misconception_tag": "variables_and_values__equals_is_comparison"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "y = x copies the value 4 into y at that moment. Changing x later does not change y.",
+      "difficulty": 0.25,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "practice",
+      "prompt": "After price = 20, tax = price * 0.1, then price = 50, what is tax?",
+      "options": [
+        {
+          "text": "5.0, because tax follows price",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "2.0",
+          "misconception_tag": null
+        },
+        {
+          "text": "Error, because price was already set",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        },
+        {
+          "text": "50.0, since 50 times 0.1 runs now",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "tax stored the computed value 2.0 when it was assigned. Later changes to price do not recalculate it.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "practice",
+      "prompt": "count = 0, then three times count = count + 1. What is count at the end?",
+      "options": [
+        {
+          "text": "1, because each pass overwrites with 1",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        },
+        {
+          "text": "0, because count keeps its first value",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        },
+        {
+          "text": "4, since count + 1 is re-run as a formula",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "3",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Each pass reads the current value of count, adds 1, and assigns the result back. After three passes count is 3.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "transfer",
+      "prompt": "name = Ana, greeting = Hi + name, name = Ben. What does print(greeting) show?",
+      "options": [
+        {
+          "text": "Hi Ben, since greeting tracks name",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "Hi Ana",
+          "misconception_tag": null
+        },
+        {
+          "text": "Hi name, since the text stays unevaluated",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "Error, because name cannot change",
+          "misconception_tag": "variables_and_values__variable_is_fixed_forever"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "greeting was built from the value of name at that time, which was Ana. Reassigning name later does not change greeting.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-variables_and_values-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "variables_and_values",
+      "kind": "transfer",
+      "prompt": "score = 10, then the line score == 10 runs. What is score afterwards?",
+      "options": [
+        {
+          "text": "True, because the comparison overwrites score",
+          "misconception_tag": "variables_and_values__equals_is_comparison"
+        },
+        {
+          "text": "Error, since == needs a second name",
+          "misconception_tag": "variables_and_values__equals_is_comparison"
+        },
+        {
+          "text": "True, since score stays linked to 10 == 10",
+          "misconception_tag": "variables_and_values__variable_holds_formula"
+        },
+        {
+          "text": "10",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "== compares and produces True, but nothing is assigned to score. So score still holds 10.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "diagnostic",
+      "prompt": "What does type('42') return?",
+      "options": [
+        {
+          "text": "<class 'float'>",
+          "misconception_tag": "data_types__float_is_exact"
+        },
+        {
+          "text": "<class 'str'>",
+          "misconception_tag": null
+        },
+        {
+          "text": "<class 'bool'>",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "<class 'int'>",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The quotes make '42' text, so its type is str, even though it looks like a number.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "diagnostic",
+      "prompt": "Which of these is a boolean value?",
+      "options": [
+        {
+          "text": "True",
+          "misconception_tag": null
+        },
+        {
+          "text": "'yes'",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "'True'",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "1",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "True without quotes is the boolean value; in quotes it is just text.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "diagnostic",
+      "prompt": "Which of these is a float?",
+      "options": [
+        {
+          "text": "2",
+          "misconception_tag": "data_types__float_is_exact"
+        },
+        {
+          "text": "2.0",
+          "misconception_tag": null
+        },
+        {
+          "text": "'2.0'",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        },
+        {
+          "text": "True",
+          "misconception_tag": "data_types__true_is_text"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "2.0 has a decimal point, so it is a float; 2 is an int and '2.0' is text.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "practice",
+      "prompt": "What does print(0.1 + 0.2 == 0.3) display?",
+      "options": [
+        {
+          "text": "0.3",
+          "misconception_tag": "data_types__float_is_exact"
+        },
+        {
+          "text": "True",
+          "misconception_tag": "data_types__float_is_exact"
+        },
+        {
+          "text": "'False'",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "False",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Floats store binary approximations, so 0.1 + 0.2 is slightly above 0.3 and the comparison is False.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "practice",
+      "prompt": "name = input('Age: ') gives '21'. Which expression gives 29?",
+      "options": [
+        {
+          "text": "name + 8",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        },
+        {
+          "text": "name + '8'",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        },
+        {
+          "text": "float(name) + 8",
+          "misconception_tag": "data_types__float_is_exact"
+        },
+        {
+          "text": "int(name) + 8",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "input returns text, so it must be converted with int before adding the number 8.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "transfer",
+      "prompt": "flag = 'False' is set, then 'if flag:' is run. What happens?",
+      "options": [
+        {
+          "text": "The block is skipped because the text says False",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "The block runs after converting to a number",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        },
+        {
+          "text": "The block runs; text is truthy",
+          "misconception_tag": null
+        },
+        {
+          "text": "A TypeError is raised for text in an if",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Any non-empty string counts as true in a condition, so the block runs even though the text reads False.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-data_types-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "data_types",
+      "kind": "transfer",
+      "prompt": "In a new script, what type is the value of 'cat' == 'dog'?",
+      "options": [
+        {
+          "text": "str",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "bool",
+          "misconception_tag": null
+        },
+        {
+          "text": "'True'",
+          "misconception_tag": "data_types__true_is_text"
+        },
+        {
+          "text": "int",
+          "misconception_tag": "data_types__numbers_and_text_mix"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Comparisons return a boolean value, here False, so the type is bool.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "diagnostic",
+      "prompt": "What is the value of 1 + 6 / 2 in Python?",
+      "options": [
+        {
+          "text": "3",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        },
+        {
+          "text": "3.5",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "4.0",
+          "misconception_tag": null
+        },
+        {
+          "text": "4",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Division runs before addition, so 6 / 2 gives 3.0 and then 1 + 3.0 gives 4.0.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "diagnostic",
+      "prompt": "What does print('ab' + 'c') output?",
+      "options": [
+        {
+          "text": "abc",
+          "misconception_tag": null
+        },
+        {
+          "text": "cab",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "TypeError",
+          "misconception_tag": "expressions_and_operators__plus_always_adds"
+        },
+        {
+          "text": "ab c",
+          "misconception_tag": "expressions_and_operators__plus_always_adds"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "With strings, + joins the text in order, so 'ab' followed by 'c' gives 'abc'.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "diagnostic",
+      "prompt": "What is the value of 10 / 4 in Python 3?",
+      "options": [
+        {
+          "text": "2.4",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "3",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        },
+        {
+          "text": "2",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        },
+        {
+          "text": "2.5",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The / operator performs true division and returns a float, so 10 / 4 is 2.5.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "practice",
+      "prompt": "What is the value of 2 + 3 * 4 - 6 / 2 in Python?",
+      "options": [
+        {
+          "text": "11",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        },
+        {
+          "text": "11.0",
+          "misconception_tag": null
+        },
+        {
+          "text": "7.0",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "5.0",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Multiplication and division run first, giving 2 + 12 - 3.0, which is 11.0 because / returns a float.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "practice",
+      "prompt": "What does print('Ha' + 'Ha' * 2) output?",
+      "options": [
+        {
+          "text": "HaHaHaHa",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "HaHaHa",
+          "misconception_tag": null
+        },
+        {
+          "text": "HaHa",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "TypeError",
+          "misconception_tag": "expressions_and_operators__plus_always_adds"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The * operator runs first, so 'Ha' * 2 gives 'HaHa', and then 'Ha' + 'HaHa' joins to 'HaHaHa'.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "transfer",
+      "prompt": "A teacher computes the average of three test scores with avg = (80 + 90 + 70) / 3. What value does avg hold?",
+      "options": [
+        {
+          "text": "80.0",
+          "misconception_tag": null
+        },
+        {
+          "text": "240",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "193.33",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "80",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The parentheses group the sum to 240, and dividing by 3 with / gives the float 80.0.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-expressions_and_operators-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "expressions_and_operators",
+      "kind": "transfer",
+      "prompt": "A shop computes total = 2 + 3 * 1.5. What value does total hold?",
+      "options": [
+        {
+          "text": "7.5",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "4.0",
+          "misconception_tag": "expressions_and_operators__operator_order_ignored"
+        },
+        {
+          "text": "6.5",
+          "misconception_tag": null
+        },
+        {
+          "text": "3.0",
+          "misconception_tag": "expressions_and_operators__division_gives_integer"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Multiplication runs before addition, so 3 * 1.5 is 4.5 and adding 2 gives 6.5.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "diagnostic",
+      "prompt": "s = \"cat\"; print(len(s))",
+      "options": [
+        {
+          "text": "3",
+          "misconception_tag": null
+        },
+        {
+          "text": "2",
+          "misconception_tag": "strings__index_starts_at_one"
+        },
+        {
+          "text": "5",
+          "misconception_tag": "strings__quotes_are_content"
+        },
+        {
+          "text": "4",
+          "misconception_tag": "strings__index_starts_at_one"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The length counts the three letters c, a and t; the quote marks only delimit the text and are not stored in it.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "diagnostic",
+      "prompt": "word = \"hi\"; what does word[0] give?",
+      "options": [
+        {
+          "text": "hi",
+          "misconception_tag": "strings__index_starts_at_one"
+        },
+        {
+          "text": "'h'",
+          "misconception_tag": "strings__quotes_are_content"
+        },
+        {
+          "text": "h",
+          "misconception_tag": null
+        },
+        {
+          "text": "i",
+          "misconception_tag": "strings__index_starts_at_one"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Python indexes start at 0, so index 0 is the first character, h.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "diagnostic",
+      "prompt": "s = \"dog\"; t = s.upper(); print(s)",
+      "options": [
+        {
+          "text": "Dog",
+          "misconception_tag": "strings__strings_change_in_place"
+        },
+        {
+          "text": "DOG",
+          "misconception_tag": "strings__strings_change_in_place"
+        },
+        {
+          "text": "dog",
+          "misconception_tag": null
+        },
+        {
+          "text": "'dog'",
+          "misconception_tag": "strings__quotes_are_content"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "upper() returns a new uppercase string and leaves s unchanged, so printing s shows the original lowercase text.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "practice",
+      "prompt": "s = \"python\"; print(s[1:4])",
+      "options": [
+        {
+          "text": "'yth'",
+          "misconception_tag": "strings__quotes_are_content"
+        },
+        {
+          "text": "pyth",
+          "misconception_tag": "strings__index_starts_at_one"
+        },
+        {
+          "text": "yth",
+          "misconception_tag": null
+        },
+        {
+          "text": "pyt",
+          "misconception_tag": "strings__index_starts_at_one"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Slicing from index 1 up to but not including index 4 takes the characters at indexes 1, 2 and 3, which are y, t and h.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "practice",
+      "prompt": "s = \"data\"; s.replace(\"a\", \"o\"); print(s)",
+      "options": [
+        {
+          "text": "dota",
+          "misconception_tag": "strings__strings_change_in_place"
+        },
+        {
+          "text": "data",
+          "misconception_tag": null
+        },
+        {
+          "text": "doto",
+          "misconception_tag": "strings__strings_change_in_place"
+        },
+        {
+          "text": "'data'",
+          "misconception_tag": "strings__quotes_are_content"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "replace() returns a new string with the substitution, but since its result is not assigned, s still holds the original text data.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "transfer",
+      "prompt": "msg = 'say \"hi\"'; print(len(msg))",
+      "options": [
+        {
+          "text": "8",
+          "misconception_tag": null
+        },
+        {
+          "text": "6",
+          "misconception_tag": "strings__quotes_are_content"
+        },
+        {
+          "text": "7",
+          "misconception_tag": "strings__index_starts_at_one"
+        },
+        {
+          "text": "10",
+          "misconception_tag": "strings__quotes_are_content"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The text say \"hi\" has 8 characters, including the space and the two double quotes that sit inside the string; the outer single quotes are only delimiters.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-strings-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "strings",
+      "kind": "transfer",
+      "prompt": "word = \"cat\"; word2 = word.capitalize(); print(word, word2)",
+      "options": [
+        {
+          "text": "cat cat",
+          "misconception_tag": "strings__strings_change_in_place"
+        },
+        {
+          "text": "'cat' Cat",
+          "misconception_tag": "strings__quotes_are_content"
+        },
+        {
+          "text": "Cat Cat",
+          "misconception_tag": "strings__strings_change_in_place"
+        },
+        {
+          "text": "cat Cat",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "capitalize() returns a new string, so word keeps its original value while word2 holds Cat.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "diagnostic",
+      "prompt": "nums = [10, 20, 30]\nnums.append(40)\nWhat is nums[3]?",
+      "options": [
+        {
+          "text": "None",
+          "misconception_tag": "lists__append_returns_list"
+        },
+        {
+          "text": "IndexError",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "30",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "40",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "append adds 40 to the end, so the list is [10, 20, 30, 40] and index 3 holds 40.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "diagnostic",
+      "prompt": "nums = [1, 2, 3]. What does nums.append(4) return?",
+      "options": [
+        {
+          "text": "A separate copy of [1, 2, 3]",
+          "misconception_tag": "lists__list_copy_by_assignment"
+        },
+        {
+          "text": "The updated list [1, 2, 3, 4]",
+          "misconception_tag": "lists__append_returns_list"
+        },
+        {
+          "text": "The new value 4",
+          "misconception_tag": "lists__append_returns_list"
+        },
+        {
+          "text": "None",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "append changes the list in place and returns None, so assigning its result gives None.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "diagnostic",
+      "prompt": "fruits = [\"apple\", \"pear\", \"fig\"]. Which expression gives \"pear\"?",
+      "options": [
+        {
+          "text": "fruits[0]",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "fruits[2]",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "fruits[1]",
+          "misconception_tag": null
+        },
+        {
+          "text": "fruits.append('pear')",
+          "misconception_tag": "lists__append_returns_list"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Positions start at 0, so \"pear\", the second item, is at index 1.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "practice",
+      "prompt": "x = [1, 2, 3]\ny = x\ny[0] = 99\nWhat is x now?",
+      "options": [
+        {
+          "text": "[99, 2, 3]",
+          "misconception_tag": null
+        },
+        {
+          "text": "[1, 2, 3]",
+          "misconception_tag": "lists__list_copy_by_assignment"
+        },
+        {
+          "text": "[1, 2, 3, 99]",
+          "misconception_tag": "lists__list_copy_by_assignment"
+        },
+        {
+          "text": "[2, 3, 99]",
+          "misconception_tag": "lists__list_index_from_one"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "y = x makes both names refer to the same list, so changing y[0] also changes x.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "practice",
+      "prompt": "nums = [1, 2]\nresult = nums.append(3)\nprint(result[0])\nWhat happens?",
+      "options": [
+        {
+          "text": "It prints 2 because positions start at 1",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "It prints [1, 2, 3] because append returns the list",
+          "misconception_tag": "lists__append_returns_list"
+        },
+        {
+          "text": "It raises TypeError because result is None",
+          "misconception_tag": null
+        },
+        {
+          "text": "It prints 1 because result holds the list",
+          "misconception_tag": "lists__append_returns_list"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "append returns None, so result is None and indexing it raises TypeError.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "transfer",
+      "prompt": "def add_item(cart):\n    cart.append(\"milk\")\nmycart = [\"eggs\"]\nadd_item(mycart)\nprint(mycart)\nWhat is printed?",
+      "options": [
+        {
+          "text": "['eggs', 'milk']",
+          "misconception_tag": null
+        },
+        {
+          "text": "None",
+          "misconception_tag": "lists__append_returns_list"
+        },
+        {
+          "text": "['milk']",
+          "misconception_tag": "lists__list_copy_by_assignment"
+        },
+        {
+          "text": "['eggs']",
+          "misconception_tag": "lists__list_copy_by_assignment"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The function receives the same list object, so append changes mycart itself.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-lists-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "lists",
+      "kind": "transfer",
+      "prompt": "letters = list('abc')\nletters.insert(0, 'z')\nWhat is letters[1]?",
+      "options": [
+        {
+          "text": "'b'",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "'a'",
+          "misconception_tag": null
+        },
+        {
+          "text": "'z'",
+          "misconception_tag": "lists__list_index_from_one"
+        },
+        {
+          "text": "'c'",
+          "misconception_tag": "lists__append_returns_list"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "After inserting 'z' at position 0, the list is ['z', 'a', 'b', 'c'], so index 1 holds 'a'.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "diagnostic",
+      "prompt": "x = 5\nif x > 3:\n    print('big')\nelse:\n    print('small')\nWhat is printed?",
+      "options": [
+        {
+          "text": "Nothing",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "small",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "big",
+          "misconception_tag": null
+        },
+        {
+          "text": "big small",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "The condition x > 3 is true, so the if branch runs and prints 'big'. The else branch is skipped.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "diagnostic",
+      "prompt": "x = 7\nif x > 10:\n    print('A')\nelif x > 5:\n    print('B')\nelse:\n    print('C')\nWhat is printed?",
+      "options": [
+        {
+          "text": "A and B and C",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        },
+        {
+          "text": "C",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "B",
+          "misconception_tag": null
+        },
+        {
+          "text": "A and B",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "x > 10 is false and x > 5 is true, so only the elif branch runs and prints 'B'. Once one branch runs, the rest are skipped.",
+      "difficulty": 0.25,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "diagnostic",
+      "prompt": "What does the else branch of an if statement do?",
+      "options": [
+        {
+          "text": "Runs when its own test is true",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "Replaces the if test entirely",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "Runs right after the if",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        },
+        {
+          "text": "Runs when the if is false",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The else block runs when the preceding if condition evaluates to False. It has no condition of its own.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "practice",
+      "prompt": "score = 75\nif score >= 90:\n    print('A')\nelif score >= 70:\n    print('B')\nelif score >= 50:\n    print('C')\nWhat is printed?",
+      "options": [
+        {
+          "text": "Nothing",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "B and C",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        },
+        {
+          "text": "B",
+          "misconception_tag": null
+        },
+        {
+          "text": "C",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "75 fails the first test but passes score >= 70, so the second branch runs. The remaining elif is skipped, so only 'B' prints.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "practice",
+      "prompt": "Which line correctly checks whether the variable name equals 'Ana'?",
+      "options": [
+        {
+          "text": "if name == 'Ana':",
+          "misconception_tag": null
+        },
+        {
+          "text": "if name = 'Ana':",
+          "misconception_tag": "conditionals__single_equals_in_condition"
+        },
+        {
+          "text": "if name === 'Ana':",
+          "misconception_tag": "conditionals__single_equals_in_condition"
+        },
+        {
+          "text": "else name == 'Ana':",
+          "misconception_tag": "conditionals__else_needs_condition"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "In Python, == compares two values for equality inside a condition. A single = is assignment and is a syntax error in an if.",
+      "difficulty": 0.45,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "transfer",
+      "prompt": "A vending script has: if coins >= price: dispense(); elif coins > 0: show('more coins needed'); else: show('insert coins'). With coins = 0 and price = 1, what is shown?",
+      "options": [
+        {
+          "text": "'insert coins'",
+          "misconception_tag": null
+        },
+        {
+          "text": "'more coins needed'",
+          "misconception_tag": "conditionals__else_needs_condition"
+        },
+        {
+          "text": "'insert coins' and 'more coins needed'",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        },
+        {
+          "text": "Nothing is shown",
+          "misconception_tag": "conditionals__else_needs_condition"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "coins >= price and coins > 0 are both false, so the else branch runs and shows 'insert coins'. Only one branch runs in the chain.",
+      "difficulty": 0.55,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-conditionals-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "conditionals",
+      "kind": "transfer",
+      "prompt": "In a shop script, an if checks is_member and an else sets price to 10. When does the else block run?",
+      "options": [
+        {
+          "text": "When is_member is False",
+          "misconception_tag": null
+        },
+        {
+          "text": "When is_member = 10",
+          "misconception_tag": "conditionals__single_equals_in_condition"
+        },
+        {
+          "text": "Right after the if block runs",
+          "misconception_tag": "conditionals__if_runs_all_branches"
+        },
+        {
+          "text": "When is_member is True",
+          "misconception_tag": "conditionals__else_needs_condition"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The else block runs whenever the if condition is False, here when is_member is False. It needs no condition of its own.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "diagnostic",
+      "prompt": "What does this print?\nnums = [1, 2, 3]\nfor n in nums:\n    print(n)",
+      "options": [
+        {
+          "text": "1, 2, 3, then repeats forever",
+          "misconception_tag": "loops__forgot_loop_end"
+        },
+        {
+          "text": "1, 2, 3 on separate lines",
+          "misconception_tag": null
+        },
+        {
+          "text": "3, 3, 3 on separate lines",
+          "misconception_tag": "loops__loop_variable_persists_wrongly"
+        },
+        {
+          "text": "[1, 2, 3]",
+          "misconception_tag": "loops__loop_variable_persists_wrongly"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The for loop assigns each list item to n in turn, so each item is printed once and the loop then ends.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "diagnostic",
+      "prompt": "What does this print?\nx = 5\nwhile x < 3:\n    print(\"hi\")",
+      "options": [
+        {
+          "text": "Nothing is printed",
+          "misconception_tag": null
+        },
+        {
+          "text": "hi, once",
+          "misconception_tag": "loops__while_runs_once"
+        },
+        {
+          "text": "An error is raised",
+          "misconception_tag": "loops__while_runs_once"
+        },
+        {
+          "text": "hi, forever",
+          "misconception_tag": "loops__forgot_loop_end"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "A while loop checks its condition before each pass, and 5 < 3 is False, so the body never runs.",
+      "difficulty": 0.25,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "diagnostic",
+      "prompt": "What does this print?\nfor ch in \"abc\":\n    print(ch)",
+      "options": [
+        {
+          "text": "a, b, c, then repeats forever",
+          "misconception_tag": "loops__forgot_loop_end"
+        },
+        {
+          "text": "abc",
+          "misconception_tag": "loops__loop_variable_persists_wrongly"
+        },
+        {
+          "text": "c, c, c on separate lines",
+          "misconception_tag": "loops__loop_variable_persists_wrongly"
+        },
+        {
+          "text": "a, b, c on separate lines",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The for loop takes each character of the string in order, so each one is printed on its own line.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "practice",
+      "prompt": "This loop should print \"go\" three times but prints forever. What fixes it?\ncount = 0\nwhile count < 3:\n    print(\"go\")",
+      "options": [
+        {
+          "text": "Change while to if",
+          "misconception_tag": "loops__while_runs_once"
+        },
+        {
+          "text": "Move the print above the while line",
+          "misconception_tag": "loops__forgot_loop_end"
+        },
+        {
+          "text": "Add count = count + 1 in the loop body",
+          "misconception_tag": null
+        },
+        {
+          "text": "Add count = 0 above the while line",
+          "misconception_tag": "loops__forgot_loop_end"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "A while loop needs its condition to change inside the body, so incrementing count lets it eventually become False.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "practice",
+      "prompt": "What does this print?\nready = False\nwhile ready:\n    print(\"hello\")\n    ready = True",
+      "options": [
+        {
+          "text": "Nothing is printed",
+          "misconception_tag": null
+        },
+        {
+          "text": "hello, forever",
+          "misconception_tag": "loops__forgot_loop_end"
+        },
+        {
+          "text": "True, once",
+          "misconception_tag": "loops__while_runs_once"
+        },
+        {
+          "text": "hello, once",
+          "misconception_tag": "loops__while_runs_once"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The condition ready is False when the while line is first checked, so the body is skipped entirely.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "transfer",
+      "prompt": "A player has 2 lives and this loop runs:\nlives = 2\nwhile lives > 0:\n    print(\"Still playing\")\nWhat happens?",
+      "options": [
+        {
+          "text": "It runs exactly once",
+          "misconception_tag": "loops__while_runs_once"
+        },
+        {
+          "text": "It stops when the list is empty",
+          "misconception_tag": "loops__forgot_loop_end"
+        },
+        {
+          "text": "It repeats forever",
+          "misconception_tag": null
+        },
+        {
+          "text": "It runs exactly twice",
+          "misconception_tag": "loops__forgot_loop_end"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "Nothing inside the loop changes lives, so the condition stays True and the loop never ends on its own.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-loops-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "loops",
+      "kind": "transfer",
+      "prompt": "A queue is empty when this runs:\nqueue = []\nwhile queue:\n    serve(queue.pop())\nWhat happens?",
+      "options": [
+        {
+          "text": "Customers are served forever",
+          "misconception_tag": "loops__forgot_loop_end"
+        },
+        {
+          "text": "One customer is served",
+          "misconception_tag": "loops__while_runs_once"
+        },
+        {
+          "text": "Nothing is served",
+          "misconception_tag": null
+        },
+        {
+          "text": "An error is raised before the loop",
+          "misconception_tag": "loops__while_runs_once"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "The while loop checks whether queue has items first, and an empty list is falsy, so serve is never called.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "diagnostic",
+      "prompt": "def hello():\n    print('hi')\n\nAfter this code runs, with no call to hello(), what appears on screen?",
+      "options": [
+        {
+          "text": "Nothing is printed",
+          "misconception_tag": null
+        },
+        {
+          "text": "'hi' is returned to you",
+          "misconception_tag": "functions__print_is_return"
+        },
+        {
+          "text": "'hi' is printed",
+          "misconception_tag": "functions__defining_runs_function"
+        },
+        {
+          "text": "'hi' is printed once",
+          "misconception_tag": "functions__defining_runs_function"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "A def line only defines the function; its body runs only when the function is called.",
+      "difficulty": 0.2,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "diagnostic",
+      "prompt": "What is the main job of return inside a function?",
+      "options": [
+        {
+          "text": "Starts the function running",
+          "misconception_tag": "functions__defining_runs_function"
+        },
+        {
+          "text": "Sends a value back to the caller",
+          "misconception_tag": null
+        },
+        {
+          "text": "Creates a new function",
+          "misconception_tag": "functions__defining_runs_function"
+        },
+        {
+          "text": "Displays a value on screen",
+          "misconception_tag": "functions__print_is_return"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "return hands a value back to the code that called the function so it can be stored or used.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "diagnostic",
+      "prompt": "Given def area(n): return n * n, which line correctly calls the function with 3?",
+      "options": [
+        {
+          "text": "area = 3",
+          "misconception_tag": "functions__defining_runs_function"
+        },
+        {
+          "text": "def area(3):",
+          "misconception_tag": "functions__defining_runs_function"
+        },
+        {
+          "text": "print(area(3))",
+          "misconception_tag": "functions__print_is_return"
+        },
+        {
+          "text": "area(3)",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "Calling a function means writing its name followed by the argument in parentheses.",
+      "difficulty": 0.25,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "practice",
+      "prompt": "def add_one(n):\n    n = n + 1\n\nx = 5\nadd_one(x)\nprint(x)\n\nWhat is printed?",
+      "options": [
+        {
+          "text": "5",
+          "misconception_tag": null
+        },
+        {
+          "text": "None",
+          "misconception_tag": "functions__print_is_return"
+        },
+        {
+          "text": "4",
+          "misconception_tag": "functions__parameters_change_outside"
+        },
+        {
+          "text": "6",
+          "misconception_tag": "functions__parameters_change_outside"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "Assigning n inside the function changes only the local name, so x still holds 5.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "practice",
+      "prompt": "def double(n):\n    print(n * 2)\n\nresult = double(4)\nprint(result)\n\nWhat is printed, in order?",
+      "options": [
+        {
+          "text": "Nothing then 8",
+          "misconception_tag": "functions__defining_runs_function"
+        },
+        {
+          "text": "8 then 8",
+          "misconception_tag": "functions__print_is_return"
+        },
+        {
+          "text": "8 then None",
+          "misconception_tag": null
+        },
+        {
+          "text": "8 then an error",
+          "misconception_tag": "functions__print_is_return"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "print shows 8 but does not return it, so double returns None and result holds None.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "transfer",
+      "prompt": "def price(x):\n    return x + 2\n\ntotal = price(5) * 2\nprint(total)\n\nWhat is printed?",
+      "options": [
+        {
+          "text": "12",
+          "misconception_tag": "functions__parameters_change_outside"
+        },
+        {
+          "text": "7",
+          "misconception_tag": "functions__print_is_return"
+        },
+        {
+          "text": "14",
+          "misconception_tag": null
+        },
+        {
+          "text": "10",
+          "misconception_tag": "functions__defining_runs_function"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "price(5) returns 7, which is then doubled to 14.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-functions-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "functions",
+      "kind": "transfer",
+      "prompt": "def score(p):\n    p = p + 10\n    return p\n\nbonus = 3\nscore(bonus)\nprint(bonus)\n\nWhat is printed?",
+      "options": [
+        {
+          "text": "3",
+          "misconception_tag": null
+        },
+        {
+          "text": "None",
+          "misconception_tag": "functions__print_is_return"
+        },
+        {
+          "text": "13",
+          "misconception_tag": "functions__parameters_change_outside"
+        },
+        {
+          "text": "10",
+          "misconception_tag": "functions__parameters_change_outside"
+        }
+      ],
+      "correct_index": 0,
+      "explanation": "The returned value is discarded, and reassigning p inside score never changes bonus.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-d1",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "diagnostic",
+      "prompt": "Python shows NameError: name 'totl' is not defined, pointing to line 4. What does this mean?",
+      "options": [
+        {
+          "text": "Python's installation is damaged and needs reinstalling.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        },
+        {
+          "text": "The error is on the last line of the file, so edit it there.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        },
+        {
+          "text": "Random edits to any line should clear the NameError.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        },
+        {
+          "text": "Line 4 uses a name 'totl' that Python cannot find in your code.",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "The message names the problem (an undefined name 'totl') and the line where it is used, so the fix is in your code at that spot.",
+      "difficulty": 0.15,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-d2",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "diagnostic",
+      "prompt": "A traceback lists File app.py line 10 in main, then File utils.py line 3 in parse, then ValueError. Where should you look first?",
+      "options": [
+        {
+          "text": "Edit app.py line 10 right away, since it is listed.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        },
+        {
+          "text": "Line 3 of utils.py, where the error was raised.",
+          "misconception_tag": null
+        },
+        {
+          "text": "Reinstall Python, since the traceback shows a crash.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        },
+        {
+          "text": "The ValueError line at the bottom, since it is last.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The traceback lists the path of calls, and the deepest frame, utils.py line 3, is where the exception was actually raised.",
+      "difficulty": 0.25,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-d3",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "diagnostic",
+      "prompt": "Python prints a SyntaxError pointing at one line. What is the best first step?",
+      "options": [
+        {
+          "text": "Change lines at random until the error disappears.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        },
+        {
+          "text": "Assume Python has a bug and try a different version.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        },
+        {
+          "text": "Jump to the final line of the file and rewrite it.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        },
+        {
+          "text": "Read the line shown and check it for a typo or missing symbol.",
+          "misconception_tag": null
+        }
+      ],
+      "correct_index": 3,
+      "explanation": "A SyntaxError marks the place where Python could not parse your code, so checking that line for a mistake is the efficient first step.",
+      "difficulty": 0.3,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-p1",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "practice",
+      "prompt": "Traceback: File report.py line 9 in module calls average(scores); File report.py line 4 in average runs return total / count; then ZeroDivisionError. The list passed is empty. Which line should you inspect to fix the root cause?",
+      "options": [
+        {
+          "text": "Python's division code, since the interpreter is faulty.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        },
+        {
+          "text": "Line 4, where count is zero for an empty list.",
+          "misconception_tag": null
+        },
+        {
+          "text": "Random lines in report.py until the division stops failing.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        },
+        {
+          "text": "The ZeroDivisionError line, since it is the last shown.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The division on line 4 is where the exception is raised, and the empty list makes count zero there, so the root cause is visible at that line.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-p2",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "practice",
+      "prompt": "A program prints KeyError: 'apples' at line 12, where stock['apples'] is used. What is the most likely cause?",
+      "options": [
+        {
+          "text": "Python's dictionary feature is broken on this computer.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        },
+        {
+          "text": "The last line of the file has the wrong dictionary name.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        },
+        {
+          "text": "The dictionary stock has no key 'apples' when line 12 runs.",
+          "misconception_tag": null
+        },
+        {
+          "text": "Changing the print on line 12 at random should add apples.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        }
+      ],
+      "correct_index": 2,
+      "explanation": "KeyError names the missing key and line 12 is where the lookup fails, so the dictionary contents at that moment are the thing to check.",
+      "difficulty": 0.6,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-t1",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "transfer",
+      "prompt": "In game.py, line 15 calls pick(), and the traceback shows IndexError: list index out of range raised at line 7 inside pick. Where is the fix most likely?",
+      "options": [
+        {
+          "text": "Line 15, the last line shown, since it is the final call.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        },
+        {
+          "text": "Line 7 inside pick, where the bad index is used.",
+          "misconception_tag": null
+        },
+        {
+          "text": "The Python installation, which needs repair.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        },
+        {
+          "text": "Random lines in game.py until the IndexError goes away.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "The exception is raised at line 7 where the index is applied, so the fix belongs there or in the value that the caller passes in.",
+      "difficulty": 0.5,
+      "variant_of": null
+    },
+    {
+      "id": "e221eb0a-error_messages-t2",
+      "course_id": "e221eb0a",
+      "concept_id": "error_messages",
+      "kind": "transfer",
+      "prompt": "A file gives SyntaxError: '(' was never closed, pointing at line 3, while line 8 looks fine. What does this suggest?",
+      "options": [
+        {
+          "text": "Edit any random line until the bracket message disappears.",
+          "misconception_tag": "error_messages__fix_random_lines"
+        },
+        {
+          "text": "The unclosed bracket starts on line 3, so the error is there.",
+          "misconception_tag": null
+        },
+        {
+          "text": "Line 8 is the real problem, since it is the last code line.",
+          "misconception_tag": "error_messages__read_bottom_only"
+        },
+        {
+          "text": "Python is broken, so line 8 is correct as written.",
+          "misconception_tag": "error_messages__error_means_broken_python"
+        }
+      ],
+      "correct_index": 1,
+      "explanation": "Python reports where the unclosed bracket began, so the missing closing symbol is near line 3 even though the parser fails later.",
+      "difficulty": 0.6,
+      "variant_of": null
+    }
+  ]
+}
