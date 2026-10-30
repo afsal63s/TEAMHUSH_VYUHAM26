@@ -1,0 +1,82 @@
+.level-select {
+  position: relative;
+}
+.level-select__button {
+  min-height: 44px;
+  padding: 0 14px;
+}
+.level-select__button[aria-expanded='true'] {
+  border-color: var(--primary);
+  background: #f1f7fd;
+}
+
+.level-select__menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 10;
+  width: 300px;
+  max-width: calc(100vw - 32px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  box-sizing: border-box;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.12);
+}
+.level-select__option {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text);
+  font: 14px var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.level-select__option:hover {
+  background: var(--row-hover);
+}
+.level-select__option--on,
+.level-select__option--on:hover {
+  background: var(--primary-soft);
+}
+.level-select__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.level-select__name {
+  font-weight: 600;
+}
+.level-select__option--on .level-select__name {
+  color: var(--primary-strong);
+}
+.level-select__desc {
+  font-size: 12px;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* Level bars, shared with the New chat level buttons. */
+.lvl__bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+  flex: 0 0 auto;
+}
+.lvl__bar {
+  width: 5px;
+  border-radius: 1.5px;
+  background: #d3dce8;
+}
+.lvl__bar--on {
+  background: var(--primary);
+}

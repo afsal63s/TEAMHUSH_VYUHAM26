@@ -1,0 +1,220 @@
+.review {
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.review__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+}
+.review__title {
+  margin: 0;
+  color: var(--muted);
+}
+.review__filters {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: #eef2f6;
+}
+.review__filter {
+  min-height: 36px;
+  padding: 0 12px;
+  border: none;
+  border-radius: 9px;
+  background: transparent;
+  color: var(--text-icon);
+  font: 500 13px var(--font);
+  cursor: pointer;
+}
+.review__filter--on {
+  background: var(--surface);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+.review__empty {
+  margin: 0;
+  padding: 12px 0;
+  font-size: 14px;
+  color: var(--muted);
+}
+.review__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* One reviewed question */
+.rq {
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: 12px;
+}
+.rq--right {
+  border-left-color: #16a34a;
+}
+.rq--wrong {
+  border-left-color: #dc2626;
+}
+.rq--skipped {
+  border-left-color: var(--track);
+}
+.rq__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+}
+.rq__n {
+  font-size: 13px;
+  font-weight: 700;
+}
+.rq__topic {
+  font-size: 13px;
+  color: var(--muted);
+}
+.rq__spacer {
+  flex: 1;
+}
+.rq__conf {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-icon);
+}
+.rq__verdict {
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.rq__verdict--right {
+  background: #dcfce7;
+  color: #15803d;
+}
+.rq__verdict--wrong {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+.rq__verdict--skipped {
+  background: #eef2f6;
+  color: var(--text-icon);
+}
+.rq__text {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.rq__options {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.rq__opt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--text-3);
+}
+.rq__letter {
+  flex: 0 0 24px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: var(--text-icon);
+  font-size: 12px;
+  font-weight: 700;
+}
+.rq__opt-text {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.rq__tag {
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Picked and right, or the correct answer they missed: green. */
+.rq__opt--right,
+.rq__opt--answer {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: var(--text);
+}
+.rq__opt--right .rq__letter,
+.rq__opt--answer .rq__letter {
+  background: #16a34a;
+  color: #fff;
+}
+.rq__opt--right .rq__tag,
+.rq__tag--answer {
+  color: #15803d;
+}
+/* Picked and wrong: red. */
+.rq__opt--wrong {
+  border-color: #fca5a5;
+  background: #fef2f2;
+  color: var(--text);
+}
+.rq__opt--wrong .rq__letter {
+  background: #dc2626;
+  color: #fff;
+}
+.rq__opt--wrong .rq__tag {
+  color: #b91c1c;
+}
+
+.rq__callout {
+  padding: 8px 12px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.45;
+}
+.rq__callout--warn {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+.rq__callout--good {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+
+@media (max-width: 560px) {
+  .review {
+    padding: 18px 16px;
+  }
+  .rq {
+    padding: 14px;
+  }
+}

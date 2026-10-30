@@ -1,0 +1,147 @@
+.shell {
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+.shell__frame {
+  max-width: 1440px;
+  margin: 0 auto;
+  display: flex;
+  align-items: stretch;
+  min-height: 100vh;
+  background: var(--surface);
+  border-inline: 1px solid var(--border);
+}
+
+.sidenav {
+  flex: 0 0 280px;
+  box-sizing: border-box;
+  padding: 14px 20px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  border-right: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidenav__logo {
+  display: block;
+  padding: 0 8px;
+}
+.sidenav__logo img {
+  width: 170px;
+  height: auto;
+  display: block;
+}
+
+.sidenav__nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+  min-height: 24px;
+  border-radius: 12px;
+  color: var(--text-2);
+  font-size: 16px;
+  font-weight: 500;
+}
+.nav:hover {
+  background: var(--surface-hover);
+  color: var(--text);
+}
+.nav--active,
+.nav--active:hover {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-weight: 600;
+}
+
+.sidenav__new {
+  width: 100%;
+  min-height: 52px;
+  font-size: 15px;
+  letter-spacing: 0.03em;
+}
+
+.sidenav__chats {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidenav__chats-label {
+  padding: 0 8px 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+.sidenav__chat {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 8px;
+}
+.sidenav__chat--active,
+.sidenav__chat--active:hover {
+  background: var(--primary-soft);
+}
+.sidenav__chat-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-2);
+}
+.sidenav__chat-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.sidenav__footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.sidenav__profile {
+  padding: 10px 16px;
+}
+.sidenav__profile-text {
+  flex: 1;
+  min-width: 0;
+}
+.sidenav__profile-name {
+  font-size: 14px;
+  font-weight: 600;
+}
+.sidenav__profile-sub {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Narrow screens: the nav becomes a top section instead of a column. */
+@media (max-width: 760px) {
+  .shell__frame {
+    flex-direction: column;
+  }
+  .sidenav {
+    flex: none;
+    position: static;
+    height: auto;
+    gap: 20px;
+    padding: 20px 16px;
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidenav__chats,
+  .sidenav__footer {
+    display: none;
+  }
+}

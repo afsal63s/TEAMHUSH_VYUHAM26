@@ -1,0 +1,242 @@
+.build {
+  flex: 1 1 640px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+}
+
+.build__header {
+  min-height: 62px;
+  box-sizing: border-box;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.build__heading {
+  flex: 1;
+  min-width: 0;
+}
+.build__heading h1 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.build__heading div {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.build__body {
+  flex: 1;
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+  box-sizing: border-box;
+  padding: 48px 24px 64px;
+}
+
+.build__card {
+  padding: 36px 32px 32px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 14px;
+}
+.build__card h2 {
+  font-size: 22px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+.build__message {
+  margin: 0;
+  max-width: 460px;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--text-icon);
+}
+
+/* Building: the mark inside a spinning ring. */
+.build__anim {
+  position: relative;
+  width: 88px;
+  height: 88px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+.build__anim img {
+  width: 48px;
+  height: auto;
+  mix-blend-mode: multiply;
+  animation: build-pulse 1.6s ease-in-out infinite;
+}
+.build__ring {
+  position: absolute;
+  inset: 0;
+  border: 4px solid var(--primary-soft);
+  border-top-color: var(--primary);
+  border-radius: 999px;
+  animation: build-spin 1s linear infinite;
+}
+@keyframes build-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes build-pulse {
+  50% {
+    transform: scale(0.9);
+    opacity: 0.75;
+  }
+}
+
+.build__steps {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-self: stretch;
+  max-width: 320px;
+  margin-inline: auto;
+  text-align: left;
+}
+.build__step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: var(--icon-muted);
+}
+.build__step-dot {
+  flex: 0 0 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--track);
+}
+.build__step--now {
+  color: var(--text);
+  font-weight: 600;
+}
+.build__step--now .build__step-dot {
+  background: var(--primary);
+  box-shadow: 0 0 0 4px var(--primary-soft);
+}
+.build__step--done {
+  color: var(--text-icon);
+}
+.build__step--done .build__step-dot {
+  background: var(--ok-fg);
+}
+.build__hint {
+  margin: 8px 0 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+/* Ready: concept list then the start button. */
+.build__ready-icon,
+.build__fail-icon {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+}
+.build__ready-icon {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+.build__concepts {
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 0;
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.build__concept {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 500;
+  animation: build-in 0.3s ease both;
+}
+@keyframes build-in {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+}
+.build__concept-n {
+  flex: 0 0 28px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+  font-size: 13px;
+  font-weight: 700;
+}
+.build__cta {
+  align-self: stretch;
+  min-height: 52px;
+  margin-top: 8px;
+  font-size: 16px;
+}
+
+/* Failed */
+.build__card--failed {
+  border-color: var(--warn-border);
+}
+.build__fail-icon {
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+.build__actions {
+  margin-top: 6px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .build__ring,
+  .build__anim img,
+  .build__concept {
+    animation: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .build__header {
+    padding-inline: 16px;
+  }
+  .build__body {
+    padding: 24px 16px 48px;
+  }
+  .build__card {
+    padding: 28px 18px 22px;
+  }
+}

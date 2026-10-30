@@ -1,0 +1,342 @@
+.tutor {
+  flex: 1 1 560px;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--page-bg);
+  border-right: 1px solid var(--border);
+}
+
+.tutor__header {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  min-height: 62px;
+  box-sizing: border-box;
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+}
+.tutor__heading {
+  flex: 1;
+  min-width: 0;
+}
+.tutor__heading h1 {
+  font-size: 18px;
+  font-weight: 700;
+}
+.tutor__heading div {
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tutor__body {
+  flex: 1;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Review-due banner: the spaced review is ready to take. */
+.tutor__due {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid var(--warn-border);
+  border-radius: 14px;
+  background: #fffaf0;
+}
+.tutor__due-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+}
+.tutor__due-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.tutor__due-kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--warn-fg);
+}
+.tutor__due-text h2 {
+  margin-top: 2px;
+  font-size: 18px;
+  font-weight: 700;
+}
+.tutor__due-text div:last-child {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.tutor__curated {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid #cfe2f5;
+  border-radius: 14px;
+  background: #f5f9fe;
+}
+.tutor__curated--quiet {
+  border-color: var(--border);
+  background: var(--surface);
+}
+.tutor__curated-icon {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--primary);
+  color: #fff;
+}
+.tutor__curated-text {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.tutor__kicker {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--primary-strong);
+}
+.tutor__curated-text h2 {
+  margin-top: 2px;
+  font-size: 19px;
+  font-weight: 700;
+}
+.tutor__curated-text div:last-child {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.material {
+  padding: 16px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+}
+.material__n {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.material__n--done {
+  background: var(--primary);
+  color: #fff;
+}
+.material__n--now {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+.material__n--next {
+  background: #eef2f6;
+  color: var(--text-icon);
+}
+.material__icon {
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+.material__text {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+.material__title {
+  font-size: 16px;
+  font-weight: 600;
+}
+.material__meta {
+  margin-top: 3px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.status {
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status--sm {
+  padding: 4px 10px;
+}
+.status--done {
+  background: var(--ok-bg);
+  color: var(--ok-fg);
+}
+.status--now {
+  background: var(--primary-soft);
+  color: var(--primary-strong);
+}
+.status--next {
+  background: #eef2f6;
+  color: var(--text-icon);
+}
+
+/* Right panel */
+.tutor__mastery {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.tutor__mastery-head {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.tutor__mastery-pct {
+  font-size: 20px;
+  font-weight: 700;
+}
+.tutor__mastery-level {
+  font-size: 16px;
+  font-weight: 700;
+}
+.tutor__mastery-delta {
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #157f3d;
+}
+.tutor__mastery-topic {
+  margin-top: 2px;
+  font-size: 12px;
+  color: var(--muted);
+}
+.tutor__divider {
+  height: 1px;
+  background: #eef2f6;
+}
+.tutor__topics {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.tutor__topic-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.tutor__topic-pct {
+  color: var(--text-icon);
+}
+.tutor__topic-track {
+  height: 6px;
+  border-radius: 999px;
+  background: #eef2f6;
+}
+.tutor__topic-fill {
+  height: 6px;
+  border-radius: 999px;
+}
+.tutor__curated-by {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.tutor__next {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-color: #cfe2f5;
+  background: #f5f9fe;
+}
+.tutor__next--due {
+  border-color: var(--warn-border);
+  background: #fffaf0;
+}
+.tutor__next-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.tutor__cal {
+  flex: 0 0 56px;
+  width: 56px;
+  overflow: hidden;
+  border: 1px solid #cfe2f5;
+  border-radius: 12px;
+  background: var(--surface);
+  text-align: center;
+}
+.tutor__cal-month {
+  padding: 3px 0;
+  background: var(--primary);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+.tutor__next--due .tutor__cal-month {
+  background: #d97706;
+}
+.tutor__cal-day {
+  padding: 4px 0 6px;
+  font-size: 22px;
+  font-weight: 700;
+}
+.tutor__next-text {
+  flex: 1;
+  min-width: 0;
+}
+.tutor__next-when {
+  font-size: 15px;
+  font-weight: 700;
+}
+.tutor__next-what {
+  margin-top: 2px;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-icon);
+}
+.tutor__next-btn {
+  width: 100%;
+}
+
+@media (max-width: 1180px) {
+  .tutor {
+    border-right: none;
+  }
+}
+@media (max-width: 560px) {
+  .tutor__header,
+  .tutor__body {
+    padding-inline: 16px;
+  }
+}
