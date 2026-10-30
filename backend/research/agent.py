@@ -115,7 +115,9 @@ async def _run_tool(
     try:
         rows = await asyncio.to_thread(fn, query)
     except Exception as exc:
-        logger.warning("%s failed: %s", name, exc)
+        # Never log str(exc): a googleapiclient HttpError message contains the request URL with the API key.
+        status = getattr(getattr(exc, "resp", None), "status", None) or getattr(exc, "status_code", None)
+        logger.warning("%s failed: %s%s", name, type(exc).__name__, f" (HTTP {status})" if status else "")
         return f"error: {type(exc).__name__}"
     added = cands.add(kind, rows)
     return "\n".join(f"[{cid}] {r['title']} - {r['snippet'][:160]}" for cid, r in added) or "no new results"

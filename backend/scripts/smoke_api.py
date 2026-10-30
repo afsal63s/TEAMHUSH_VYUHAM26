@@ -14,6 +14,7 @@ The X-Master-Password header comes from MASTER_PASSWORD in the environment or .e
 import argparse
 import json
 import sys
+import time
 import uuid
 from pathlib import Path
 
@@ -148,6 +149,21 @@ def main() -> None:
         print("gaps:", state["gaps"], "| due:", state["due"])
         check(state["gaps"] == [x for x in state["roadmap"] if x not in right], "gaps = unplaced concepts, roadmap order")
         check(set(state["due"]) == right, "placed concepts have a verification review scheduled")
+
+        # Research runs in the background for the gap concepts only; poll it for up to 60 s.
+        t0, research = time.monotonic(), {}
+        while time.monotonic() - t0 < 60:
+            research = call(c, "GET", f"{run.base}/resources")
+            if research and all(v["status"] != "pending" for v in research.values()):
+                break
+            time.sleep(3)
+        print(f"research after {time.monotonic() - t0:.0f} s: "
+              + ", ".join(f"{k}={v['status']}" for k, v in research.items()))
+        for k, v in research.items():
+            for r in v["resources"]:
+                print(f"    {k}: [{r['kind']}] {r['title'][:70]} <{r['url']}>")
+        check(set(research) == set(state["gaps"]), "research started for exactly the gap concepts")
+        check(not set(research) & right, "placed concepts are not researched")
 
         nxt = run.next()
         check([q["id"] for q in nxt["questions"]] == [q["id"] for q in step["questions"]]

@@ -62,9 +62,28 @@
     "lesson": {
       "concept_id": "role_prompting",
       "style": "worked_example",
-      "explanation": "Role prompting means telling the model who it should act as before you ask your question, such as a nurse, a copy editor, or a chess coach. The role shapes the tone, the expertise it draws on, and what it chooses to focus on. Let's walk through one small example. Suppose you want advice about a sore back after lifting boxes. Step one: write the plain question, 'My back hurts after moving boxes. What should I do?' Step two: add a role, so the prompt becomes, 'You are a calm physical therapist. My back hurts after moving boxes. What should I do?' Step three: compare the two answers. The plain version may give a generic list. The role version usually sounds more measured, emphasizes rest and gentle movement, and flags when to see a doctor. Your turn: pick a task you care about, like summarizing meeting notes, and write one role-based prompt for it. Then ask yourself whether the role changed the focus, the tone, or both. Keep the role specific, because 'expert' tells the model less than 'an editor who cuts jargon for beginners'.",
+      "explanation": "Role prompting means assigning the model a role, persona, or area of expertise before giving it a task. Let's walk through one small example. Step one: choose a role that fits your goal, such as an experienced HR manager. Step two: put the role at the start of your prompt, like this: You are an experienced HR manager. Step three: add the task right after it: Review the following job description and suggest improvements. Step four: paste the job description below the task. The role does not change the model's knowledge or training. What it changes is how the model interprets your request, so its suggestions will likely focus on hiring concerns, such as clarity and appeal to candidates, rather than general writing edits. Your turn: write a role line for a task you care about, then compare the response with and without it.",
       "targets": [],
-      "resources": []
+      "resources": [
+        {
+          "kind": "article",
+          "title": "Assigning Roles to Chatbots",
+          "url": "https://learnprompting.org/docs/basics/roles",
+          "snippet": "Role prompting is a technique that involves assigning a role or persona to an AI model, such as \"food critic\" or \"mathematician,\" to control the style or accuracy of its responses.\n\nBy instructing the model to take on a specific role, you can shape how it processes and delivers information. This technique is widely used across many applications, from creative writing to problem-solving.\n\n## Applic"
+        },
+        {
+          "kind": "article",
+          "title": "Does Role Prompting Work? What the Research Says",
+          "url": "https://www.jdhwilkins.com/role-prompting-giving-ai-a-persona",
+          "snippet": "Role prompting means giving an AI model a character, job title, or area of expertise before asking it to complete a task. A basic example:\n\n```\nYou are an experienced HR manager. Review the following job description and suggest improvements. \n```\n\nThe model has not changed. Its training data and knowledge base are no different. But the assigned persona shapes how it interprets the request and how "
+        },
+        {
+          "kind": "video",
+          "title": "Role Prompting Explained | Make ChatGPT Think Like an Expert (\u0627\u0631\u062f\u0648 + \u0939\u093f\u0902\u0926\u0940)",
+          "url": "https://www.youtube.com/watch?v=xe11nwZznXo",
+          "snippet": "Role prompting is the simplest way to make ChatGPT give expert-level answers. In this video, I explain role prompting from zero to ..."
+        }
+      ]
     },
     "questions": [
       {

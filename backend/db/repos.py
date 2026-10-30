@@ -2,13 +2,14 @@
 
 import hashlib
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 
 from pymongo import ASCENDING, DESCENDING, ReplaceOne
+from pymongo.errors import DuplicateKeyError
 
 from db.connection import get_db
 from generation import prompt_hash
-from schemas.content import Course, Lesson, Level, Question
+from schemas.content import Course, Lesson, Level, Question, Resource
 from schemas.learner import AnswerGraded, LearnerState
 
 
@@ -108,9 +109,11 @@ async def seen_question_ids(learner_id: str, course_id: str) -> set[str]:
 # --- lesson cache ---
 
 def lesson_key(course_id: str, concept_id: str, target_tags: list[str], avoid_styles: list[str],
-               level: Level) -> str:
+               level: Level, grounded: bool = False) -> str:
     # course_id is part of the key so two courses with a same-named concept never share a lesson.
-    raw = json.dumps([course_id, concept_id, sorted(target_tags), sorted(avoid_styles), level])
+    # A lesson written with research sources is cached apart from one written without them.
+    parts = [course_id, concept_id, sorted(target_tags), sorted(avoid_styles), level] + (["grounded"] if grounded else [])
+    raw = json.dumps(parts)
     return hashlib.sha1(raw.encode()).hexdigest()
 
 
@@ -121,3 +124,48 @@ async def get_lesson(key: str) -> Lesson | None:
 
 async def save_lesson(key: str, lesson: Lesson) -> None:
     await get_db().lessons.replace_one({"_id": key}, {**lesson.model_dump(), "_id": key}, upsert=True)
+
+
+# --- research resources, one document per (course, concept) ---
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc).replace(tzinfo=None)   # naive UTC, like every stored datetime
+
+
+def _resources_id(course_id: str, concept_id: str) -> str:
+    return f"{course_id}:{concept_id}"
+
+
+async def get_resources_doc(course_id: str, concept_id: str) -> dict | None:
+    """{course_id, concept_id, status, resources: [Resource], updated_at}, or None if never researched."""
+    doc = await get_db().resources.find_one({"_id": _resources_id(course_id, concept_id)})
+    if doc is None:
+        return None
+    doc["resources"] = [Resource.model_validate(r) for r in doc.get("resources", [])]
+    return doc
+
+
+async def save_resources(course_id: str, concept_id: str, status: str, resources: list[Resource]) -> None:
+    rid = _resources_id(course_id, concept_id)
+    await get_db().resources.replace_one({"_id": rid}, {
+        "_id": rid, "course_id": course_id, "concept_id": concept_id, "status": status,
+        "resources": [r.model_dump() for r in resources], "updated_at": _utcnow(),
+    }, upsert=True)
+
+
+async def fail_pending_resources() -> int:
+    """Mark research still 'pending' as 'failed'. Call at startup: a restart killed its task."""
+    result = await get_db().resources.update_many({"status": "pending"},
+                                                  {"$set": {"status": "failed", "updated_at": _utcnow()}})
+    return result.modified_count
+
+
+async def mark_pending(course_id: str, concept_id: str) -> bool:
+    """Create a pending document. False if one already exists (research started before), so it runs once."""
+    rid = _resources_id(course_id, concept_id)
+    try:
+        await get_db().resources.insert_one({"_id": rid, "course_id": course_id, "concept_id": concept_id,
+                                             "status": "pending", "resources": [], "updated_at": _utcnow()})
+    except DuplicateKeyError:
+        return False
+    return True

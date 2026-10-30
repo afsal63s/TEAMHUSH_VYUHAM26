@@ -2,7 +2,7 @@
 @baseUrl = http://127.0.0.1:8000
 @password = <your-master-password>
 @courseId = b0dafa63
-@learnerId = docs-223148
+@learnerId = docs-231157
 
 ### GET /health
 GET {{baseUrl}}/health
@@ -90,6 +90,10 @@ X-Master-Password: {{password}}
 
 ### GET /courses/{cid}/learners/{lid}/state
 GET {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/state
+X-Master-Password: {{password}}
+
+### GET /courses/{cid}/learners/{lid}/resources
+GET {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/resources
 X-Master-Password: {{password}}
 
 ### POST /courses/{cid}/learners/{lid}/attempts
@@ -362,7 +366,7 @@ Content-Type: application/json
 {
   "prompt": "SQL joins",
   "level": "novice",
-  "deadline": "2026-11-02T05:01:55.006365"
+  "deadline": "2026-11-02T05:42:08.314084"
 }
 
 ### POST /courses/{cid}/learners/{lid}/attempts
@@ -411,6 +415,66 @@ Content-Type: application/json
     {
       "question_id": "d3f0e36a-join_multiple_tables-d1",
       "chosen_index": 0
+    }
+  ]
+}
+
+### POST /courses/{cid}/learners/{lid}/attempts
+POST {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/attempts
+X-Master-Password: {{password}}
+Content-Type: application/json
+
+{
+  "answers": [
+    {
+      "question_id": "f707cec4-language_model_basics-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-prompt_structure-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-sampling_temperature-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-context_window-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-clear_instructions-d1",
+      "chosen_index": 1,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-role_prompting-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-few_shot_examples-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-output_formatting-d1",
+      "chosen_index": 0,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-iterative_refinement-d1",
+      "chosen_index": 1,
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-hallucination_checking-d1",
+      "chosen_index": 0,
+      "confidence": "low"
     }
   ]
 }

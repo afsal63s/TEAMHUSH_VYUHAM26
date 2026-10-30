@@ -23,9 +23,13 @@
   },
   "lesson_llm": {
     "ms": [
-      4968.0,
-      10063.0
+      3235.000000015134
     ],
-    "when": "2026-10-30 22:28, the slowest attempts and GET /next calls of the first run"
+    "when": "2026-10-30 23:08"
+  },
+  "resources_pending": {
+    "path": "/courses/b0dafa63/learners/docs-231157-new/resources",
+    "ms": 16.00000000325963,
+    "when": "2026-10-30 23:12"
   }
 }

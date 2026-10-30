@@ -24,6 +24,8 @@ async def lifespan(app: FastAPI):
     await repos.ensure_indexes()
     if stale := await repos.fail_generating_courses():
         logger.warning("marked %d course(s) stuck in 'generating' as failed", stale)
+    if stale := await repos.fail_pending_resources():
+        logger.warning("marked %d research job(s) stuck in 'pending' as failed", stale)
     yield
     await close_client()
 

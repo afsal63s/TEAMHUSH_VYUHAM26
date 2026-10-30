@@ -1,0 +1,80 @@
+{
+  "language_model_basics": {
+    "status": "pending",
+    "resources": []
+  },
+  "prompt_structure": {
+    "status": "pending",
+    "resources": []
+  },
+  "sampling_temperature": {
+    "status": "pending",
+    "resources": []
+  },
+  "context_window": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It also determines the maximum size of documents or code samples that it can process at once. When a prompt, conversation, document or code base exceeds an artificial intelligence model\u2019s context window"
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
+  },
+  "clear_instructions": {
+    "status": "pending",
+    "resources": []
+  },
+  "role_prompting": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Assigning Roles to Chatbots",
+        "url": "https://learnprompting.org/docs/basics/roles",
+        "snippet": "Role prompting is a technique that involves assigning a role or persona to an AI model, such as \"food critic\" or \"mathematician,\" to control the style or accuracy of its responses.\n\nBy instructing the model to take on a specific role, you can shape how it processes and delivers information. This technique is widely used across many applications, from creative writing to problem-solving.\n\n## Applic"
+      },
+      {
+        "kind": "article",
+        "title": "Does Role Prompting Work? What the Research Says",
+        "url": "https://www.jdhwilkins.com/role-prompting-giving-ai-a-persona",
+        "snippet": "Role prompting means giving an AI model a character, job title, or area of expertise before asking it to complete a task. A basic example:\n\n```\nYou are an experienced HR manager. Review the following job description and suggest improvements. \n```\n\nThe model has not changed. Its training data and knowledge base are no different. But the assigned persona shapes how it interprets the request and how "
+      },
+      {
+        "kind": "video",
+        "title": "Role Prompting Explained | Make ChatGPT Think Like an Expert (\u0627\u0631\u062f\u0648 + \u0939\u093f\u0902\u0926\u0940)",
+        "url": "https://www.youtube.com/watch?v=xe11nwZznXo",
+        "snippet": "Role prompting is the simplest way to make ChatGPT give expert-level answers. In this video, I explain role prompting from zero to ..."
+      }
+    ]
+  },
+  "few_shot_examples": {
+    "status": "pending",
+    "resources": []
+  },
+  "output_formatting": {
+    "status": "pending",
+    "resources": []
+  },
+  "iterative_refinement": {
+    "status": "pending",
+    "resources": []
+  },
+  "hallucination_checking": {
+    "status": "pending",
+    "resources": []
+  }
+}

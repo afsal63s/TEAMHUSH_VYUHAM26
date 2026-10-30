@@ -1,8 +1,9 @@
 from datetime import datetime
+from typing import Literal
 
 from pydantic import BaseModel
 
-from schemas.content import Level, Lesson
+from schemas.content import Level, Lesson, Resource
 from schemas.learner import AnswerGraded, AnswerIn, ConceptState, MisconceptionState, Step
 
 
@@ -73,3 +74,8 @@ class AdvanceOut(BaseModel):
     due_now: list[str]               # concepts due for review
     next_kind: str | None = None     # the decision stored for GET .../next
     next_concept_id: str | None = None
+
+
+class ConceptResearch(BaseModel):    # GET .../resources: one entry per gap concept being researched
+    status: Literal['pending', 'ready', 'failed'] = 'pending'
+    resources: list[Resource] = []

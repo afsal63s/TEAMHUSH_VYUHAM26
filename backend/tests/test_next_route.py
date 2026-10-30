@@ -4,6 +4,7 @@ db.repos is replaced by an in-memory store and generate_lesson by a stub: no Mon
 Documents round-trip through model_dump/model_validate, as they would through Mongo.
 """
 
+import asyncio
 import json
 from pathlib import Path
 
@@ -12,9 +13,11 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from api import learners
+from api import resources as api_resources
+from api.auth import require_master
 from db import repos
 from generation import CourseBundle
-from schemas.content import Course, Lesson
+from schemas.content import Course, Lesson, Resource
 from schemas.learner import LearnerState
 
 FIXTURE = sorted((Path(__file__).resolve().parent.parent / "fixtures").glob("*.json"))[0]
@@ -32,6 +35,11 @@ class Store:
         self.attempts: list[dict] = []
         self.lessons: dict[str, dict] = {}
         self.lesson_calls = 0
+        self.lesson_sources: list[list] = []
+        self.research: dict[str, dict] = {}
+        self.researched: list[tuple[str, list[str]]] = []
+        self.research_result = lambda concept: [Resource(kind="article", title=f"About {concept.id}",
+                                                         url=f"https://example.com/{concept.id}")]
 
     def state(self) -> LearnerState:
         return LearnerState.model_validate(self.states[LID])
@@ -73,8 +81,29 @@ def env(monkeypatch):
 
     async def fake_generate_lesson(graph, concept_id, *, style, target_tags, mastery, level, sources):
         st.lesson_calls += 1
+        st.lesson_sources.append(list(sources or []))
         return Lesson(concept_id=concept_id, style=style, explanation=f"lesson {st.lesson_calls}", targets=target_tags)
 
+    async def get_resources_doc(course_id, concept_id):
+        return st.research.get(concept_id)
+
+    async def save_resources(course_id, concept_id, status, resources):
+        st.research[concept_id] = {"status": status, "resources": list(resources)}
+
+    async def mark_pending(course_id, concept_id):
+        if concept_id in st.research:
+            return False
+        st.research[concept_id] = {"status": "pending", "resources": []}
+        return True
+
+    async def fake_research(topic, concept, level, targets):
+        st.researched.append((concept.id, list(targets)))
+        return st.research_result(concept)
+
+    monkeypatch.setattr(api_resources, "research_concept", fake_research)
+    for name, fn in [("get_resources_doc", get_resources_doc), ("save_resources", save_resources),
+                     ("mark_pending", mark_pending)]:
+        monkeypatch.setattr(repos, name, fn)
     for name, fn in [("get_course", get_course), ("get_questions", get_questions),
                      ("get_questions_by_ids", get_questions_by_ids), ("get_state", get_state),
                      ("save_state", save_state), ("record_attempts", record_attempts),
@@ -84,6 +113,7 @@ def env(monkeypatch):
     monkeypatch.setattr(learners, "generate_lesson", fake_generate_lesson)
     app = FastAPI()
     app.include_router(learners.router)
+    app.dependency_overrides[require_master] = lambda: None   # auth has its own tests; .env may set a password
     return TestClient(app), st
 
 
@@ -129,7 +159,8 @@ def test_next_is_idempotent(env):
     second = client.get(f"{BASE}/next").json()
     assert first == second
     assert [q["id"] for q in first["questions"]] == [q["id"] for q in res["next"]["questions"]]
-    assert first["lesson"] == res["next"]["lesson"]
+    strip = lambda lesson: {k: v for k, v in lesson.items() if k != "resources"}   # noqa: E731
+    assert strip(first["lesson"]) == strip(res["next"]["lesson"])   # resources may arrive once research is ready
     assert st.lesson_calls == calls                       # rebuilt from the cache, no new lesson
     assert json.dumps(st.states, sort_keys=True, default=str) == snapshot   # no state change
 
@@ -193,3 +224,81 @@ def test_fallback_counted_once_across_next_calls(env):
     assert outs[0] == outs[1] == outs[2]
     assert outs[0]["step"]["kind"] == "fallback" and outs[0]["step"]["target_concept"] == target.id
     assert st.state().concepts[target.id].fallbacks == 1
+
+
+# --- research wiring (fake research_concept: no network) ---
+
+def test_research_starts_for_gap_concepts_only(env):
+    client, st = env
+    diag = client.post(f"{BASE}/start").json()["questions"]
+    right = {q["concept_id"] for q in diag[:4]}
+    wrong_high = diag[4]["concept_id"]
+    answers = [answer(q["id"], q["concept_id"] in right, "high") for q in diag]
+    client.post(f"{BASE}/attempts", json={"answers": answers})
+    gaps = [q["concept_id"] for q in diag if q["concept_id"] not in right]
+    assert set(st.research) == set(gaps)                  # placed (mastered) concepts are never researched
+    assert not set(st.research) & right
+    state = client.get(f"{BASE}/state").json()
+    assert set(st.research) == set(state["gaps"])
+    out = client.get(f"{BASE}/resources").json()
+    assert set(out) == set(gaps)
+    assert all(v["status"] in ("pending", "ready", "failed") for v in out.values())
+    assert wrong_high in out
+
+
+@pytest.mark.asyncio
+async def test_get_resources_is_empty_while_pending_then_ready(env):
+    _, st = env
+    concept = BUNDLE.graph.concepts[0]
+    await repos.mark_pending(CID, concept.id)
+    assert await api_resources.get_resources(CID, concept.id) == []
+    await api_resources._research(CID, "t", "beginner", concept, ["a misconception"])
+    assert st.research[concept.id]["status"] == "ready"
+    got = await api_resources.get_resources(CID, concept.id)
+    assert [r.url for r in got] == [f"https://example.com/{concept.id}"]
+    assert st.researched == [(concept.id, ["a misconception"])]
+
+
+@pytest.mark.asyncio
+async def test_failed_research_is_marked_failed_and_does_not_raise(env, monkeypatch):
+    _, st = env
+    concept = BUNDLE.graph.concepts[1]
+
+    async def boom(*args, **kwargs):
+        raise RuntimeError("search is down")
+
+    monkeypatch.setattr(api_resources, "research_concept", boom)
+    await api_resources.start_research(CID, [concept.id])
+    await asyncio.gather(*api_resources._tasks)
+    assert st.research[concept.id] == {"status": "failed", "resources": []}
+    assert await api_resources.get_resources(CID, concept.id) == []
+    st.research_result = lambda c: []                     # nothing found also counts as failed
+    other = BUNDLE.graph.concepts[2]
+    monkeypatch.setattr(api_resources, "research_concept",
+                        lambda *a, **k: asyncio.sleep(0, result=[]))
+    await api_resources.start_research(CID, [other.id])
+    await asyncio.gather(*api_resources._tasks)
+    assert st.research[other.id]["status"] == "failed"
+
+
+def test_lesson_gets_sources_and_resources_when_research_is_ready(env):
+    client, st = env
+    diag = client.post(f"{BASE}/start").json()["questions"]
+    first = diag[0]["concept_id"]
+    ready = [Resource(kind="video", title="Ready", url="https://example.com/ready")]
+    st.research[first] = {"status": "ready", "resources": ready}     # research finished before the lesson
+    res = client.post(f"{BASE}/attempts", json={"answers": [answer(q["id"], False) for q in diag]}).json()
+    assert res["next"]["step"]["concept_id"] == first
+    assert st.lesson_sources[-1] == ready                 # the lesson was written from the sources
+    assert res["next"]["lesson"]["resources"] == [r.model_dump() for r in ready]
+    assert client.get(f"{BASE}/next").json()["lesson"]["resources"] == res["next"]["lesson"]["resources"]
+
+
+def test_lesson_without_research_is_written_without_sources(env):
+    client, st = env
+    diag = client.post(f"{BASE}/start").json()["questions"]
+    res = client.post(f"{BASE}/attempts", json={"answers": [answer(q["id"], False) for q in diag]}).json()
+    assert st.research[res["next"]["step"]["concept_id"]]["status"] in ("pending", "ready", "failed")
+    if st.research[res["next"]["step"]["concept_id"]]["status"] == "pending":
+        assert st.lesson_sources[-1] == []
+        assert res["next"]["lesson"]["resources"] == []

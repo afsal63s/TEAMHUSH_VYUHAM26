@@ -12,9 +12,28 @@
   "lesson": {
     "concept_id": "context_window",
     "style": "worked_example",
-    "explanation": "Imagine you paste a long document into a chat and ask a question about its last paragraph. The model only sees what fits inside its context window, the fixed amount of text it can receive in one request. Anything beyond that limit is simply not visible to it. Let's walk through a small example. Suppose the window holds 1,000 tokens, and your prompt is 900 tokens of notes plus a 200-token question. Step one: add the sizes, 900 plus 200 gives 1,100. Step two: compare that to the limit, 1,100 is more than 1,000, so 100 tokens do not fit. Step three: decide what to trim. Usually the oldest or least relevant notes get cut, so you would remove roughly 100 tokens of background text. Step four: resend the shortened request, now totaling 1,000 or fewer tokens, so the model sees your question and the key notes together. The lesson is that the model forgets nothing it was never given, and it has no memory beyond the current request. Whenever a task is long, plan what the model must see, and place the most important information where it will fit.",
+    "explanation": "A context window is the amount of text an AI model can see and consider at once, like its working memory. Let's walk through a small example. Suppose the window holds about 40 words, and you have sent a long chat where your first message said, \"My dog is named Biscuit and I need a birthday poem for him.\" Later you write, \"Now make it funnier.\" Step one: the model receives the whole conversation as one request. Step two: it checks whether everything fits inside its window. Step three: if the earlier messages push past the limit, the oldest text may be cut off. Step four: if the naming message was dropped, the model no longer knows the dog's name and may write a poem about a generic pet. The lesson: anything outside the window is effectively invisible to the model. To avoid this, repeat key details in your newest message or keep long conversations focused. Sources note that when a prompt or document exceeds the window, information can be lost, so plan what the model needs to see.",
     "targets": [],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It also determines the maximum size of documents or code samples that it can process at once. When a prompt, conversation, document or code base exceeds an artificial intelligence model\u2019s context window"
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
   },
   "questions": [
     {

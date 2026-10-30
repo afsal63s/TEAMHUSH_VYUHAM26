@@ -5,8 +5,10 @@ Clients are created lazily, so a missing key only matters when research actually
 {"kind", "title", "url", "snippet"} that the agent turns into schemas.content.Resource.
 """
 
+import html
 import logging
 import re
+import threading
 from functools import lru_cache
 
 from config import get_settings
@@ -29,14 +31,20 @@ def _tavily():
     )
 
 
-@lru_cache(maxsize=1)
-def _youtube():
-    from googleapiclient.discovery import build
+_local = threading.local()
 
-    key = get_settings().YOUTUBE_API_KEY.get_secret_value()
-    if not key:
-        raise RuntimeError("YOUTUBE_API_KEY is not set")
-    return build("youtube", "v3", developerKey=key, cache_discovery=False)
+
+def _youtube():
+    """One client per thread: googleapiclient's httplib2 transport is not thread-safe, and research
+    runs searches from several worker threads at once (a shared client crashed the server live)."""
+    if getattr(_local, "youtube", None) is None:
+        from googleapiclient.discovery import build
+
+        key = get_settings().YOUTUBE_API_KEY.get_secret_value()
+        if not key:
+            raise RuntimeError("YOUTUBE_API_KEY is not set")
+        _local.youtube = build("youtube", "v3", developerKey=key, cache_discovery=False)
+    return _local.youtube
 
 
 def search_articles(query: str, max_results: int = 5) -> list[dict]:
@@ -75,9 +83,10 @@ def search_videos(query: str, max_results: int = 5) -> list[dict]:
         out.append(
             {
                 "kind": "video",
-                "title": (snippet.get("title") or "").strip(),
+                # The Data API returns HTML-escaped text ("&amp;", "&#39;").
+                "title": html.unescape(snippet.get("title") or "").strip(),
                 "url": f"https://www.youtube.com/watch?v={video_id}",
-                "snippet": (snippet.get("description") or "").strip()[:SNIPPET_CHARS],
+                "snippet": html.unescape(snippet.get("description") or "").strip()[:SNIPPET_CHARS],
             }
         )
     return out

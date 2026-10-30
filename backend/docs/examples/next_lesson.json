@@ -14,11 +14,30 @@
   "lesson": {
     "concept_id": "context_window",
     "style": "contrast",
-    "explanation": "You may believe the model remembers every conversation you have ever had with it. That belief is wrong. The right idea is that a model only works with the text inside its context window, meaning the text sent in one request. Think of it as a desk with limited space. Whatever is on the desk, the model can read and use. Whatever has been pushed off the desk, or was never placed there, is invisible to it. So when you start a new chat, earlier conversations are not automatically present. The model has no stored memory of your last session unless that text is included again in the new request. Here is where the wrong belief breaks: memory implies everything persists, but the context window is a fixed, limited input for each request. If a long conversation exceeds that limit, the oldest parts can be dropped, and the model will act as if they never happened. To get reliable answers, put the information the model needs directly into your current request.",
+    "explanation": "Here is the key idea: a context window is the fixed amount of text a model can consider in one request, like its working memory. Many learners believe the model remembers every past chat, but that is wrong. It only sees the text inside the current context window, so anything outside it is invisible to the model. Compare the right idea with the wrong belief. Right idea: if an earlier detail is not included in the current request, the model cannot use it. Wrong belief: the model keeps a full record of all past conversations and recalls them automatically. This breaks because the model does not store your chats in a running memory; each request is judged only on the text it receives. When a conversation or document exceeds the window, earlier parts drop out and the model can forget details from the start of the exchange. To fix this, restate important facts in your prompt or keep key material within the limit. Check yourself: if a fact from ten messages ago is missing from your latest request, should you expect the model to know it?",
     "targets": [
       "context_window__model_remembers_everything"
     ],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It also determines the maximum size of documents or code samples that it can process at once. When a prompt, conversation, document or code base exceeds an artificial intelligence model\u2019s context window"
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
   },
   "questions": [
     {

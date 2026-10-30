@@ -72,28 +72,28 @@
     }
   ],
   "correct_indices": {
-    "d3f0e36a-table_aliases-d1": 1,
-    "d3f0e36a-select_columns-d1": 2,
-    "d3f0e36a-foreign_keys-d1": 1,
-    "d3f0e36a-where_filtering-d1": 1,
     "d3f0e36a-primary_keys-d1": 1,
-    "d3f0e36a-left_join-d1": 3,
+    "d3f0e36a-table_aliases-d1": 1,
     "d3f0e36a-join_multiple_tables-d1": 1,
-    "d3f0e36a-tables_rows_columns-d1": 3,
+    "d3f0e36a-select_columns-d1": 2,
+    "d3f0e36a-inner_join-d1": 2,
+    "d3f0e36a-where_filtering-d1": 1,
     "d3f0e36a-null_values-d1": 2,
-    "d3f0e36a-inner_join-d1": 2
+    "d3f0e36a-tables_rows_columns-d1": 3,
+    "d3f0e36a-left_join-d1": 3,
+    "d3f0e36a-foreign_keys-d1": 1
   },
   "explanations": {
-    "d3f0e36a-table_aliases-d1": "The alias e is declared in FROM and exists only for this query; the table itself is unchanged.",
-    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the stored table is not changed.",
-    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, which links the order to one customer row.",
-    "d3f0e36a-where_filtering-d1": "WHERE filters rows, so only rows where the condition is true appear in the result. Columns are chosen by the SELECT list.",
     "d3f0e36a-primary_keys-d1": "A student_id gives each student a unique value that identifies exactly one row. Names and class years can be shared by many students.",
-    "d3f0e36a-left_join-d1": "LEFT JOIN keeps every left-table row, so each customer appears once per match, or once with NULL if they have no orders.",
+    "d3f0e36a-table_aliases-d1": "The alias e is declared in FROM and exists only for this query; the table itself is unchanged.",
     "d3f0e36a-join_multiple_tables-d1": "Each JOIN adds one table through its own matching keys, so two chained joins connect three tables.",
-    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across the table's columns.",
+    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the stored table is not changed.",
+    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, pairing each customer with their own orders.",
+    "d3f0e36a-where_filtering-d1": "WHERE filters rows, so only rows where the condition is true appear in the result. Columns are chosen by the SELECT list.",
     "d3f0e36a-null_values-d1": "NULL marks a value that is absent or unknown. It is not a number or a string with content.",
-    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, pairing each customer with their own orders."
+    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across the table's columns.",
+    "d3f0e36a-left_join-d1": "LEFT JOIN keeps every left-table row, so each customer appears once per match, or once with NULL if they have no orders.",
+    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, which links the order to one customer row."
   },
   "mastery": {
     "tables_rows_columns": 0.1774193548387097,

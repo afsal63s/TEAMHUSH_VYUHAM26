@@ -523,6 +523,75 @@
         }
       }
     },
+    "/courses/{cid}/learners/{lid}/resources": {
+      "get": {
+        "summary": "Resources",
+        "description": "Research status and resources for the learner's gap concepts (only those research was started for).",
+        "operationId": "resources_courses__cid__learners__lid__resources_get",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cid"
+            }
+          },
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          },
+          {
+            "name": "x-master-password",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Master-Password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/ConceptResearch"
+                  },
+                  "title": "Response Resources Courses  Cid  Learners  Lid  Resources Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -785,6 +854,30 @@
           "next"
         ],
         "title": "AttemptResultOut"
+      },
+      "ConceptResearch": {
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "default": "pending"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/components/schemas/Resource"
+            },
+            "type": "array",
+            "title": "Resources",
+            "default": []
+          }
+        },
+        "type": "object",
+        "title": "ConceptResearch"
       },
       "ConceptState": {
         "properties": {

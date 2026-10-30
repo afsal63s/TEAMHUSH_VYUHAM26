@@ -135,6 +135,7 @@ META: dict = json.loads(META_PATH.read_text(encoding="utf-8")) if META_PATH.exis
 CALLS: list[Call] = []
 EXAMPLE_FILES: dict[str, Call] = {}
 QUIRKS: list[str] = []
+RESEARCH_LLM: list[int] = []   # background research LLM calls seen in each request's log window
 UNVERIFIED: list[str] = []
 FACTS: dict = {}
 
@@ -157,7 +158,9 @@ def call(client: httpx.Client, route: str, method: str, path: str, body=None, *,
         data = r.json()
     except ValueError:
         data = r.text
-    llm = sum(1 for ln in SRV.take(method, path) if re.search(r"\w+ call: \d+ in / \d+ out tokens", ln))
+    lines = SRV.take(method, path)
+    llm = sum(1 for ln in lines if re.search(r"strong call: \d+ in / \d+ out tokens", ln))
+    RESEARCH_LLM.append(sum(1 for ln in lines if re.search(r"cheap call: \d+ in / \d+ out tokens", ln)))
     c = Call(route, method, path, body, r.status_code, (t1 - t0) * 1000, data, llm, auth)
     CALLS.append(c)
     print(f"{method:5} {path} -> {r.status_code} ({c.ms:.0f} ms{', LLM x' + str(c.llm) if c.llm else ''})"
@@ -237,6 +240,20 @@ def run(client: httpx.Client) -> None:
     FACTS["next_matches_attempt"] = n1.data["step"] == res["next"]["step"] and \
         [q["id"] for q in n1.data["questions"]] == [q["id"] for q in res["next"]["questions"]]
     call(client, f"GET {lp}/state", "GET", f"{b}/state", example="state_after_diagnostic")
+    r0 = call(client, f"GET {lp}/resources", "GET", f"{b}/resources", example="resources_after_diagnostic")
+    FACTS["research_first"] = {k: v["status"] for k, v in r0.data.items()}
+    t_res = time.monotonic()
+    while time.monotonic() - t_res < 90:
+        rr = call(client, f"GET {lp}/resources", "GET", f"{b}/resources")
+        if rr.data and all(v["status"] != "pending" for v in rr.data.values()):
+            break
+        time.sleep(3)
+    EXAMPLE_FILES["resources_ready"] = rr
+    write(EXAMPLES / "resources_ready.json", json.dumps(rr.data, indent=2))
+    FACTS["research_seconds"] = time.monotonic() - t_res
+    FACTS["research_final"] = {k: v["status"] for k, v in rr.data.items()}
+    gaps_now = call(client, f"GET {lp}/state", "GET", f"{b}/state").data["gaps"]
+    FACTS["research_gaps_match"] = set(rr.data) <= set(gaps_now) and set(r0.data) == set(gaps_now)
     qs = n1.data["questions"]
     practice = answers_for(key, qs, None, per_q=lambda q: (q["id"] != qs[-1]["id"], "medium"))
     call(client, f"POST {lp}/attempts", "POST", f"{b}/attempts", {"answers": practice}, example="attempts_practice")
@@ -304,7 +321,7 @@ def run(client: httpx.Client) -> None:
     # --- other routes ---
     call(client, "GET /eval/results", "GET", "/eval/results", example="eval_results", expect=None)
     FACTS["planned"] = {}
-    for method, path, body in [("GET", f"{b}/resources", None), ("POST", f"{b}/virtual/start", {"persona": "x"}),
+    for method, path, body in [("POST", f"{b}/virtual/start", {"persona": "x"}),
                                ("POST", f"{b}/virtual/pause", None), ("POST", f"{b}/virtual/resume", None),
                                ("POST", f"{b}/virtual/stop", None), ("POST", f"{b}/virtual/speed", {"speed": 1}),
                                ("GET", f"{b}/virtual/status", None), ("GET", f"{b}/virtual/events?after=0", None)]:
@@ -358,6 +375,30 @@ def run(client: httpx.Client) -> None:
     else:
         UNVERIFIED.append(f"Deadline messages: the generated course ended as '{gc['status']}'.")
 
+    # A learner who gets every diagnostic question wrong: research starts for every concept not researched yet,
+    # so the first poll shows `pending` (research results persist per course, so later runs may not see it).
+    b5 = f"/courses/{cid}/learners/{lid}-new"
+    d5 = call(client, f"POST {lp}/start", "POST", f"{b5}/start").data["questions"]
+    call(client, f"POST {lp}/attempts", "POST", f"{b5}/attempts", {"answers": answers_for(key, d5, set(), "low")})
+    rp = call(client, f"GET {lp}/resources", "GET", f"{b5}/resources")
+    if any(v["status"] == "pending" for v in rp.data.values()):
+        EXAMPLE_FILES["resources_pending"] = rp
+        write(EXAMPLES / "resources_pending.json", json.dumps(rp.data, indent=2))
+        META["resources_pending"] = {"path": rp.path, "ms": rp.ms, "when": f"{datetime.now():%Y-%m-%d %H:%M}"}
+    elif META.get("resources_pending") and (EXAMPLES / "resources_pending.json").exists():
+        m = META["resources_pending"]
+        EXAMPLE_FILES["resources_pending"] = Call(f"GET {lp}/resources", "GET", m["path"], None, 200, m["ms"],
+                                                  json.loads((EXAMPLES / "resources_pending.json").read_text(encoding="utf-8")), 0, True)
+        quirk(f"The `pending` resources example was captured in an earlier run of this script ({m['when']}); "
+              "in this run every concept had been researched already.")
+    else:
+        UNVERIFIED.append("A `pending` research status: every gap concept was already researched when polled.")
+    # Let that research finish before the server stops: research killed by a restart is marked failed.
+    t_wait = time.monotonic()
+    while time.monotonic() - t_wait < 120 and any(
+            v["status"] == "pending" for v in client.get(f"{b5}/resources").json().values()):
+        time.sleep(3)
+
 
 # --- analysis of the captures ---
 
@@ -408,7 +449,8 @@ def analyse() -> None:
     # Things that looked surprising during the run
     for c in CALLS:
         if isinstance(c.data, dict) and c.data.get("next", {}).get("lesson") and not c.data["next"]["lesson"]["resources"]:
-            quirk("Lessons always come with `resources: []`: the research step is not wired yet.")
+            quirk("A lesson built before its concept's research is ready comes with `resources: []`; "
+                  "GET .../next returns the same lesson with the resources once research is ready.")
             break
     st = EXAMPLE_FILES.get("state")
     if st and isinstance(st.data, dict) and isinstance(st.data.get("pace", {}).get("mastered"), float):
@@ -419,8 +461,11 @@ def analyse() -> None:
     fractions = {len(m.group(1)) if m else 0 for d in dts for m in [re.search(r"\.(\d+)$", d)]}
     ms_only =sum(1 for d in dts if re.search(r"\.\d{3}000$", d))
     quirk(f"Datetimes: {len(dts)} values, fraction digits seen {sorted(fractions)}; {ms_only} of them end in '000' "
-          "(values stored in MongoDB keep only milliseconds). Open question: Python omits the fraction entirely when "
-          "the microseconds are 0 (not observed here), so parse with a lenient ISO parser.")
+          "(values stored in MongoDB keep only milliseconds). "
+          + ("Some have no fraction at all (Python omits it when the microseconds are 0), so parse with a lenient ISO "
+             "parser, not a fixed format." if 0 in fractions else
+             "Open question: Python omits the fraction entirely when the microseconds are 0 (not observed here), so "
+             "parse with a lenient ISO parser."))
     if ENV_PASSWORD == "":
         quirk(".env has no MASTER_PASSWORD, so a server started from .env runs in dev mode with every route open "
               "(it logs a warning). This run gave the server a temporary password to capture the real 401.")
@@ -472,7 +517,9 @@ FIELD_DOCS = {
     "Lesson.style": ("worked_example, contrast, analogy or step_by_step.", ""),
     "Lesson.explanation": ("Lesson text, 120 to 200 words, plain text.", ""),
     "Lesson.targets": ("Misconception tags addressed.", "empty when none"),
-    "Lesson.resources": ("Articles and videos for the concept.", "always empty today (research not wired)"),
+    "Lesson.resources": ("Researched articles and videos for the concept.", "empty until the concept's research is ready"),
+    "ConceptResearch.status": ("`pending` while research runs, then `ready` or `failed`.", ""),
+    "ConceptResearch.resources": ("Articles and videos found (at most 2 articles and 1 video).", "empty while pending and when failed"),
     "Resource.kind": ("article or video.", ""),
     "Resource.title": ("Title.", ""),
     "Resource.url": ("Link.", ""),
@@ -564,6 +611,12 @@ ENDPOINT_DOCS = {
                                                          "When the learner chooses to continue after a session_end step.",
                                                          "Session counter reset; stored next step replaced; served questions cleared. Call GET .../next.",
                                                          "Safe to repeat (each call re-decides for the same state)."),
+    "GET /courses/{cid}/learners/{lid}/resources": (
+        "Research status and the articles and videos found for each of the learner's gap concepts. Research starts in "
+        "the background when the diagnostic is graded, for gap concepts only (never for concepts placed as known), "
+        "and is shared by every learner of the course. Concepts it was never started for are not listed.",
+        "After the diagnostic, to show 'researching...' and then the links; poll until no entry is `pending`.",
+        "none", "Safe to poll every 3 to 5 s; entries go from `pending` to `ready` or `failed` and then stay."),
     "GET /eval/results": ("Serves the offline evaluation results file if one has been produced, else 404.",
                           "Optional 'how well does the brain work' page.", "none", "Safe to call."),
 }
@@ -582,6 +635,7 @@ ERRORS_BY_ROUTE = {
     "POST /courses/{cid}/learners/{lid}/advance": [(404, "learner not started", "error_404_learner"), (422, "days <= 0", "error_422_advance_days")],
     "POST /courses/{cid}/learners/{lid}/sessions/new": [(404, "learner not started", "error_404_learner")],
     "GET /eval/results": [(404, "no results file yet", "eval_results")],
+    "GET /courses/{cid}/learners/{lid}/resources": [(404, "learner not started", "error_404_learner")],
 }
 
 EXAMPLES_BY_ROUTE = {
@@ -597,12 +651,14 @@ EXAMPLES_BY_ROUTE = {
     "POST /courses/{cid}/learners/{lid}/advance": ["advance", "advance_all_due"],
     "POST /courses/{cid}/learners/{lid}/sessions/new": ["sessions_new"],
     "GET /eval/results": ["eval_results"],
+    "GET /courses/{cid}/learners/{lid}/resources": ["resources_pending", "resources_after_diagnostic", "resources_ready"],
 }
 
 FLOW_ORDER = ["GET /health", "POST /courses", "GET /courses/{cid}", "POST /courses/{cid}/learners/{lid}/start",
               "POST /courses/{cid}/learners/{lid}/attempts", "GET /courses/{cid}/learners/{lid}/next",
               "GET /courses/{cid}/learners/{lid}/state", "POST /courses/{cid}/learners/{lid}/advance",
-              "POST /courses/{cid}/learners/{lid}/sessions/new", "GET /eval/results"]
+              "POST /courses/{cid}/learners/{lid}/sessions/new", "GET /courses/{cid}/learners/{lid}/resources",
+              "GET /eval/results"]
 
 MESSAGE_TEMPLATES = [
     (r"^You mastered (.+) \(mastery [\d.]+\)\.$", "You mastered {concept} (mastery {p}).", "a concept crossed 0.85 in this round"),
@@ -689,10 +745,12 @@ def gen_types(openapi: dict) -> str:
     out += ["// Responses without a response model in the schema: shapes inferred from the live responses.",
             f"export type HealthResponse = {ts_from_value(EXAMPLE_FILES['health'].data)};",
             f"export type NewSessionResponse = {ts_from_value(EXAMPLE_FILES['sessions_new'].data)};",
+            "/** GET .../resources: concept_id -> research status and resources. */",
+            "export type ResourcesResponse = Record<string, ConceptResearch>;",
             "export interface ErrorResponse { detail: string | ValidationError[]; }", "",
             "// Planned, NOT AVAILABLE yet (404 today). Code against them behind feature detection.",
-            'export type ResearchStatus = "pending" | "ready" | "failed";',
-            "export type ResourcesResponse = Record<string, { status: ResearchStatus; resources: Resource[] }>;",
+
+
             "export interface VirtualStartIn { persona: string; speed: number; days: number; reset: boolean; }",
             "export interface VirtualSpeedIn { speed: number; }",
             "export interface VirtualEvent { n: number; at: string; kind: string; text: string; source: string; }",
@@ -751,7 +809,7 @@ def route_calls(route: str) -> list[Call]:
     return [c for c in CALLS if c.route == route]
 
 
-BACKGROUND_LLM = {"POST /courses", "GET /courses/{cid}"}
+BACKGROUND_LLM = {"POST /courses", "GET /courses/{cid}", "GET /courses/{cid}/learners/{lid}/resources"}
 
 
 def latency_line(route: str) -> str:
@@ -759,7 +817,7 @@ def latency_line(route: str) -> str:
     if route in BACKGROUND_LLM and cs:
         ms = [c.ms for c in cs]
         return (f"{len(ms)} successful calls: median {statistics.median(ms) / 1000:.3f} s, max {max(ms) / 1000:.3f} s. "
-                "Never waits for the LLM: course generation runs in the background after POST /courses returns.")
+                "Never waits for the LLM: course generation and research run in the background.")
     if not cs:
         return "not measured (no successful call)"
     ms = [c.ms for c in cs]
@@ -882,7 +940,8 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
          "| Feedback: toasts | `POST .../attempts` | `messages[]` |",
          "| Lesson: text, style badge | `next.lesson` / `GET .../next` | `lesson.explanation`, `lesson.style`, `lesson.targets` |",
          "| Lesson: 'why this' line | same | `reason` |",
-         "| Lesson: further reading | same | `lesson.resources` (empty today) |",
+         "| Lesson: further reading | same | `lesson.resources` (fills in once research is ready) |",
+         "| Sidebar: 'researching...' then links per gap | `GET .../resources` | `{concept_id: {status, resources}}` |",
          "| Review: 'review due' banner | same | `step.kind == 'review'`, `step.concept_id`, `reason` |",
          "| Stuck card | `GET .../state` | `needs_help[]`; step `give_up_after` |",
          "| Sidebar: mastery bars | `GET .../state` | `concepts[].p_mastery` (or `mastery` from attempts) |",
@@ -925,6 +984,10 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
                       "MasteryOut": ["ConceptState", "MisconceptionState"], "StartOut": ["QuestionPublic"]}.get(name, [])
             for n in nested:
                 add([f"`{n}`:", "", *model_table(openapi, n), ""])
+        elif isinstance(res.get("additionalProperties"), dict) and "$ref" in res["additionalProperties"]:
+            name = res["additionalProperties"]["$ref"].split("/")[-1]
+            add([f"**Response 200:** an object keyed by concept id; each value is a `{name}`:", "",
+                 *model_table(openapi, name), ""])
         else:
             ex = next((c.data for c in route_calls(route) if c.status == 200), None)
             add([f"**Response 200:** no response model in the schema; live shape: `{ts_from_value(ex) if ex is not None else 'not captured'}`.", ""])
@@ -992,6 +1055,12 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
          "**Simulated time.** Each learner has a private clock offset. `POST .../advance {days}` adds to it, resets the "
          "session, and decides the next step for the new time; `due_now` lists due concepts. All `now`, `due` and "
          "`retrievability` values use the learner's simulated now.", "",
+         f"**Research.** When the diagnostic is graded, research starts in the background for the gap concepts only "
+         f"(observed: {len(FACTS.get('research_first', {}))} concepts listed right after the diagnostic, statuses "
+         f"{sorted(set(FACTS.get('research_first', {}).values()))}; after {FACTS.get('research_seconds', 0):.0f} s of polling: "
+         f"{sorted(set(FACTS.get('research_final', {}).values()))}). Requests never wait for it. Lessons written after "
+         "research is ready are grounded in the sources; `lesson.resources` carries them, and GET .../next fills them in "
+         "for a lesson built earlier. Research results are shared by every learner of the course.", "",
          "**Placed vs verified.** The API does not expose whether a mastered concept was placed or verified by a review.", ""])
 
     # 6. Enumerations
@@ -1010,7 +1079,6 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
          "| Route | Status now |", "|---|---|"])
     add([f"| `{r}` | {s} |" for r, s in FACTS["planned"].items()])
     add(["", "Contracts:", "", "```text",
-         "GET  .../resources -> {concept_id: {status: \"pending\"|\"ready\"|\"failed\", resources: [{kind, title, url, snippet}]}}",
          "POST .../virtual/start {persona, speed, days, reset}",
          "POST .../virtual/pause | .../virtual/resume | .../virtual/stop",
          "POST .../virtual/speed {speed}",
@@ -1065,7 +1133,9 @@ def render_check(openapi: dict) -> str:
             llm = "background" if route in BACKGROUND_LLM else str(sum(c.llm for c in cs))
             note = " (404 expected: no results file yet)" if route == "GET /eval/results" and not ok else ""
             rows.append(f"| `{route}` | {'yes' if ok else 'no'}{note} | {len(cs)} | {lat} | {statuses} | {llm} |")
-    rows += ["", "Planned routes probed:", ""] + [f"- `{r}` -> {s}" for r, s in FACTS["planned"].items()]
+    rows += ["", "LLM calls in the request count lesson generation (role `strong`) only. Course generation and research "
+             f"run in the background; {sum(RESEARCH_LLM)} research (role `cheap`) calls were logged during this run.",
+             "", "Planned routes probed:", ""] + [f"- `{r}` -> {s}" for r, s in FACTS["planned"].items()]
     return "\n".join(rows) + "\n"
 
 

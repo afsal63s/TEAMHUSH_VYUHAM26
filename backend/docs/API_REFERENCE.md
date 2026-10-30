@@ -1,6 +1,6 @@
 # OnlyNerd API reference
 
-Generated 2026-10-30 22:31 from a live run (commit `2fb0ac6`, with uncommitted changes). Every field, status code and example below was captured from the running server. Routes documented: 10.
+Generated 2026-10-30 23:12 from a live run (commit `11b8da9`, with uncommitted changes). Every field, status code and example below was captured from the running server. Routes documented: 11.
 
 ## Contents
 
@@ -37,14 +37,14 @@ Generated 2026-10-30 22:31 from a live run (commit `2fb0ac6`, with uncommitted c
 }
 ```
 
-**409** (`POST /courses/b0dafa63/learners/docs-223148/start`):
+**409** (`POST /courses/b0dafa63/learners/docs-231157/start`):
 ```json
 {
-  "detail": "learner 'docs-223148' already started course 'b0dafa63'"
+  "detail": "learner 'docs-231157' already started course 'b0dafa63'"
 }
 ```
 
-**422** (`POST /courses/b0dafa63/learners/docs-223148/attempts`):
+**422** (`POST /courses/b0dafa63/learners/docs-231157/attempts`):
 ```json
 {
   "detail": "questions not served to this learner: ['f707cec4-language_model_basics-d2']"
@@ -133,7 +133,8 @@ Frontend                                   Backend
 | Feedback: toasts | `POST .../attempts` | `messages[]` |
 | Lesson: text, style badge | `next.lesson` / `GET .../next` | `lesson.explanation`, `lesson.style`, `lesson.targets` |
 | Lesson: 'why this' line | same | `reason` |
-| Lesson: further reading | same | `lesson.resources` (empty today) |
+| Lesson: further reading | same | `lesson.resources` (fills in once research is ready) |
+| Sidebar: 'researching...' then links per gap | `GET .../resources` | `{concept_id: {status, resources}}` |
 | Review: 'review due' banner | same | `step.kind == 'review'`, `step.concept_id`, `reason` |
 | Stuck card | `GET .../state` | `needs_help[]`; step `give_up_after` |
 | Sidebar: mastery bars | `GET .../state` | `concepts[].p_mastery` (or `mastery` from attempts) |
@@ -162,7 +163,7 @@ Liveness check. Needs no password.
 
 _health_
 
-`GET /health` -> **200** (16 ms), file `docs/examples/health.json`
+`GET /health` -> **200** (47 ms), file `docs/examples/health.json`
 
 ```json
 {
@@ -177,7 +178,7 @@ _health_
 
 **Side effects:** none
 
-**Latency:** 1 successful calls: median 0.016 s, max 0.016 s. No LLM call observed.
+**Latency:** 1 successful calls: median 0.047 s, max 0.047 s. No LLM call observed.
 
 **Idempotency and polling:** Safe to poll; no state.
 
@@ -218,7 +219,7 @@ Real request body:
 
 _courses_create_ready_
 
-`POST /courses` -> **200** (0 ms), file `docs/examples/courses_create_ready.json`
+`POST /courses` -> **200** (16 ms), file `docs/examples/courses_create_ready.json`
 
 ```json
 {
@@ -319,7 +320,7 @@ _courses_create_generating_
 
 **Side effects:** Creates a course (and starts LLM generation) or updates the deadline of the existing one.
 
-**Latency:** 2 successful calls: median 0.000 s, max 0.000 s. Never waits for the LLM: course generation runs in the background after POST /courses returns.
+**Latency:** 2 successful calls: median 0.008 s, max 0.016 s. Never waits for the LLM: course generation and research run in the background.
 
 **Idempotency and polling:** Repeat calls with the same prompt and level return the same course_id. Poll GET /courses/{cid} every 2 s while status is `generating`.
 
@@ -447,7 +448,7 @@ _course_get_generating_
 
 **Side effects:** none
 
-**Latency:** 2 successful calls: median 0.007 s, max 0.015 s. Never waits for the LLM: course generation runs in the background after POST /courses returns.
+**Latency:** 2 successful calls: median 0.000 s, max 0.000 s. Never waits for the LLM: course generation and research run in the background.
 
 **Idempotency and polling:** Safe to poll every 2 s while `generating`; stop on `ready` or `failed`.
 
@@ -480,7 +481,7 @@ Creates the learner for this course and returns the diagnostic: one question per
 
 _start_
 
-`POST /courses/b0dafa63/learners/docs-223148/start` -> **200** (16 ms), file `docs/examples/start.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-231157/start` -> **200** (16 ms), file `docs/examples/start.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -539,13 +540,13 @@ _start_
 | Status | When | Body |
 |---|---|---|
 | 404 | unknown course | {"detail": "course 'no-such-course' not found"} |
-| 409 | learner already started | {"detail": "learner 'docs-223148' already started course 'b0dafa63'"} |
+| 409 | learner already started | {"detail": "learner 'docs-231157' already started course 'b0dafa63'"} |
 | 409 | course not ready (`course '...' is generating`) | `{"detail": "..."}` |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** Creates the learner state (every concept at the prior, roadmap in prerequisite order); the diagnostic questions become the only answerable ones.
 
-**Latency:** 4 successful calls: median 0.008 s, max 0.016 s. No LLM call observed.
+**Latency:** 5 successful calls: median 0.016 s, max 0.078 s. No LLM call observed.
 
 **Idempotency and polling:** Not idempotent: a second call returns 409. Use GET .../state to detect an existing learner.
 
@@ -679,13 +680,13 @@ Real request body:
 | `style` | `string` | worked_example, contrast, analogy or step_by_step. | - |
 | `explanation` | `string` | Lesson text, 120 to 200 words, plain text. | - |
 | `targets` | `string[]` | Misconception tags addressed. | empty when none |
-| `resources` | `Resource[]` | Articles and videos for the concept. | always empty today (research not wired) |
+| `resources` | `Resource[]` | Researched articles and videos for the concept. | empty until the concept's research is ready |
 
 **Real examples:**
 
 _attempts_diagnostic_
 
-`POST /courses/b0dafa63/learners/docs-223148/attempts` -> **200** (16 ms), file `docs/examples/attempts_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-231157/attempts` -> **200** (16 ms), file `docs/examples/attempts_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -707,28 +708,28 @@ _attempts_diagnostic_
     "... 8 more"
   ],
   "correct_indices": {
-    "f707cec4-iterative_refinement-d1": 0,
-    "f707cec4-sampling_temperature-d1": 1,
-    "f707cec4-few_shot_examples-d1": 2,
-    "f707cec4-output_formatting-d1": 2,
-    "f707cec4-context_window-d1": 2,
-    "f707cec4-hallucination_checking-d1": 3,
     "f707cec4-prompt_structure-d1": 1,
-    "f707cec4-clear_instructions-d1": 0,
+    "f707cec4-iterative_refinement-d1": 0,
     "f707cec4-role_prompting-d1": 1,
-    "f707cec4-language_model_basics-d1": 1
+    "f707cec4-context_window-d1": 2,
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-language_model_basics-d1": 1,
+    "f707cec4-clear_instructions-d1": 0,
+    "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-hallucination_checking-d1": 3,
+    "f707cec4-sampling_temperature-d1": 1
   },
   "explanations": {
-    "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it...",
-    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probabi...",
-    "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples...",
-    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format de...",
-    "f707cec4-context_window-d1": "The model only sees the text inside the current request's co...",
-    "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need...",
     "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or transl...",
-    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what out...",
+    "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it...",
     "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same ...",
-    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is ..."
+    "f707cec4-context_window-d1": "The model only sees the text inside the current request's co...",
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format de...",
+    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is ...",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what out...",
+    "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples...",
+    "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need...",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probabi..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -765,11 +766,25 @@ _attempts_diagnostic_
     "lesson": {
       "concept_id": "context_window",
       "style": "contrast",
-      "explanation": "You may believe the model remembers every conversation you h...",
+      "explanation": "Here is the key idea: a context window is the fixed amount o...",
       "targets": [
         "context_window__model_remembers_everything"
       ],
-      "resources": []
+      "resources": [
+        {
+          "kind": "article",
+          "title": "AI Prompting (3/10): Context Windows Explained ...",
+          "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/...",
+          "snippet": "A context window is the amount of text an AI model can \"see\"..."
+        },
+        {
+          "kind": "article",
+          "title": "What is a context window? | IBM",
+          "url": "https://www.ibm.com/think/topics/context-window",
+          "snippet": "An LLM\u2019s context window can be thought of as the equivalent ..."
+        },
+        "... 1 more"
+      ]
     },
     "questions": [
       {
@@ -800,7 +815,7 @@ _attempts_diagnostic_
 
 _attempts_practice_
 
-`POST /courses/b0dafa63/learners/docs-223148/attempts` -> **200** (0 ms), file `docs/examples/attempts_practice.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-231157/attempts` -> **200** (16 ms), file `docs/examples/attempts_practice.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -819,13 +834,7 @@ _attempts_practice_
       "chosen_tag": null,
       "confidence": "medium"
     },
-    {
-      "question_id": "f707cec4-context_window-t1",
-      "concept_id": "context_window",
-      "correct": false,
-      "chosen_tag": "context_window__limit_is_only_words",
-      "confidence": "medium"
-    }
+    "... 1 more"
   ],
   "correct_indices": {
     "f707cec4-context_window-t1": 0,
@@ -833,9 +842,9 @@ _attempts_practice_
     "f707cec4-context_window-p2": 3
   },
   "explanations": {
-    "f707cec4-context_window-t1": "A new session only includes the text sent in that request. Without the day-one text, the model has no access to the order number.",
-    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be split into several tokens. So a word count can understate the token count.",
-    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most relevant sections in pieces works within the limit. Relying on memory or assuming a fit does not."
+    "f707cec4-context_window-t1": "A new session only includes the text sent in that request. W...",
+    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be s...",
+    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most r..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -851,7 +860,7 @@ _attempts_practice_
   },
   "new_confirmed_misconceptions": [],
   "messages": [
-    "Misconception context_window__model_remembers_everything resolved."
+    "Misconception context_window__model_remembers_everything res..."
   ],
   "next": {
     "step": {
@@ -867,44 +876,46 @@ _attempts_practice_
     "lesson": {
       "concept_id": "role_prompting",
       "style": "worked_example",
-      "explanation": "Role prompting means telling the model who it should act as before you ask your question, such as a nurse, a copy editor, or a chess coach. The role shapes the tone, the expertise it draws on, and wha...",
+      "explanation": "Role prompting means assigning the model a role, persona, or...",
       "targets": [],
-      "resources": []
+      "resources": [
+        {
+          "kind": "article",
+          "title": "Assigning Roles to Chatbots",
+          "url": "https://learnprompting.org/docs/basics/roles",
+          "snippet": "Role prompting is a technique that involves assigning a role..."
+        },
+        {
+          "kind": "article",
+          "title": "Does Role Prompting Work? What the Research Says",
+          "url": "https://www.jdhwilkins.com/role-prompting-giving-ai-a-person...",
+          "snippet": "Role prompting means giving an AI model a character, job tit..."
+        },
+        "... 1 more"
+      ]
     },
     "questions": [
       {
         "id": "f707cec4-role_prompting-p1",
         "concept_id": "role_prompting",
-        "prompt": "A prompt says 'You are a tax lawyer' and asks about a student's gig income. Why might the answer still be wrong?",
+        "prompt": "A prompt says 'You are a tax lawyer' and asks about a studen...",
         "options": [
           "Any professional role would be equally accurate here",
           "The role only changes style; facts can still be wrong",
-          "The role gives it current tax law it lacked",
-          "The role makes stating the income question unnecessary"
+          "... 2 more"
         ]
       },
       {
         "id": "f707cec4-role_prompting-p2",
         "concept_id": "role_prompting",
-        "prompt": "You want a critical review of a startup pitch. Which role and task pairing is strongest?",
+        "prompt": "You want a critical review of a startup pitch. Which role an...",
         "options": [
           "A skeptical investor asked to flag risks",
           "A licensed CPA who audits the numbers",
-          "Skeptical reviewer, with the pitch left out",
-          "A cheerful children's book author writing praise"
+          "... 2 more"
         ]
       },
-      {
-        "id": "f707cec4-role_prompting-t1",
-        "concept_id": "role_prompting",
-        "prompt": "Which setup best gets a calm, short reply to an angry customer?",
-        "options": [
-          "Support agent role, with the complaint omitted",
-          "A chemistry professor role for refund rules",
-          "Support agent role, complaint text, and length limit",
-          "A poet role, since any role fits equally"
-        ]
-      }
+      "... 1 more"
     ]
   }
 }
@@ -912,7 +923,7 @@ _attempts_practice_
 
 _attempts_review_failed_
 
-`POST /courses/b0dafa63/learners/docs-223148/attempts` -> **200** (15 ms), file `docs/examples/attempts_review_failed.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-231157/attempts` -> **200** (16 ms), file `docs/examples/attempts_review_failed.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -933,12 +944,12 @@ _attempts_review_failed_
     }
   ],
   "correct_indices": {
-    "f707cec4-clear_instructions-p1": 2,
-    "f707cec4-clear_instructions-p2": 2
+    "f707cec4-clear_instructions-p2": 2,
+    "f707cec4-clear_instructions-p1": 2
   },
   "explanations": {
-    "f707cec4-clear_instructions-p1": "Naming the target audience and style describes the desired behavior, which is more actionable than a prohibition or a vague quality request.",
-    "f707cec4-clear_instructions-p2": "Naming the specific change and the constraint tells the model the exact task, rather than leaving 'improve' open to interpretation."
+    "f707cec4-clear_instructions-p2": "Naming the specific change and the constraint tells the model the exact task, rather than leaving 'improve' open to interpretation.",
+    "f707cec4-clear_instructions-p1": "Naming the target audience and style describes the desired behavior, which is more actionable than a prohibition or a vague quality request."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -1024,7 +1035,7 @@ _attempts_review_failed_
 
 _attempts_all_known_done_
 
-`POST /courses/b0dafa63/learners/docs-223148-all/attempts` -> **200** (15 ms), file `docs/examples/attempts_all_known_done.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-231157-all/attempts` -> **200** (16 ms), file `docs/examples/attempts_all_known_done.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1053,28 +1064,28 @@ _attempts_all_known_done_
     "... 7 more"
   ],
   "correct_indices": {
-    "f707cec4-iterative_refinement-d1": 0,
-    "f707cec4-sampling_temperature-d1": 1,
-    "f707cec4-few_shot_examples-d1": 2,
-    "f707cec4-output_formatting-d1": 2,
-    "f707cec4-context_window-d1": 2,
-    "f707cec4-hallucination_checking-d1": 3,
     "f707cec4-prompt_structure-d1": 1,
-    "f707cec4-clear_instructions-d1": 0,
+    "f707cec4-iterative_refinement-d1": 0,
     "f707cec4-role_prompting-d1": 1,
-    "f707cec4-language_model_basics-d1": 1
+    "f707cec4-context_window-d1": 2,
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-language_model_basics-d1": 1,
+    "f707cec4-clear_instructions-d1": 0,
+    "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-hallucination_checking-d1": 3,
+    "f707cec4-sampling_temperature-d1": 1
   },
   "explanations": {
-    "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it works and where it fails. Revising base...",
-    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predi...",
-    "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples in the exact format teach the model wha...",
-    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by s...",
-    "f707cec4-context_window-d1": "The model only sees the text inside the current request's context window. Earlier chats are not avai...",
-    "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need checking against reliable sources.",
     "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or translate. The other parts supply information ...",
-    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to g...",
+    "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it works and where it fails. Revising base...",
     "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same model. It does not add knowledge the mod...",
-    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input ..."
+    "f707cec4-context_window-d1": "The model only sees the text inside the current request's context window. Earlier chats are not avai...",
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by s...",
+    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input ...",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to g...",
+    "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples in the exact format teach the model wha...",
+    "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need checking against reliable sources.",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predi..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -1113,7 +1124,7 @@ _attempts_all_known_done_
 
 _attempts_needs_help_
 
-`POST /courses/b0dafa63/learners/docs-223148-stuck/attempts` -> **200** (0 ms), file `docs/examples/attempts_needs_help.json`
+`POST /courses/b0dafa63/learners/docs-231157-stuck/attempts` -> **200** (15 ms), file `docs/examples/attempts_needs_help.json`
 
 ```json
 {
@@ -1186,7 +1197,7 @@ _attempts_needs_help_
 
 _attempts_with_deadline_
 
-`POST /courses/c6aaba84/learners/docs-223148-deadline/attempts` -> **200** (16 ms), file `docs/examples/attempts_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/c6aaba84/learners/docs-231157-deadline/attempts` -> **200** (15 ms), file `docs/examples/attempts_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1208,28 +1219,28 @@ _attempts_with_deadline_
     "... 8 more"
   ],
   "correct_indices": {
-    "d3f0e36a-table_aliases-d1": 1,
-    "d3f0e36a-select_columns-d1": 2,
-    "d3f0e36a-foreign_keys-d1": 1,
-    "d3f0e36a-where_filtering-d1": 1,
     "d3f0e36a-primary_keys-d1": 1,
-    "d3f0e36a-left_join-d1": 3,
+    "d3f0e36a-table_aliases-d1": 1,
     "d3f0e36a-join_multiple_tables-d1": 1,
-    "d3f0e36a-tables_rows_columns-d1": 3,
+    "d3f0e36a-select_columns-d1": 2,
+    "d3f0e36a-inner_join-d1": 2,
+    "d3f0e36a-where_filtering-d1": 1,
     "d3f0e36a-null_values-d1": 2,
-    "d3f0e36a-inner_join-d1": 2
+    "d3f0e36a-tables_rows_columns-d1": 3,
+    "d3f0e36a-left_join-d1": 3,
+    "d3f0e36a-foreign_keys-d1": 1
   },
   "explanations": {
-    "d3f0e36a-table_aliases-d1": "The alias e is declared in FROM and exists only for this que...",
-    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the store...",
-    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, ...",
-    "d3f0e36a-where_filtering-d1": "WHERE filters rows, so only rows where the condition is true...",
     "d3f0e36a-primary_keys-d1": "A student_id gives each student a unique value that identifi...",
-    "d3f0e36a-left_join-d1": "LEFT JOIN keeps every left-table row, so each customer appea...",
+    "d3f0e36a-table_aliases-d1": "The alias e is declared in FROM and exists only for this que...",
     "d3f0e36a-join_multiple_tables-d1": "Each JOIN adds one table through its own matching keys, so t...",
-    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across th...",
+    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the store...",
+    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, p...",
+    "d3f0e36a-where_filtering-d1": "WHERE filters rows, so only rows where the condition is true...",
     "d3f0e36a-null_values-d1": "NULL marks a value that is absent or unknown. It is not a nu...",
-    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, p..."
+    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across th...",
+    "d3f0e36a-left_join-d1": "LEFT JOIN keeps every left-table row, so each customer appea...",
+    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, ..."
   },
   "mastery": {
     "tables_rows_columns": 0.1774193548387097,
@@ -1296,14 +1307,14 @@ _attempts_with_deadline_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-223148' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
 | 422 | a question was not served to this learner (lists the ids) | {"detail": "questions not served to this learner: ['f707cec4-language_model_basics-d2']"} |
 | 422 | empty `answers`, `chosen_index` out of range, or body invalid | `{"detail": "..."}` |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** Records every answer; updates the learner state; stores the next step and its questions (only those become answerable). May call the LLM to write the next lesson.
 
-**Latency:** 13 successful calls: median 0.000 s, max 0.016 s. No LLM call observed.
+**Latency:** 14 successful calls: median 0.016 s, max 0.203 s. No LLM call observed.
 
 **Idempotency and polling:** Not idempotent: answers count once; resubmitting the same ids returns 422 because they are no longer served.
 
@@ -1346,7 +1357,7 @@ Serves the stored next step with its lesson and questions. The first call after 
 | `style` | `string` | worked_example, contrast, analogy or step_by_step. | - |
 | `explanation` | `string` | Lesson text, 120 to 200 words, plain text. | - |
 | `targets` | `string[]` | Misconception tags addressed. | empty when none |
-| `resources` | `Resource[]` | Articles and videos for the concept. | always empty today (research not wired) |
+| `resources` | `Resource[]` | Researched articles and videos for the concept. | empty until the concept's research is ready |
 
 `QuestionPublic`:
 
@@ -1361,7 +1372,7 @@ Serves the stored next step with its lesson and questions. The first call after 
 
 _next_lesson_
 
-`GET /courses/b0dafa63/learners/docs-223148/next` -> **200** (0 ms), file `docs/examples/next_lesson.json`
+`GET /courses/b0dafa63/learners/docs-231157/next` -> **200** (15 ms), file `docs/examples/next_lesson.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1380,11 +1391,30 @@ _next_lesson_
   "lesson": {
     "concept_id": "context_window",
     "style": "contrast",
-    "explanation": "You may believe the model remembers every conversation you have ever had with it. That belief is wrong. The right idea is that a model only works with the text inside its context window, meaning the text sent in one request. Think of it as a desk with limited space. Whatever is on the desk, the model can read and use. Whatever has been pushed off the desk, or was never placed there, is invisible to it. So when you start a new chat, earlier conversations are not automatically present. The model has no stored memory of your last session unless that text is included again in the new request. Here is where the wrong belief breaks: memory implies everything persists, but the context window is a fixed, limited input for each request. If a long conversation exceeds that limit, the oldest parts can be dropped, and the model will act as if they never happened. To get reliable answers, put the information the model needs directly into your current request.",
+    "explanation": "Here is the key idea: a context window is the fixed amount of text a model can consider in one request, like its working memory. Many learners believe the model remembers every past chat, but that is ...",
     "targets": [
       "context_window__model_remembers_everything"
     ],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It..."
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
   },
   "questions": [
     {
@@ -1412,7 +1442,7 @@ _next_lesson_
     {
       "id": "f707cec4-context_window-t1",
       "concept_id": "context_window",
-      "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely cause?",
+      "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely c...",
       "options": [
         "The day-one text is no longer in the context window",
         "The order number used more words than the bot's limit",
@@ -1426,7 +1456,7 @@ _next_lesson_
 
 _next_review_
 
-`GET /courses/b0dafa63/learners/docs-223148/next` -> **200** (0 ms), file `docs/examples/next_review.json`
+`GET /courses/b0dafa63/learners/docs-231157/next` -> **200** (15 ms), file `docs/examples/next_review.json`
 
 ```json
 {
@@ -1470,7 +1500,7 @@ _next_review_
 
 _next_relearn_
 
-`GET /courses/b0dafa63/learners/docs-223148/next` -> **200** (0 ms), file `docs/examples/next_relearn.json`
+`GET /courses/b0dafa63/learners/docs-231157/next` -> **200** (15 ms), file `docs/examples/next_relearn.json`
 
 ```json
 {
@@ -1537,7 +1567,7 @@ _next_relearn_
 
 _next_fallback_
 
-`GET /courses/b0dafa63/learners/docs-223148-stuck/next` -> **200** (0 ms), file `docs/examples/next_fallback.json`
+`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (0 ms), file `docs/examples/next_fallback.json`
 
 ```json
 {
@@ -1598,7 +1628,7 @@ _next_fallback_
 
 _next_give_up_
 
-`GET /courses/b0dafa63/learners/docs-223148-stuck/next` -> **200** (0 ms), file `docs/examples/next_give_up.json`
+`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (0 ms), file `docs/examples/next_give_up.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1615,9 +1645,28 @@ _next_give_up_
   "lesson": {
     "concept_id": "context_window",
     "style": "worked_example",
-    "explanation": "Imagine you paste a long document into a chat and ask a question about its last paragraph. The model only sees what fits inside its context window, the fixed amount of text it can receive in one request. Anything beyond that limit is simply not visible to it. Let's walk through a small example. Suppose the window holds 1,000 tokens, and your prompt is 900 tokens of notes plus a 200-token question. Step one: add the sizes, 900 plus 200 gives 1,100. Step two: compare that to the limit, 1,100 is more than 1,000, so 100 tokens do not fit. Step three: decide what to trim. Usually the oldest or least relevant notes get cut, so you would remove roughly 100 tokens of background text. Step four: resend the shortened request, now totaling 1,000 or fewer tokens, so the model sees your question and the key notes together. The lesson is that the model forgets nothing it was never given, and it has no memory beyond the current request. Whenever a task is long, plan what the model must see, and place the most important information where it will fit.",
+    "explanation": "A context window is the amount of text an AI model can see and consider at once, like its working memory. Let's walk through a small example. Suppose the window holds about 40 words, and you have sent...",
     "targets": [],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It..."
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
   },
   "questions": [
     {
@@ -1645,7 +1694,7 @@ _next_give_up_
     {
       "id": "f707cec4-context_window-t1",
       "concept_id": "context_window",
-      "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely cause?",
+      "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely c...",
       "options": [
         "The day-one text is no longer in the context window",
         "The order number used more words than the bot's limit",
@@ -1659,7 +1708,7 @@ _next_give_up_
 
 _next_session_end_
 
-`GET /courses/b0dafa63/learners/docs-223148-stuck/next` -> **200** (0 ms), file `docs/examples/next_session_end.json`
+`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (15 ms), file `docs/examples/next_session_end.json`
 
 ```json
 {
@@ -1680,7 +1729,7 @@ _next_session_end_
 
 _next_done_
 
-`GET /courses/b0dafa63/learners/docs-223148-all/next` -> **200** (0 ms), file `docs/examples/next_done.json`
+`GET /courses/b0dafa63/learners/docs-231157-all/next` -> **200** (16 ms), file `docs/examples/next_done.json`
 
 ```json
 {
@@ -1701,7 +1750,7 @@ _next_done_
 
 _next_done_with_needs_help_
 
-`GET /courses/b0dafa63/learners/docs-223148-stuck/next` -> **200** (16 ms), file `docs/examples/next_done_with_needs_help.json`
+`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (16 ms), file `docs/examples/next_done_with_needs_help.json`
 
 ```json
 {
@@ -1724,13 +1773,13 @@ _next_done_with_needs_help_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-223148' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
 | 409 | before the diagnostic is answered | {"detail": "no step decided yet: answer the diagnostic from /start first"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** First call after a decision: stores the served question ids and records the lesson style. Later calls: none.
 
-**Latency:** 14 successful calls: median 0.000 s, max 0.016 s. No LLM call observed.
+**Latency:** 14 successful calls: median 0.015 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Idempotent: identical calls return identical bodies.
 
@@ -1789,7 +1838,7 @@ Returns the dashboard: per-concept mastery, retrievability and schedule, misconc
 
 _state_
 
-`GET /courses/b0dafa63/learners/docs-223148/state` -> **200** (16 ms), file `docs/examples/state.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-231157/state` -> **200** (16 ms), file `docs/examples/state.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1800,8 +1849,8 @@ _state_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -1813,8 +1862,8 @@ _state_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -1826,8 +1875,8 @@ _state_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -1881,16 +1930,16 @@ _state_
     },
     "... 1 more"
   ],
-  "next_due": "2026-11-01T17:01:54.694000",
+  "next_due": "2026-11-01T17:42:07.820000",
   "due": {
-    "language_model_basics": "2026-11-01T17:01:54.694000",
-    "prompt_structure": "2026-11-01T17:01:54.694000",
-    "sampling_temperature": "2026-11-01T17:01:54.694000",
-    "clear_instructions": "2026-11-01T17:01:54.759000",
-    "few_shot_examples": "2026-11-02T17:01:54.694000",
-    "output_formatting": "2026-11-02T17:01:54.694000",
-    "iterative_refinement": "2026-11-02T17:01:54.694000",
-    "hallucination_checking": "2026-11-02T17:01:54.694000"
+    "language_model_basics": "2026-11-01T17:42:07.820000",
+    "prompt_structure": "2026-11-01T17:42:07.820000",
+    "sampling_temperature": "2026-11-01T17:42:07.820000",
+    "clear_instructions": "2026-11-01T17:42:07.946000",
+    "few_shot_examples": "2026-11-02T17:42:07.820000",
+    "output_formatting": "2026-11-02T17:42:07.820000",
+    "iterative_refinement": "2026-11-02T17:42:07.820000",
+    "hallucination_checking": "2026-11-02T17:42:07.820000"
   },
   "roadmap": [
     "language_model_basics",
@@ -1907,16 +1956,16 @@ _state_
     "role_prompting"
   ],
   "retrievability": {
-    "language_model_basics": 0.9486832480331439,
-    "prompt_structure": 0.9486832480331439,
-    "sampling_temperature": 0.9486832480331439,
+    "language_model_basics": 0.948683205280355,
+    "prompt_structure": 0.948683205280355,
+    "sampling_temperature": 0.948683205280355,
     "context_window": 1.0,
-    "clear_instructions": 0.9999999738184,
+    "clear_instructions": 0.9999999580740763,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.9654893506700053,
-    "output_formatting": 0.9654893506700053,
-    "iterative_refinement": 0.9654893506700053,
-    "hallucination_checking": 0.9654893506700053
+    "few_shot_examples": 0.9654893216632301,
+    "output_formatting": 0.9654893216632301,
+    "iterative_refinement": 0.9654893216632301,
+    "hallucination_checking": 0.9654893216632301
   },
   "pace": {
     "mastered": 7.0,
@@ -1928,7 +1977,7 @@ _state_
 
 _state_after_diagnostic_
 
-`GET /courses/b0dafa63/learners/docs-223148/state` -> **200** (0 ms), file `docs/examples/state_after_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-231157/state` -> **200** (16 ms), file `docs/examples/state_after_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1939,8 +1988,8 @@ _state_after_diagnostic_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -1952,8 +2001,8 @@ _state_after_diagnostic_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -1965,8 +2014,8 @@ _state_after_diagnostic_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -2005,16 +2054,16 @@ _state_after_diagnostic_
       "clean_streak": 0
     }
   ],
-  "next_due": "2026-10-31T17:01:54.694000",
+  "next_due": "2026-10-31T17:42:07.820000",
   "due": {
-    "language_model_basics": "2026-11-01T17:01:54.694000",
-    "prompt_structure": "2026-11-01T17:01:54.694000",
-    "sampling_temperature": "2026-11-01T17:01:54.694000",
-    "clear_instructions": "2026-10-31T17:01:54.694000",
-    "few_shot_examples": "2026-11-02T17:01:54.694000",
-    "output_formatting": "2026-11-02T17:01:54.694000",
-    "iterative_refinement": "2026-11-02T17:01:54.694000",
-    "hallucination_checking": "2026-11-02T17:01:54.694000"
+    "language_model_basics": "2026-11-01T17:42:07.820000",
+    "prompt_structure": "2026-11-01T17:42:07.820000",
+    "sampling_temperature": "2026-11-01T17:42:07.820000",
+    "clear_instructions": "2026-10-31T17:42:07.820000",
+    "few_shot_examples": "2026-11-02T17:42:07.820000",
+    "output_formatting": "2026-11-02T17:42:07.820000",
+    "iterative_refinement": "2026-11-02T17:42:07.820000",
+    "hallucination_checking": "2026-11-02T17:42:07.820000"
   },
   "roadmap": [
     "language_model_basics",
@@ -2030,16 +2079,16 @@ _state_after_diagnostic_
     "role_prompting"
   ],
   "retrievability": {
-    "language_model_basics": 0.9999999876219686,
-    "prompt_structure": 0.9999999876219686,
-    "sampling_temperature": 0.9999999876219686,
+    "language_model_basics": 0.9999999786084011,
+    "prompt_structure": 0.9999999786084011,
+    "sampling_temperature": 0.9999999786084011,
     "context_window": 1.0,
-    "clear_instructions": 0.9999999752439375,
+    "clear_instructions": 0.9999999572168027,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.999999991747979,
-    "output_formatting": 0.999999991747979,
-    "iterative_refinement": 0.999999991747979,
-    "hallucination_checking": 0.999999991747979
+    "few_shot_examples": 0.999999985738934,
+    "output_formatting": 0.999999985738934,
+    "iterative_refinement": 0.999999985738934,
+    "hallucination_checking": 0.999999985738934
   },
   "pace": {
     "mastered": 8.0,
@@ -2051,7 +2100,7 @@ _state_after_diagnostic_
 
 _state_after_advance_
 
-`GET /courses/b0dafa63/learners/docs-223148/state` -> **200** (16 ms), file `docs/examples/state_after_advance.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-231157/state` -> **200** (0 ms), file `docs/examples/state_after_advance.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -2062,8 +2111,8 @@ _state_after_advance_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -2075,8 +2124,8 @@ _state_after_advance_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -2088,8 +2137,8 @@ _state_after_advance_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.694000",
-      "due_at": "2026-11-01T17:01:54.694000",
+      "last_reviewed_at": "2026-10-30T17:42:07.820000",
+      "due_at": "2026-11-01T17:42:07.820000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -2135,16 +2184,16 @@ _state_after_advance_
       "clean_streak": 0
     }
   ],
-  "next_due": "2026-10-31T17:01:54.694000",
+  "next_due": "2026-10-31T17:42:07.820000",
   "due": {
-    "language_model_basics": "2026-11-01T17:01:54.694000",
-    "prompt_structure": "2026-11-01T17:01:54.694000",
-    "sampling_temperature": "2026-11-01T17:01:54.694000",
-    "clear_instructions": "2026-10-31T17:01:54.694000",
-    "few_shot_examples": "2026-11-02T17:01:54.694000",
-    "output_formatting": "2026-11-02T17:01:54.694000",
-    "iterative_refinement": "2026-11-02T17:01:54.694000",
-    "hallucination_checking": "2026-11-02T17:01:54.694000"
+    "language_model_basics": "2026-11-01T17:42:07.820000",
+    "prompt_structure": "2026-11-01T17:42:07.820000",
+    "sampling_temperature": "2026-11-01T17:42:07.820000",
+    "clear_instructions": "2026-10-31T17:42:07.820000",
+    "few_shot_examples": "2026-11-02T17:42:07.820000",
+    "output_formatting": "2026-11-02T17:42:07.820000",
+    "iterative_refinement": "2026-11-02T17:42:07.820000",
+    "hallucination_checking": "2026-11-02T17:42:07.820000"
   },
   "roadmap": [
     "language_model_basics",
@@ -2160,16 +2209,16 @@ _state_after_advance_
     "role_prompting"
   ],
   "retrievability": {
-    "language_model_basics": 0.9486832671631824,
-    "prompt_structure": 0.9486832671631824,
-    "sampling_temperature": 0.9486832671631824,
+    "language_model_basics": 0.9486832365280501,
+    "prompt_structure": 0.9486832365280501,
+    "sampling_temperature": 0.9486832365280501,
     "context_window": 1.0,
-    "clear_instructions": 0.8999999413954101,
+    "clear_instructions": 0.8999998832693362,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.9654893636492925,
-    "output_formatting": 0.9654893636492925,
-    "iterative_refinement": 0.9654893636492925,
-    "hallucination_checking": 0.9654893636492925
+    "few_shot_examples": 0.9654893428640662,
+    "output_formatting": 0.9654893428640662,
+    "iterative_refinement": 0.9654893428640662,
+    "hallucination_checking": 0.9654893428640662
   },
   "pace": {
     "mastered": 8.0,
@@ -2181,7 +2230,7 @@ _state_after_advance_
 
 _state_needs_help_
 
-`GET /courses/b0dafa63/learners/docs-223148-stuck/state` -> **200** (0 ms), file `docs/examples/state_needs_help.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-231157-stuck/state` -> **200** (0 ms), file `docs/examples/state_needs_help.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -2192,8 +2241,8 @@ _state_needs_help_
       "attempts": 4,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.879000",
-      "due_at": "2026-11-01T17:01:54.879000",
+      "last_reviewed_at": "2026-10-30T17:42:08.050000",
+      "due_at": "2026-11-01T17:42:08.050000",
       "lapses": 0,
       "explanations_tried": [
         "worked_example"
@@ -2207,8 +2256,8 @@ _state_needs_help_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.879000",
-      "due_at": "2026-11-01T17:01:54.879000",
+      "last_reviewed_at": "2026-10-30T17:42:08.050000",
+      "due_at": "2026-11-01T17:42:08.050000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -2220,8 +2269,8 @@ _state_needs_help_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:01:54.879000",
-      "due_at": "2026-11-01T17:01:54.879000",
+      "last_reviewed_at": "2026-10-30T17:42:08.050000",
+      "due_at": "2026-11-01T17:42:08.050000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
@@ -2270,17 +2319,17 @@ _state_needs_help_
       "clean_streak": 0
     }
   ],
-  "next_due": "2026-11-01T17:01:54.879000",
+  "next_due": "2026-11-01T17:42:08.050000",
   "due": {
-    "language_model_basics": "2026-11-01T17:01:54.879000",
-    "prompt_structure": "2026-11-01T17:01:54.879000",
-    "sampling_temperature": "2026-11-01T17:01:54.879000",
-    "clear_instructions": "2026-11-01T17:01:54.879000",
-    "role_prompting": "2026-11-01T17:01:54.879000",
-    "few_shot_examples": "2026-11-01T17:01:54.879000",
-    "output_formatting": "2026-11-01T17:01:54.879000",
-    "iterative_refinement": "2026-11-01T17:01:54.879000",
-    "hallucination_checking": "2026-11-01T17:01:54.879000"
+    "language_model_basics": "2026-11-01T17:42:08.050000",
+    "prompt_structure": "2026-11-01T17:42:08.050000",
+    "sampling_temperature": "2026-11-01T17:42:08.050000",
+    "clear_instructions": "2026-11-01T17:42:08.050000",
+    "role_prompting": "2026-11-01T17:42:08.050000",
+    "few_shot_examples": "2026-11-01T17:42:08.050000",
+    "output_formatting": "2026-11-01T17:42:08.050000",
+    "iterative_refinement": "2026-11-01T17:42:08.050000",
+    "hallucination_checking": "2026-11-01T17:42:08.050000"
   },
   "roadmap": [
     "language_model_basics",
@@ -2297,16 +2346,16 @@ _state_needs_help_
     "context_window"
   ],
   "retrievability": {
-    "language_model_basics": 0.9999999309315505,
-    "prompt_structure": 0.9999999309315505,
-    "sampling_temperature": 0.9999999309315505,
+    "language_model_basics": 0.9999998663281228,
+    "prompt_structure": 0.9999998663281228,
+    "sampling_temperature": 0.9999998663281228,
     "context_window": 1.0,
-    "clear_instructions": 0.9999999309315505,
-    "role_prompting": 0.9999999309315505,
-    "few_shot_examples": 0.9999999309315505,
-    "output_formatting": 0.9999999309315505,
-    "iterative_refinement": 0.9999999309315505,
-    "hallucination_checking": 0.9999999309315505
+    "clear_instructions": 0.9999998663281228,
+    "role_prompting": 0.9999998663281228,
+    "few_shot_examples": 0.9999998663281228,
+    "output_formatting": 0.9999998663281228,
+    "iterative_refinement": 0.9999998663281228,
+    "hallucination_checking": 0.9999998663281228
   },
   "pace": {
     "mastered": 9.0,
@@ -2318,7 +2367,7 @@ _state_needs_help_
 
 _state_with_deadline_
 
-`GET /courses/c6aaba84/learners/docs-223148-deadline/state` -> **200** (0 ms), file `docs/examples/state_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/c6aaba84/learners/docs-231157-deadline/state` -> **200** (0 ms), file `docs/examples/state_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -2452,12 +2501,12 @@ _state_with_deadline_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-223148' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** none
 
-**Latency:** 5 successful calls: median 0.000 s, max 0.016 s. No LLM call observed.
+**Latency:** 6 successful calls: median 0.007 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Safe to call any time.
 
@@ -2495,11 +2544,11 @@ Real request body:
 
 _advance_
 
-`POST /courses/b0dafa63/learners/docs-223148/advance` -> **200** (0 ms), file `docs/examples/advance.json`
+`POST /courses/b0dafa63/learners/docs-231157/advance` -> **200** (16 ms), file `docs/examples/advance.json`
 
 ```json
 {
-  "now": "2026-10-31T17:01:54.738135",
+  "now": "2026-10-31T17:42:07.919518",
   "due_now": [
     "clear_instructions"
   ],
@@ -2510,11 +2559,11 @@ _advance_
 
 _advance_all_due_
 
-`POST /courses/b0dafa63/learners/docs-223148-all/advance` -> **200** (0 ms), file `docs/examples/advance_all_due.json`
+`POST /courses/b0dafa63/learners/docs-231157-all/advance` -> **200** (0 ms), file `docs/examples/advance_all_due.json`
 
 ```json
 {
-  "now": "2026-11-02T17:01:54.847080",
+  "now": "2026-11-02T17:42:08.035263",
   "due_now": [
     "language_model_basics",
     "prompt_structure",
@@ -2536,13 +2585,13 @@ _advance_all_due_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-223148' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
 | 422 | days <= 0 | {"detail": "days must be positive"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** clock_offset_days += days; session counter reset; stored next step replaced; previously served questions are no longer answerable. Call GET .../next to get the material.
 
-**Latency:** 2 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
+**Latency:** 2 successful calls: median 0.008 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Not idempotent: each call moves the clock again.
 
@@ -2562,7 +2611,7 @@ Starts a new session: resets the per-session question counter and decides the ne
 
 _sessions_new_
 
-`POST /courses/b0dafa63/learners/docs-223148/sessions/new` -> **200** (0 ms), file `docs/examples/sessions_new.json`
+`POST /courses/b0dafa63/learners/docs-231157/sessions/new` -> **200** (0 ms), file `docs/examples/sessions_new.json`
 
 ```json
 {
@@ -2576,7 +2625,7 @@ _sessions_new_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-223148' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** Session counter reset; stored next step replaced; served questions cleared. Call GET .../next.
@@ -2584,6 +2633,235 @@ _sessions_new_
 **Latency:** 2 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
 
 **Idempotency and polling:** Safe to repeat (each call re-decides for the same state).
+
+### `GET /courses/{cid}/learners/{lid}/resources`
+
+Research status and the articles and videos found for each of the learner's gap concepts. Research starts in the background when the diagnostic is graded, for gap concepts only (never for concepts placed as known), and is shared by every learner of the course. Concepts it was never started for are not listed.
+
+**When to call:** After the diagnostic, to show 'researching...' and then the links; poll until no entry is `pending`.
+
+**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+
+**Request body:** none.
+
+**Response 200:** an object keyed by concept id; each value is a `ConceptResearch`:
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `status` | `"pending" | "ready" | "failed"` | `pending` while research runs, then `ready` or `failed`. | - |
+| `resources` | `Resource[]` | Articles and videos found (at most 2 articles and 1 video). | empty while pending and when failed |
+
+**Real examples:**
+
+_resources_pending_
+
+`GET /courses/b0dafa63/learners/docs-231157-new/resources` -> **200** (16 ms), file `docs/examples/resources_pending.json`
+
+```json
+{
+  "language_model_basics": {
+    "status": "pending",
+    "resources": []
+  },
+  "prompt_structure": {
+    "status": "pending",
+    "resources": []
+  },
+  "sampling_temperature": {
+    "status": "pending",
+    "resources": []
+  },
+  "context_window": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It also determines the maximum size of documents or code samples that it can process at once. When a prompt, conversation, document or code base exceeds an artificial intelligence model\u2019s context window"
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
+  },
+  "clear_instructions": {
+    "status": "pending",
+    "resources": []
+  },
+  "role_prompting": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Assigning Roles to Chatbots",
+        "url": "https://learnprompting.org/docs/basics/roles",
+        "snippet": "Role prompting is a technique that involves assigning a role or persona to an AI model, such as \"food critic\" or \"mathematician,\" to control the style or accuracy of its responses.\n\nBy instructing the model to take on a specific role, you can shape how it processes and delivers information. This technique is widely used across many applications, from creative writing to problem-solving.\n\n## Applic"
+      },
+      {
+        "kind": "article",
+        "title": "Does Role Prompting Work? What the Research Says",
+        "url": "https://www.jdhwilkins.com/role-prompting-giving-ai-a-persona",
+        "snippet": "Role prompting means giving an AI model a character, job title, or area of expertise before asking it to complete a task. A basic example:\n\n```\nYou are an experienced HR manager. Review the following job description and suggest improvements. \n```\n\nThe model has not changed. Its training data and knowledge base are no different. But the assigned persona shapes how it interprets the request and how "
+      },
+      {
+        "kind": "video",
+        "title": "Role Prompting Explained | Make ChatGPT Think Like an Expert (\u0627\u0631\u062f\u0648 + \u0939\u093f\u0902\u0926\u0940)",
+        "url": "https://www.youtube.com/watch?v=xe11nwZznXo",
+        "snippet": "Role prompting is the simplest way to make ChatGPT give expert-level answers. In this video, I explain role prompting from zero to ..."
+      }
+    ]
+  },
+  "few_shot_examples": {
+    "status": "pending",
+    "resources": []
+  },
+  "output_formatting": {
+    "status": "pending",
+    "resources": []
+  },
+  "iterative_refinement": {
+    "status": "pending",
+    "resources": []
+  },
+  "hallucination_checking": {
+    "status": "pending",
+    "resources": []
+  }
+}
+```
+
+_resources_after_diagnostic_
+
+`GET /courses/b0dafa63/learners/docs-231157/resources` -> **200** (0 ms), file `docs/examples/resources_after_diagnostic.json`
+
+```json
+{
+  "context_window": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It also determines the maximum size of documents or code samples that it can process at once. When a prompt, conversation, document or code base exceeds an artificial intelligence model\u2019s context window"
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
+  },
+  "role_prompting": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Assigning Roles to Chatbots",
+        "url": "https://learnprompting.org/docs/basics/roles",
+        "snippet": "Role prompting is a technique that involves assigning a role or persona to an AI model, such as \"food critic\" or \"mathematician,\" to control the style or accuracy of its responses.\n\nBy instructing the model to take on a specific role, you can shape how it processes and delivers information. This technique is widely used across many applications, from creative writing to problem-solving.\n\n## Applic"
+      },
+      {
+        "kind": "article",
+        "title": "Does Role Prompting Work? What the Research Says",
+        "url": "https://www.jdhwilkins.com/role-prompting-giving-ai-a-persona",
+        "snippet": "Role prompting means giving an AI model a character, job title, or area of expertise before asking it to complete a task. A basic example:\n\n```\nYou are an experienced HR manager. Review the following job description and suggest improvements. \n```\n\nThe model has not changed. Its training data and knowledge base are no different. But the assigned persona shapes how it interprets the request and how "
+      },
+      {
+        "kind": "video",
+        "title": "Role Prompting Explained | Make ChatGPT Think Like an Expert (\u0627\u0631\u062f\u0648 + \u0939\u093f\u0902\u0926\u0940)",
+        "url": "https://www.youtube.com/watch?v=xe11nwZznXo",
+        "snippet": "Role prompting is the simplest way to make ChatGPT give expert-level answers. In this video, I explain role prompting from zero to ..."
+      }
+    ]
+  }
+}
+```
+
+_resources_ready_
+
+`GET /courses/b0dafa63/learners/docs-231157/resources` -> **200** (16 ms), file `docs/examples/resources_ready.json`
+
+```json
+{
+  "context_window": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "AI Prompting (3/10): Context Windows Explained ...",
+        "url": "https://www.reddit.com/r/PromptEngineering/comments/1iftklk/ai_prompting_310_context_windows",
+        "snippet": "A context window is the amount of text an AI model can \"see\" and consider at once. Think of it like the AI's working memory - everything it can"
+      },
+      {
+        "kind": "article",
+        "title": "What is a context window? | IBM",
+        "url": "https://www.ibm.com/think/topics/context-window",
+        "snippet": "An LLM\u2019s context window can be thought of as the equivalent of its working memory. It determines how long of a conversation it can carry out without forgetting details from earlier in the exchange. It also determines the maximum size of documents or code samples that it can process at once. When a prompt, conversation, document or code base exceeds an artificial intelligence model\u2019s context window"
+      },
+      {
+        "kind": "video",
+        "title": "Why AI Models Forget Previous Messages ?What Is Context Length in LLMs?",
+        "url": "https://www.youtube.com/watch?v=bUOfdbyCDFA",
+        "snippet": "Why does ChatGPT forget past conversations? Is it really forgetting \u2014 or is something else happening? In this video, I explain ..."
+      }
+    ]
+  },
+  "role_prompting": {
+    "status": "ready",
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Assigning Roles to Chatbots",
+        "url": "https://learnprompting.org/docs/basics/roles",
+        "snippet": "Role prompting is a technique that involves assigning a role or persona to an AI model, such as \"food critic\" or \"mathematician,\" to control the style or accuracy of its responses.\n\nBy instructing the model to take on a specific role, you can shape how it processes and delivers information. This technique is widely used across many applications, from creative writing to problem-solving.\n\n## Applic"
+      },
+      {
+        "kind": "article",
+        "title": "Does Role Prompting Work? What the Research Says",
+        "url": "https://www.jdhwilkins.com/role-prompting-giving-ai-a-persona",
+        "snippet": "Role prompting means giving an AI model a character, job title, or area of expertise before asking it to complete a task. A basic example:\n\n```\nYou are an experienced HR manager. Review the following job description and suggest improvements. \n```\n\nThe model has not changed. Its training data and knowledge base are no different. But the assigned persona shapes how it interprets the request and how "
+      },
+      {
+        "kind": "video",
+        "title": "Role Prompting Explained | Make ChatGPT Think Like an Expert (\u0627\u0631\u062f\u0648 + \u0939\u093f\u0902\u0926\u0940)",
+        "url": "https://www.youtube.com/watch?v=xe11nwZznXo",
+        "snippet": "Role prompting is the simplest way to make ChatGPT give expert-level answers. In this video, I explain role prompting from zero to ..."
+      }
+    ]
+  }
+}
+```
+
+**Errors:**
+
+| Status | When | Body |
+|---|---|---|
+| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
+
+**Side effects:** none
+
+**Latency:** 3 successful calls: median 0.016 s, max 0.016 s. Never waits for the LLM: course generation and research run in the background.
+
+**Idempotency and polling:** Safe to poll every 3 to 5 s; entries go from `pending` to `ready` or `failed` and then stay.
 
 ### `GET /eval/results`
 
@@ -2624,7 +2902,7 @@ _eval_results_
 
 ## 5. Behaviour the frontend must know
 
-**Datetimes.** Verified on 105 datetime values in this run: none carry a zone. They are naive UTC ISO strings without a trailing `Z` (e.g. `2026-10-30T17:01:54.694000`). Append `Z` before parsing:
+**Datetimes.** Verified on 130 datetime values in this run: none carry a zone. They are naive UTC ISO strings without a trailing `Z` (e.g. `2026-10-30T17:42:07.820000`). Append `Z` before parsing:
 
 ```ts
 const parseUtc = (s: string | null) => (s ? new Date(s.endsWith('Z') ? s : s + 'Z') : null);
@@ -2668,12 +2946,14 @@ Send datetimes (e.g. `deadline`) as UTC ISO; a `Z` is accepted.
 | `every reachable concept is mastered[; needs help: ...]` | the next step is done (the reason is copied into messages) | yes: `every reachable concept is mastered` |
 | `{n} questions this session; start a new session to continue` | the next step is session_end | yes: `15 questions this session; start a new session to continue` |
 
-**Lessons and latency.** A lesson is written by the LLM the first time a (concept, misconception targets, styles tried) combination is needed, then cached. Measured: responses that generated a lesson took 5.0 to 10.1 s (measured in an earlier run of this script (2026-10-30 22:28, the slowest attempts and GET /next calls of the first run)); with a cached lesson 0.02 s or less. 
+**Lessons and latency.** A lesson is written by the LLM the first time a (concept, misconception targets, styles tried) combination is needed, then cached. Measured: responses that generated a lesson took 3.2 to 3.2 s (measured in an earlier run of this script (2026-10-30 23:08)); with a cached lesson 0.20 s or less. 
 Show a loading state on attempts and GET .../next.
 
 **Course generation.** Measured in an earlier run of this script (2026-10-30 22:28): `generating` for 142 s (71 polls), ending `ready`. Poll every 2 s; allow up to about 3 minutes; on `failed` offer to retry with POST /courses.
 
 **Simulated time.** Each learner has a private clock offset. `POST .../advance {days}` adds to it, resets the session, and decides the next step for the new time; `due_now` lists due concepts. All `now`, `due` and `retrievability` values use the learner's simulated now.
+
+**Research.** When the diagnostic is graded, research starts in the background for the gap concepts only (observed: 2 concepts listed right after the diagnostic, statuses ['ready']; after 0 s of polling: ['ready']). Requests never wait for it. Lessons written after research is ready are grounded in the sources; `lesson.resources` carries them, and GET .../next fills them in for a lesson built earlier. Research results are shared by every learner of the course.
 
 **Placed vs verified.** The API does not expose whether a mastered concept was placed or verified by a review.
 
@@ -2695,7 +2975,6 @@ Show a loading state on attempts and GET .../next.
 
 | Route | Status now |
 |---|---|
-| `GET .../learners/{lid}/resources` | 404 |
 | `POST .../learners/{lid}/virtual/start` | 404 |
 | `POST .../learners/{lid}/virtual/pause` | 404 |
 | `POST .../learners/{lid}/virtual/resume` | 404 |
@@ -2707,7 +2986,6 @@ Show a loading state on attempts and GET .../next.
 Contracts:
 
 ```text
-GET  .../resources -> {concept_id: {status: "pending"|"ready"|"failed", resources: [{kind, title, url, snippet}]}}
 POST .../virtual/start {persona, speed, days, reset}
 POST .../virtual/pause | .../virtual/resume | .../virtual/stop
 POST .../virtual/speed {speed}
@@ -2739,7 +3017,7 @@ Five likely mistakes:
 
 ## 9. Changelog / how to regenerate
 
-Generated 2026-10-30 22:31 from commit `2fb0ac6` with uncommitted changes. Regenerate (MongoDB running, port 8000 free, run in `backend/`):
+Generated 2026-10-30 23:12 from commit `11b8da9` with uncommitted changes. Regenerate (MongoDB running, port 8000 free, run in `backend/`):
 
 ```bash
 uv run python scripts/gen_api_docs.py
@@ -2747,8 +3025,7 @@ uv run python scripts/gen_api_docs.py
 
 ## 10. Quirks and open questions
 
-- Lessons always come with `resources: []`: the research step is not wired yet.
+- A lesson built before its concept's research is ready comes with `resources: []`; GET .../next returns the same lesson with the resources once research is ready.
 - `pace.mastered` and `pace.total` are counts but are sent as floats (e.g. 4.0), because `pace` is typed dict[str, float].
-- Datetimes: 105 values, fraction digits seen [6]; 103 of them end in '000' (values stored in MongoDB keep only milliseconds). Open question: Python omits the fraction entirely when the microseconds are 0 (not observed here), so parse with a lenient ISO parser.
-- .env has no MASTER_PASSWORD, so a server started from .env runs in dev mode with every route open (it logs a warning). This run gave the server a temporary password to capture the real 401.
+- Datetimes: 130 values, fraction digits seen [6]; 128 of them end in '000' (values stored in MongoDB keep only milliseconds). Open question: Python omits the fraction entirely when the microseconds are 0 (not observed here), so parse with a lenient ISO parser.
 - POST .../sessions/new has no response model in the OpenAPI schema (a plain object); its shape below is taken from the live response.

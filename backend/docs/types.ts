@@ -57,6 +57,13 @@ export interface AttemptResultOut {
   next: StepOut;
 }
 
+export interface ConceptResearch {
+  /** `pending` while research runs, then `ready` or `failed`. */
+  status?: "pending" | "ready" | "failed";
+  /** Articles and videos found (at most 2 articles and 1 video). */
+  resources?: Resource[];
+}
+
 export interface ConceptState {
   /** Concept. */
   concept_id: string;
@@ -115,7 +122,7 @@ export interface Lesson {
   explanation: string;
   /** Misconception tags addressed. */
   targets?: string[];
-  /** Articles and videos for the concept. */
+  /** Researched articles and videos for the concept. */
   resources?: Resource[];
 }
 
@@ -226,11 +233,11 @@ export interface ValidationError {
 // Responses without a response model in the schema: shapes inferred from the live responses.
 export type HealthResponse = { status: string };
 export type NewSessionResponse = { session_questions: number; next_kind: string; next_concept_id: string };
+/** GET .../resources: concept_id -> research status and resources. */
+export type ResourcesResponse = Record<string, ConceptResearch>;
 export interface ErrorResponse { detail: string | ValidationError[]; }
 
 // Planned, NOT AVAILABLE yet (404 today). Code against them behind feature detection.
-export type ResearchStatus = "pending" | "ready" | "failed";
-export type ResourcesResponse = Record<string, { status: ResearchStatus; resources: Resource[] }>;
 export interface VirtualStartIn { persona: string; speed: number; days: number; reset: boolean; }
 export interface VirtualSpeedIn { speed: number; }
 export interface VirtualEvent { n: number; at: string; kind: string; text: string; source: string; }

@@ -6,14 +6,14 @@ from fastapi import APIRouter, Depends, HTTPException
 from api.auth import require_master
 from api.grading import GradingError, grade, pick_unseen_first, to_public, topo_order
 from api.messages import messages
-from api.resources import get_resources
+from api.resources import get_resources, get_resources_doc_safe, start_research
 from core import engine
 from core.clock import Clock
 from core.scheduler import get_retrievability, is_due
 from db import repos
 from generation import generate_lesson
 from generation.styles import choose_style
-from schemas.api import (AdvanceIn, AdvanceOut, AttemptResultOut, MasteryOut, StartOut, StepOut,
+from schemas.api import (AdvanceIn, AdvanceOut, AttemptResultOut, ConceptResearch, MasteryOut, StartOut, StepOut,
                          SubmitAnswersIn)
 from schemas.content import Course, Lesson, Question
 from schemas.learner import AnswerGraded, BktParams, ConceptState, LearnerState, PolicyConfig, Step
@@ -103,6 +103,23 @@ def placement_message(state: LearnerState, placed: list[str]) -> str:
     return f"Placed {len(placed)} concepts as already known; I'll check them again {when}."
 
 
+# --- research ---
+
+def research_gaps(state: LearnerState) -> list[str]:
+    """Concepts not mastered, roadmap order: the only ones research runs for."""
+    return [c for c in state.roadmap if state.concepts[c].p_mastery < PARAMS.mastery_threshold]
+
+
+def research_targets(course: Course, state: LearnerState) -> dict[str, list[str]]:
+    """concept_id -> descriptions of the learner's confirmed misconceptions on it."""
+    desc = {m.tag: m.description for m in course.graph.misconceptions}
+    out: dict[str, list[str]] = {}
+    for tag, m in state.misconceptions.items():
+        if m.status == "confirmed" and tag in desc:
+            out.setdefault(m.concept_id, []).append(desc[tag])
+    return out
+
+
 # --- the next step ---
 
 def step_reason(step: Step, state: LearnerState, now: datetime) -> str:
@@ -131,7 +148,9 @@ def step_reason(step: Step, state: LearnerState, now: datetime) -> str:
 
 async def lesson_for(course: Course, cs: ConceptState, step: Step, avoid: list[str]) -> tuple[str, Lesson | None]:
     """Cached by concept, targets, avoided styles and level. Returns (cache key, lesson or None on failure)."""
-    key = repos.lesson_key(course.course_id, cs.concept_id, step.target_misconceptions, avoid, course.level)
+    sources = await get_resources(course.course_id, cs.concept_id)   # [] until research is ready: never waits
+    key = repos.lesson_key(course.course_id, cs.concept_id, step.target_misconceptions, avoid, course.level,
+                           grounded=bool(sources))
     if lesson := await repos.get_lesson(key):
         return key, lesson
     try:
@@ -139,13 +158,21 @@ async def lesson_for(course: Course, cs: ConceptState, step: Step, avoid: list[s
             course.graph, cs.concept_id,
             style=choose_style(avoid, bool(step.target_misconceptions)),
             target_tags=step.target_misconceptions, mastery=cs.p_mastery, level=course.level,
-            sources=await get_resources(course.course_id, cs.concept_id),
+            sources=sources,
         )
     except Exception:
         logger.exception("lesson generation failed for %s/%s", course.course_id, cs.concept_id)
         return key, None
     await repos.save_lesson(key, lesson)
     return key, lesson
+
+
+async def with_resources(course: Course, lesson: Lesson | None) -> Lesson | None:
+    """The lesson carrying the concept's researched resources once research is ready."""
+    if lesson is None:
+        return None
+    ready = await get_resources(course.course_id, lesson.concept_id)
+    return lesson.model_copy(update={"resources": ready}) if ready else lesson
 
 
 async def build_material(course: Course, state: LearnerState, now: datetime) -> StepOut:
@@ -168,6 +195,7 @@ async def build_material(course: Course, state: LearnerState, now: datetime) -> 
         else:
             avoid = step.avoid_styles or list(cs.explanations_tried)
             state.pending_lesson_key, out.lesson = await lesson_for(course, cs, step, avoid)
+            out.lesson = await with_resources(course, out.lesson)
             if out.lesson and out.lesson.style not in cs.explanations_tried:
                 cs.explanations_tried.append(out.lesson.style)
             picked = pick_unseen_first(pool, seen, LESSON_QUESTIONS)
@@ -183,6 +211,7 @@ async def rebuild_material(course: Course, state: LearnerState, now: datetime) -
     step = state.pending_step
     by_id = {q.id: q for q in await repos.get_questions_by_ids(course.course_id, state.pending_question_ids)}
     lesson = await repos.get_lesson(state.pending_lesson_key) if state.pending_lesson_key else None
+    lesson = await with_resources(course, lesson)
     return StepOut(step=step, reason=step_reason(step, state, now), lesson=lesson,
                    questions=[to_public(by_id[q]) for q in state.pending_question_ids if q in by_id])
 
@@ -242,6 +271,8 @@ async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
     placed = place_known(state, graded, clock.now(), PARAMS) if diagnostic else []
     if placed:
         msgs.append(placement_message(state, placed))
+    if diagnostic:
+        await start_research(cid, research_gaps(state), research_targets(course, state))
     await repos.record_attempts(lid, cid, graded, {a.question_id: a.chosen_index for a in body.answers},
                                 clock.now())
     await repos.save_state(state)
@@ -331,4 +362,16 @@ async def next_step(cid: str, lid: str) -> StepOut:
         return await rebuild_material(course, state, now)
     out = await build_material(course, state, now)
     await repos.save_state(state)
+    return out
+
+
+@router.get("/resources", response_model=dict[str, ConceptResearch])
+async def resources(cid: str, lid: str) -> dict[str, ConceptResearch]:
+    """Research status and resources for the learner's gap concepts (only those research was started for)."""
+    _, state = await load(cid, lid)
+    out: dict[str, ConceptResearch] = {}
+    for concept_id in research_gaps(state):
+        doc = await get_resources_doc_safe(cid, concept_id)
+        if doc is not None:
+            out[concept_id] = ConceptResearch(status=doc["status"], resources=doc["resources"])
     return out

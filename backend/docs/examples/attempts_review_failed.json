@@ -16,12 +16,12 @@
     }
   ],
   "correct_indices": {
-    "f707cec4-clear_instructions-p1": 2,
-    "f707cec4-clear_instructions-p2": 2
+    "f707cec4-clear_instructions-p2": 2,
+    "f707cec4-clear_instructions-p1": 2
   },
   "explanations": {
-    "f707cec4-clear_instructions-p1": "Naming the target audience and style describes the desired behavior, which is more actionable than a prohibition or a vague quality request.",
-    "f707cec4-clear_instructions-p2": "Naming the specific change and the constraint tells the model the exact task, rather than leaving 'improve' open to interpretation."
+    "f707cec4-clear_instructions-p2": "Naming the specific change and the constraint tells the model the exact task, rather than leaving 'improve' open to interpretation.",
+    "f707cec4-clear_instructions-p1": "Naming the target audience and style describes the desired behavior, which is more actionable than a prohibition or a vague quality request."
   },
   "mastery": {
     "language_model_basics": 0.85,
