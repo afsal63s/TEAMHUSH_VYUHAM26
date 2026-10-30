@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>OnlyNerd Control Panel</title>
+<style>
+:root{--bg:#f5f4ef;--card:#fff;--ink:#1f1e1d;--mute:#6b6a68;--line:#e3e1da;--accent:#3b5bdb;--good:#2f9e44;--warn:#f08c00;--bad:#e03131}
+@media (prefers-color-scheme:dark){:root{--bg:#161615;--card:#1f1f1d;--ink:#ecebe7;--mute:#9a9893;--line:#33322f;--accent:#748ffc;--good:#51cf66;--warn:#fcc419;--bad:#ff6b6b}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 Inter,system-ui,-apple-system,"Segoe UI",sans-serif;padding:16px}
+h1{font-size:18px;margin:0}h2{font-size:13px;margin:0 0 10px;color:var(--mute);font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.grow{flex:1}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:14px}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(420px,1fr))}
+.tiles{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.tile{border:1px solid var(--line);border-radius:8px;padding:10px}
+.tile b{display:block;font-size:20px}.tile span{color:var(--mute);font-size:12px}
+button,select,input{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 11px}
+button{cursor:pointer}button:hover:not(:disabled){border-color:var(--accent)}button:disabled{opacity:.45;cursor:not-allowed}
+button.danger{border-color:var(--bad);color:var(--bad)}
+input[type=number]{width:80px}
+.row{display:grid;grid-template-columns:170px 1fr 52px;gap:10px;align-items:center;padding:5px 0;cursor:pointer}
+.row:hover{background:color-mix(in srgb,var(--accent) 6%,transparent)}
+.name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.track{position:relative;height:12px;background:var(--line);border-radius:6px}
+.fill{height:100%;border-radius:6px;transition:width .5s,background .5s}
+.mark{position:absolute;top:-3px;width:2px;height:18px;background:var(--ink);opacity:.55}
+.thin{height:5px;margin-top:3px;background:var(--line);border-radius:3px;position:relative}
+.thin .fill{background:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}th{color:var(--mute);font-weight:500}
+.chip{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11px;border:1px solid var(--line)}
+.confirmed{color:var(--bad);border-color:var(--bad)}.suspected{color:var(--warn);border-color:var(--warn)}.resolved{color:var(--good);border-color:var(--good)}
+.bad{color:var(--bad)}.mute{color:var(--mute)}
+#toast{position:fixed;right:16px;bottom:16px;background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;opacity:0;transition:opacity .25s;max-width:340px}
+#toast.on{opacity:1}
+svg{width:100%;height:auto;display:block}
+.legend span{margin-right:14px;font-size:12px;color:var(--mute)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+details pre{overflow:auto;max-height:260px;font-size:12px}
+#login{max-width:420px;margin:60px auto}
+#login input{width:100%;margin-bottom:10px}
+</style>
+</head>
+<body>
+
+<div id="login" class="card" hidden>
+  <h1>OnlyNerd control panel</h1>
+  <p class="mute">Connect to the backend.</p>
+  <input id="baseIn" placeholder="API base URL" value="http://localhost:8000">
+  <input id="pwIn" type="password" placeholder="Master password">
+  <button id="connectBtn">Connect</button>
+  <p id="loginErr" class="bad"></p>
+</div>
+
+<div id="app" hidden>
+  <div class="bar">
+    <h1>OnlyNerd control panel</h1>
+    <select id="coursePick" aria-label="Course"></select>
+    <span class="chip" id="clock">Simulated date: –</span>
+    <span class="chip" id="daysLeft" hidden></span>
+    <span class="grow"></span>
+    <button id="logout">Disconnect</button>
+  </div>
+
+  <div class="card">
+    <h2>Time</h2>
+    <div class="bar" style="margin:0">
+      <button data-days="1">+1 day</button>
+      <button data-days="3">+3 days</button>
+      <button data-days="7">+7 days</button>
+      <button data-days="30">+30 days</button>
+      <input id="customDays" type="number" min="1" step="1" value="2" aria-label="Custom days">
+      <button id="customGo">Jump</button>
+      <span class="grow"></span>
+      <button id="newSession">New session</button>
+      <button id="reset" class="danger">Reset learner</button>
+    </div>
+  </div>
+
+  <div class="card"><h2>Live numbers</h2><div class="tiles" id="tiles"></div></div>
+
+  <div class="grid">
+    <div class="card">
+      <h2>Memory and mastery</h2>
+      <div class="legend"><span><i class="dot" style="background:var(--good)"></i>Memory (retrievability), line = 70%</span><span><i class="dot" style="background:var(--accent)"></i>Mastery, line = 85%</span></div>
+      <div id="bars"></div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>History</h2>
+        <div class="legend"><span><i class="dot" style="background:var(--accent)"></i>Avg mastery</span><span><i class="dot" style="background:var(--good)"></i>Avg memory</span><span>| = clock jump</span></div>
+        <div id="chart"></div>
+        <h2 style="margin-top:14px">Avg stability (days)</h2>
+        <div id="chart2"></div>
+      </div>
+      <div class="card"><h2 id="curveTitle">Forgetting curve</h2><div id="curve" class="mute">Click a concept to see its curve.</div></div>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>Concepts</h2><div style="overflow:auto"><table id="conceptTable"></table></div></div>
+    <div class="card"><h2>Misconceptions</h2><table id="misTable"></table></div>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h2>Due for review (all courses)</h2><table id="dueTable"></table></div>
+    <div class="card"><h2>Evaluation (simulated learners)</h2><div id="evalBox" class="mute">Loading…</div></div>
+  </div>
+</div>
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ---------- storage (shared with the learner window, wrapped in try/catch) ---------- */
+const store = {
+  get(k){ try { return localStorage.getItem(k); } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k,v); } catch(e){} },
+  del(k){ try { localStorage.removeItem(k); } catch(e){} }
+};
+const LEARNER = "me";
+let BASE = store.get("onlynerds.base") || "http://localhost:8000";
+let PASSWORD = store.get("onlynerds.password") || "";
+let courseId = store.get("onlynerds.course") || "";
+let names = {};            // concept_id -> name, from GET /courses/{id}
+let state = null;          // last /state
+let busy = false;          // a mutation is in flight
+let selected = null;       // concept row selected for the curve
+let timers = [];
+let chan = null;
+try { chan = new BroadcastChannel("onlynerds"); } catch(e){}
+
+const $ = id => document.getElementById(id);
+const utc = s => s ? new Date(/[zZ]|[+-]\d\d:?\d\d$/.test(s) ? s : s + "Z") : null;
+const pct = x => (x == null || isNaN(x)) ? "–" : Math.round(x * 100) + "%";
+const num = (x,d=2) => (x == null || isNaN(x)) ? "–" : Number(x).toFixed(d);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const nm = id => names[id] || id;
+const fmtDate = d => d ? d.toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}) : "–";
+
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>t.classList.remove("on"),3500); }
+
+/* ---------- api client ---------- */
+async function api(path, opts = {}) {
+  const res = await fetch(BASE + path, {
+    ...opts,
+    headers: { "Content-Type": "application/json", "X-Master-Password": PASSWORD, ...(opts.headers || {}) }
+  });
+  if (res.status === 401) { showLogin("Wrong or missing password."); throw new Error("401"); }
+  let body = null;
+  try { body = await res.json(); } catch(e){}
+  if (!res.ok) throw new Error((body && body.detail) ? (typeof body.detail === "string" ? body.detail : JSON.stringify(body.detail)) : res.statusText);
+  return body;
+}
+const learnerPath = () => `/courses/${courseId}/learners/${LEARNER}`;
+
+/* ---------- login ---------- */
+function showLogin(msg){
+  stopPolling();
+  $("app").hidden = true; $("login").hidden = false;
+  $("baseIn").value = BASE; $("loginErr").textContent = msg || "";
+}
+$("connectBtn").onclick = async () => {
+  BASE = $("baseIn").value.trim().replace(/\/+$/,"");
+  PASSWORD = $("pwIn").value;
+  try {
+    await api("/auth/check");
+    store.set("onlynerds.base", BASE); store.set("onlynerds.password", PASSWORD);
+    start();
+  } catch(e){ if (String(e.message) !== "401") $("loginErr").textContent = "Cannot reach the backend: " + e.message; }
+};
+$("logout").onclick = () => { store.del("onlynerds.password"); PASSWORD=""; showLogin(""); };
+
+/* ---------- boot ---------- */
+async function start(){
+  $("login").hidden = true; $("app").hidden = false;
+  let courses = [];
+  try { courses = await api("/courses?learner_id=" + LEARNER); } catch(e){ toast("Could not load courses: " + e.message); return; }
+  const ok = courses.filter(c => c.status === "ready" && c.started);
+  const pick = $("coursePick");
+  pick.innerHTML = ok.length ? ok.map(c => `<option value="${esc(c.course_id)}">${esc(c.topic)} (${esc(c.level)})</option>`).join("")
+                              : `<option value="">No started course yet</option>`;
+  if (!ok.length) { toast("Start a course in the learner app first."); return; }
+  if (!ok.some(c => c.course_id === courseId)) courseId = ok[0].course_id;
+  pick.value = courseId;
+  await selectCourse(courseId);
+  startPolling();
+}
+$("coursePick").onchange = e => selectCourse(e.target.value);
+
+async function selectCourse(id){
+  courseId = id; store.set("onlynerds.course", id); selected = null; state = null;
+  names = {};
+  try {
+    const c = await api("/courses/" + id);
+    (c.concepts || (c.graph && c.graph.concepts) || []).forEach(x => names[x.id] = x.name);
+  } catch(e){}
+  await refreshState();
+}
+
+/* ---------- polling ---------- */
+function startPolling(){
+  stopPolling();
+  timers.push(setInterval(() => { if (!document.hidden) refreshState(); }, 1000));
+  timers.push(setInterval(() => { if (!document.hidden) refreshDue(); }, 5000));
+  refreshDue(); refreshEval();
+}
+function stopPolling(){ timers.forEach(clearInterval); timers = []; }
+
+async function refreshState(){
+  if (!courseId) return;
+  try { state = await api(learnerPath() + "/state"); render(); }
+  catch(e){ if (String(e.message) !== "401") $("clock").textContent = "Backend not reachable"; }
+}
+async function refreshDue(){
+  try { renderDue(await api("/due?learner_id=" + LEARNER)); } catch(e){}
+}
+async function refreshEval(){
+  const box = $("evalBox");
+  try { renderEval(await api("/eval/results")); }
+  catch(e){ box.textContent = "Not available (run scripts/evaluate.py)."; }
+}
+
+/* ---------- mutations ---------- */
+function setBusy(b){ busy = b; document.querySelectorAll("[data-days],#customGo,#newSession,#reset").forEach(x => x.disabled = b); }
+async function mutate(path, body, after){
+  if (busy || !courseId) return;
+  setBusy(true);
+  try {
+    const out = await api(learnerPath() + path, { method:"POST", body: body ? JSON.stringify(body) : undefined });
+    await refreshState(); refreshDue();
+    after && after(out);
+  } catch(e){ if (String(e.message) !== "401") toast("Failed: " + e.message); }
+  finally { setBusy(false); }
+}
+function jump(days){
+  if (!(days > 0)) { toast("Days must be greater than 0."); return; }
+  mutate("/advance", { days }, out => {
+    const due = (out.due_now || []).map(nm);
+    toast(`Jumped ${days} day${days===1?"":"s"}. Due now: ${due.length ? due.join(", ") : "nothing"}.`);
+    chan && chan.postMessage({ type:"clock" });
+  });
+}
+document.querySelectorAll("[data-days]").forEach(b => b.onclick = () => jump(Number(b.dataset.days)));
+$("customGo").onclick = () => jump(Math.round(Number($("customDays").value)));
+$("newSession").onclick = () => mutate("/sessions/new", null, () => { toast("New session started."); chan && chan.postMessage({ type:"session" }); });
+$("reset").onclick = () => {
+  if (!confirm("Erase this learner's progress for this course? The course and its links stay.")) return;
+  mutate("/reset", null, () => { toast("Learner reset."); chan && chan.postMessage({ type:"reset" }); });
+};
+
+/* ---------- rendering ---------- */
+function render(){
+  if (!state) return;
+  const now = utc(state.now);
+  $("clock").textContent = "Simulated date: " + fmtDate(now);
+  const dl = $("daysLeft");
+  if (state.days_left != null) { dl.hidden = false; dl.textContent = `${num(state.days_left,1)} days to deadline`; } else dl.hidden = true;
+
+  const ret = state.retrievability || {};
+  const rs = Object.values(ret);
+  const avgR = rs.length ? rs.reduce((a,b)=>a+b,0)/rs.length : null;
+  const pace = state.pace || {};
+  const r = state.retention || {};
+  $("tiles").innerHTML = [
+    ["Mastered", `${pace.mastered ?? 0} / ${pace.total ?? 0}`, "concepts at 85%+"],
+    ["Avg memory", pct(avgR), "right now"],
+    ["Avg stability", num(state.avg_stability_days,1) + " d", "how long memories last"],
+    ["Learning rate", (state.learning_rate > 0 ? "+" : "") + num(state.learning_rate,3), "mastery change per question"],
+    ["Review pass rate", r.review_pass_rate == null ? "no data" : pct(r.review_pass_rate), `${r.reviews_passed ?? 0} of ${r.reviews_total ?? 0} reviews`],
+    ["Delayed recall", r.delayed_pass_rate == null ? "not enough data yet" : pct(r.delayed_pass_rate), `reviews after ${r.delayed_threshold_days ?? 7}+ days`],
+    ["Attempts / mastered", num(pace.attempts_per_mastered,1), "lower is faster"]
+  ].map(t => `<div class="tile"><span>${t[0]}</span><b>${esc(t[1])}</b><span>${esc(t[2])}</span></div>`).join("");
+
+  renderBars(); renderCharts(); renderConcepts(); renderMis(); renderCurve();
+}
+
+function orderedIds(){
+  const concepts = state.concepts || [];
+  const ids = concepts.map(c => c.concept_id);
+  const road = (state.roadmap || []).filter(id => ids.includes(id));
+  return road.length === ids.length ? road : ids;
+}
+const conceptById = id => (state.concepts || []).find(c => c.concept_id === id) || {};
+
+function renderBars(){
+  const ret = state.retrievability || {};
+  $("bars").innerHTML = orderedIds().map(id => {
+    const c = conceptById(id), R = ret[id] ?? 0, p = c.p_mastery ?? 0;
+    const col = R >= .7 ? "var(--good)" : R >= .4 ? "var(--warn)" : "var(--bad)";
+    return `<div class="row" data-id="${esc(id)}" title="Click for the forgetting curve">
+      <div class="name">${esc(nm(id))}</div>
+      <div><div class="track"><div class="fill" style="width:${R*100}%;background:${col}"></div><div class="mark" style="left:70%"></div></div>
+      <div class="thin"><div class="fill" style="width:${p*100}%"></div><div class="mark" style="left:85%;height:11px;top:-3px"></div></div></div>
+      <div class="mute">${pct(R)}</div></div>`;
+  }).join("") || '<span class="mute">No concepts yet.</span>';
+  document.querySelectorAll("#bars .row").forEach(el => el.onclick = () => { selected = el.dataset.id; renderCurve(); });
+}
+
+function line(points, w, h, color, maxY){
+  if (points.length < 2) return "";
+  const x = i => 8 + i * (w - 16) / (points.length - 1);
+  const y = v => h - 8 - (Math.min(v, maxY) / maxY) * (h - 16);
+  return `<polyline fill="none" stroke="${color}" stroke-width="2" points="${points.map((v,i)=>x(i)+","+y(v)).join(" ")}"/>`;
+}
+function renderCharts(){
+  const hist = state.history || [];
+  const W = 600, H = 150;
+  const ticks = hist.map((p,i)=> p.event === "advance" ? `<line x1="${8 + i*(W-16)/Math.max(hist.length-1,1)}" x2="${8 + i*(W-16)/Math.max(hist.length-1,1)}" y1="6" y2="${H-6}" stroke="var(--mute)" stroke-dasharray="3 3" opacity=".6"/>` : "").join("");
+  const grid = [0,.25,.5,.75,1].map(g => `<line x1="8" x2="${W-8}" y1="${H-8-g*(H-16)}" y2="${H-8-g*(H-16)}" stroke="var(--line)"/>`).join("");
+  $("chart").innerHTML = hist.length < 2 ? '<span class="mute">Needs at least two points. Answer some questions or jump the clock.</span>' :
+    `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Average mastery and memory over time">${grid}${ticks}${line(hist.map(p=>p.avg_mastery),W,H,"var(--accent)",1)}${line(hist.map(p=>p.avg_retrievability),W,H,"var(--good)",1)}</svg>`;
+  const maxS = Math.max(1, ...hist.map(p => p.avg_stability_days || 0));
+  $("chart2").innerHTML = hist.length < 2 ? "" :
+    `<svg viewBox="0 0 ${W} 90" role="img" aria-label="Average stability over time">${line(hist.map(p=>p.avg_stability_days||0),W,90,"var(--warn)",maxS)}</svg><div class="mute">max ${num(maxS,1)} days</div>`;
+}
+
+function renderConcepts(){
+  const ret = state.retrievability || {};
+  const now = utc(state.now);
+  let html = "<tr><th>Concept</th><th>Mastery</th><th>Memory</th><th>Stability</th><th>Due</th><th>Lapses</th><th></th></tr>";
+  html += orderedIds().map(id => {
+    const c = conceptById(id), due = utc(c.due_at);
+    const over = due && now && due < now;
+    return `<tr><td>${esc(nm(id))}</td><td>${pct(c.p_mastery)}</td><td>${pct(ret[id])}</td><td>${num(c.stability_days,1)} d</td>
+      <td class="${over?"bad":""}">${due ? fmtDate(due) : "–"}</td><td>${c.lapses ?? 0}</td>
+      <td>${c.needs_help ? '<span class="chip confirmed">needs help</span>' : ""}</td></tr>`;
+  }).join("");
+  $("conceptTable").innerHTML = html;
+}
+
+function renderMis(){
+  const ms = state.misconceptions || [];
+  $("misTable").innerHTML = ms.length ? "<tr><th>Misconception</th><th>Status</th><th>Seen</th></tr>" + ms.map(m =>
+    `<tr><td>${esc(m.description || m.tag)}<div class="mute">${esc(nm(m.concept_id))} · first seen ${fmtDate(utc(m.first_seen_at))}${m.resolved_at ? " · resolved " + fmtDate(utc(m.resolved_at)) : ""}</div></td>
+     <td><span class="chip ${esc(m.status)}">${esc(m.status)}</span></td><td>${m.evidence ?? 0}×</td></tr>`).join("")
+    : '<tr><td class="mute">None detected yet.</td></tr>';
+}
+
+function renderCurve(){
+  const box = $("curve");
+  if (!state || !selected) { return; }
+  const c = conceptById(selected);
+  $("curveTitle").textContent = "Forgetting curve: " + nm(selected);
+  const S = c.stability_days;
+  if (!S || S <= 0) { box.innerHTML = '<span class="mute">Not mastered yet, so there is no curve.</span>'; return; }
+  const last = utc(c.last_reviewed_at), now = utc(state.now);
+  const elapsed = last && now ? Math.max(0, (now - last) / 86400000) : 0;
+  const maxT = Math.max(14, Math.ceil(elapsed * 1.3), S * 4);
+  const W = 600, H = 170, x = t => 30 + t / maxT * (W - 40), y = r => H - 20 - r * (H - 34);
+  const pts = []; for (let i=0;i<=60;i++){ const t = i*maxT/60; pts.push(x(t)+","+y(Math.pow(0.9, t/S))); }
+  const nowR = Math.pow(0.9, elapsed / S);
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Forgetting curve">
+    <line x1="30" x2="${W-10}" y1="${y(.7)}" y2="${y(.7)}" stroke="var(--mute)" stroke-dasharray="4 4"/>
+    <text x="${W-12}" y="${y(.7)-4}" text-anchor="end" fill="var(--mute)" font-size="11">70% line</text>
+    <polyline fill="none" stroke="var(--good)" stroke-width="2" points="${pts.join(" ")}"/>
+    <circle cx="${x(elapsed)}" cy="${y(nowR)}" r="5" fill="var(--bad)"/>
+    <text x="30" y="${H-4}" fill="var(--mute)" font-size="11">days since last review → (0 to ${maxT})</text></svg>
+    <div class="mute">Stability ${num(S,1)} days. Memory now ${pct(nowR)}${last ? " (" + num(elapsed,1) + " days since last review)" : ""}. Reviews: ${(c.reviews||[]).map(r => r.passed ? "✓" : "✗").join(" ") || "none yet"}.</div>`;
+}
+
+function renderDue(items){
+  const rows = (items || []).slice(0, 12);
+  $("dueTable").innerHTML = rows.length ? "<tr><th>Concept</th><th>Course</th><th>Due</th><th>Memory</th></tr>" + rows.map(d =>
+    `<tr><td>${esc(d.concept_name)}</td><td class="mute">${esc(d.topic)}</td><td class="${d.overdue_days>0?"bad":""}">${d.overdue_days>0 ? "overdue " + num(d.overdue_days,1) + " d" : fmtDate(utc(d.due_at))}</td><td>${pct(d.retrievability)}</td></tr>`).join("")
+    : '<tr><td class="mute">Nothing scheduled yet.</td></tr>';
+}
+
+function renderEval(data){
+  const box = $("evalBox");
+  if (!data || (typeof data === "object" && !Object.keys(data).length)) { box.textContent = "Empty."; return; }
+  let html = "";
+  const limits = data.limits || data.limitations;
+  if (Array.isArray(limits)) html += `<p><b>Read this first</b></p><ul>${limits.map(l => `<li>${esc(typeof l === "string" ? l : JSON.stringify(l))}</li>`).join("")}</ul>`;
+  html += `<details open><summary>Raw results (open results/results.json to map the table you want)</summary><pre>${esc(JSON.stringify(data, null, 2))}</pre></details>`;
+  box.innerHTML = html;
+}
+
+/* ---------- go ---------- */
+if (PASSWORD) { api("/auth/check").then(start).catch(e => { if (String(e.message) !== "401") showLogin("Cannot reach the backend."); }); }
+else showLogin("");
+</script>
+</body>
+</html>
