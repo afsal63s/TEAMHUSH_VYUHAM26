@@ -14,6 +14,8 @@ def submit_answers(state: LearnerState, questions: list[Question], graded: list[
     now, thr = clock.now(), params.mastery_threshold
     q_map = {q.id: q for q in questions}
     record_misconceptions(state, graded)
+    # A tag picked wrong this round is not cleared by clean answers in the same round.
+    wrong_tags = {a.chosen_tag for a in graded if not a.correct and a.chosen_tag}
 
     by_concept: dict[str, list[AnswerGraded]] = defaultdict(list)
     for ans in graded:
@@ -32,7 +34,7 @@ def submit_answers(state: LearnerState, questions: list[Question], graded: list[
             cs.attempts += 1
             any_wrong |= not ans.correct
             if ans.correct:
-                _credit_clean_answer(state, cid, q_map[ans.question_id])
+                _credit_clean_answer(state, cid, q_map[ans.question_id], wrong_tags)
         state.session_questions += len(answers)
 
         # Scheduler changes at most once per round.
@@ -53,10 +55,13 @@ def submit_answers(state: LearnerState, questions: list[Question], graded: list[
     return state
 
 
-def _credit_clean_answer(state: LearnerState, cid: str, q: Question) -> None:
-    """A correct answer counts toward resolving a misconception only if the question tests it."""
+def _credit_clean_answer(state: LearnerState, cid: str, q: Question, skip: set[str]) -> None:
+    """A correct answer counts toward resolving a misconception only if the question tests it
+    and the tag was not picked wrong in the same round (`skip`)."""
     tested = {o.misconception_tag for o in getattr(q, "options", []) if o.misconception_tag}
     for tag, m in state.misconceptions.items():
+        if tag in skip:
+            continue
         if m.concept_id == cid and m.status == "confirmed" and (not tested or tag in tested):
             m.clean_streak += 1
             if m.clean_streak >= 2:

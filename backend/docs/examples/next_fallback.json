@@ -1,0 +1,54 @@
+{
+  "step": {
+    "kind": "fallback",
+    "concept_id": "language_model_basics",
+    "target_misconceptions": [],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": "context_window",
+    "give_up_after": false
+  },
+  "reason": "stuck on context_window; revisiting prerequisite language_model_basics (mastery 0.85)",
+  "lesson": {
+    "concept_id": "language_model_basics",
+    "style": "worked_example",
+    "explanation": "Let's see how a language model predicts text using one small example. Suppose you give it the prompt: \"The cat sat on the\". The model does not look up a fact or understand the sentence the way you do. Instead, it scores many possible next words based on patterns it learned from huge amounts of text. Step one: it reads your prompt as a sequence of tokens, which are chunks of words. Step two: it estimates probabilities for every possible next token. Words like \"mat\" or \"floor\" might get high scores, while \"piano\" gets a low one. Step three: it picks one token, often one of the most likely, and adds it to the text. Step four: it repeats the process with the longer text until it reaches a stopping point. So if your prompt is \"The cat sat on the\", the output is likely \"mat\", then a period, then more words. Notice what this means for you: the model continues whatever text it receives, so the wording of your prompt directly shapes what comes next. Keep this in mind as you write prompts, because a clearer starting text usually leads to a more useful continuation.",
+    "targets": [],
+    "resources": []
+  },
+  "questions": [
+    {
+      "id": "f707cec4-language_model_basics-p1",
+      "concept_id": "language_model_basics",
+      "prompt": "A model completes 'The sky is' with 'blue' most of the time. What is the most accurate explanation?",
+      "options": [
+        "It was told to answer blue and will repeat it exactly",
+        "It judged blue to be the true color, as a person would",
+        "Blue follows that phrase most often in its training text",
+        "It checked a stored fact that the sky is blue"
+      ]
+    },
+    {
+      "id": "f707cec4-language_model_basics-p2",
+      "concept_id": "language_model_basics",
+      "prompt": "Why might running the same prompt twice produce different completions?",
+      "options": [
+        "Completions are sampled from probabilities, so lower-ranked words can be picked",
+        "The model rethinks its earlier answer and changes its mind",
+        "The model rewrites its stored answer each time it is queried",
+        "The prompt reaches the model in a slightly different form each run"
+      ]
+    },
+    {
+      "id": "f707cec4-language_model_basics-t1",
+      "concept_id": "language_model_basics",
+      "prompt": "A support bot is asked for the refund policy of a company whose documents it never saw, and it writes a convincing policy. What best explains this?",
+      "options": [
+        "It returns the same policy text on every run, so it repeats itself",
+        "It continues learned text patterns, so it can invent plausible policy details",
+        "It searched the company's policy page and copied the rule",
+        "It understood the question and worked out the rule logically"
+      ]
+    }
+  ]
+}

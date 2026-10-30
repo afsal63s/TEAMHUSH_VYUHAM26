@@ -1,0 +1,14 @@
+{
+  "step": {
+    "kind": "done",
+    "concept_id": null,
+    "target_misconceptions": [],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": null,
+    "give_up_after": false
+  },
+  "reason": "every reachable concept is mastered",
+  "lesson": null,
+  "questions": []
+}

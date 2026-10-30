@@ -9,7 +9,7 @@ from api.messages import messages
 from api.resources import get_resources
 from core import engine
 from core.clock import Clock
-from core.scheduler import first_mastery, get_retrievability, is_due
+from core.scheduler import get_retrievability, is_due
 from db import repos
 from generation import generate_lesson
 from generation.styles import choose_style
@@ -64,30 +64,43 @@ def is_diagnostic_round(state: LearnerState) -> bool:
     return all(cs.attempts == 0 for cs in state.concepts.values())
 
 
+PLACEMENT_DAYS = {"low": 1.0, "medium": 2.0, "high": 3.0}   # None (not given) counts as low
+
+
 def place_known(state: LearnerState, graded: list[AnswerGraded], now: datetime,
                 params: BktParams = BktParams()) -> list[str]:
     """After the diagnostic, treat each concept answered correctly as already known.
 
     One right answer only lifts BKT to ~0.55, which would make a learner relearn what they know.
-    Placed concepts get p_mastery = threshold and a first-mastery schedule, so a verification
-    review is due in 1 day. A guesser is caught by that review: a failed review is a lapse.
-    Concepts answered wrong stay as BKT left them. Returns the placed concept ids.
+    Placed concepts get p_mastery = threshold and a verification review whose spacing follows the
+    stated confidence: low 1 day, medium 2, high 3 (the lowest if a concept had several answers).
+    A guesser is caught by that review: a failed review is a lapse. Concepts answered wrong stay
+    as BKT left them. The diagnostic does not count against the session budget, so the session
+    counter starts again at 0. Returns the placed concept ids.
     """
     results: dict[str, bool] = {}
+    days: dict[str, float] = {}
     for g in graded:
         results[g.concept_id] = results.get(g.concept_id, True) and g.correct
+        d = PLACEMENT_DAYS.get(g.confidence or "low", 1.0)
+        days[g.concept_id] = min(days.get(g.concept_id, d), d)
     placed = []
     for cid, all_right in results.items():
         if all_right:
             cs = state.concepts.setdefault(cid, ConceptState(concept_id=cid))
             cs.p_mastery = params.mastery_threshold
-            first_mastery(cs, now)
+            cs.stability_days = days[cid]
+            cs.last_reviewed_at = now
+            cs.due_at = now + timedelta(days=days[cid])
             placed.append(cid)
+    state.session_questions = 0
     return placed
 
 
-def placement_message(placed: list[str]) -> str:
-    return f"Placed {len(placed)} concepts as already known; I'll check them again tomorrow."
+def placement_message(state: LearnerState, placed: list[str]) -> str:
+    longest = max(state.concepts[c].stability_days for c in placed)
+    when = "tomorrow" if longest <= 1 else f"within {longest:g} days"
+    return f"Placed {len(placed)} concepts as already known; I'll check them again {when}."
 
 
 # --- the next step ---
@@ -102,6 +115,9 @@ def step_reason(step: Step, state: LearnerState, now: datetime) -> str:
     if step.kind == "lesson":
         if step.give_up_after:
             return f"last try on {cs.concept_id} after {cs.failed_rounds} failed rounds"
+        if cs.p_mastery < PARAMS.mastery_threshold and (cs.lapses or cs.stability_days > 0) and cs.failed_rounds:
+            return (f"relearning {cs.concept_id} first: it was mastered, slipped to {cs.p_mastery:.2f} "
+                    f"(lapses {cs.lapses})")
         if step.target_misconceptions:
             facts = [f"{t} confirmed, evidence {state.misconceptions[t].evidence:g}"
                      for t in step.target_misconceptions]
@@ -113,11 +129,11 @@ def step_reason(step: Step, state: LearnerState, now: datetime) -> str:
     return "every reachable concept is mastered" + (f"; needs help: {', '.join(stuck)}" if stuck else "")
 
 
-async def lesson_for(course: Course, cs: ConceptState, step: Step, avoid: list[str]) -> Lesson | None:
-    """Cached by concept, targets, avoided styles and level. None if generation fails."""
+async def lesson_for(course: Course, cs: ConceptState, step: Step, avoid: list[str]) -> tuple[str, Lesson | None]:
+    """Cached by concept, targets, avoided styles and level. Returns (cache key, lesson or None on failure)."""
     key = repos.lesson_key(course.course_id, cs.concept_id, step.target_misconceptions, avoid, course.level)
     if lesson := await repos.get_lesson(key):
-        return lesson
+        return key, lesson
     try:
         lesson = await generate_lesson(
             course.graph, cs.concept_id,
@@ -127,33 +143,56 @@ async def lesson_for(course: Course, cs: ConceptState, step: Step, avoid: list[s
         )
     except Exception:
         logger.exception("lesson generation failed for %s/%s", course.course_id, cs.concept_id)
-        return None
+        return key, None
     await repos.save_lesson(key, lesson)
-    return lesson
+    return key, lesson
 
 
-async def step_out(course: Course, state: LearnerState, step: Step, now: datetime) -> StepOut:
-    """Attach material to the step. Records the lesson style on the state (caller saves)."""
+async def build_material(course: Course, state: LearnerState, now: datetime) -> StepOut:
+    """Build lesson and questions for state.pending_step and record them on the state (caller saves).
+
+    Records the lesson style in explanations_tried, the question ids as pending and served, and the
+    lesson cache key, so later GET .../next calls rebuild the same StepOut without side effects.
+    """
+    step = state.pending_step
     out = StepOut(step=step, reason=step_reason(step, state, now))
-    if step.kind not in ("lesson", "fallback", "review"):
-        return out
-    cs = state.concepts.setdefault(step.concept_id, ConceptState(concept_id=step.concept_id))
-    pool: list[Question] = await repos.get_questions(course.course_id, cs.concept_id)
-    # Practice first, then transfer, then diagnostic (already seen by everyone).
-    rank = {"practice": 0, "review": 0, "transfer": 1, "diagnostic": 2}
-    pool.sort(key=lambda q: (rank[q.kind], q.id))
-    seen = await repos.seen_question_ids(state.learner_id, course.course_id)
-
-    if step.kind == "review":
-        out.questions = [to_public(q) for q in pick_unseen_first(pool, seen, REVIEW_QUESTIONS)]
-        return out
-
-    avoid = step.avoid_styles or list(cs.explanations_tried)
-    out.lesson = await lesson_for(course, cs, step, avoid)
-    if out.lesson and out.lesson.style not in cs.explanations_tried:
-        cs.explanations_tried.append(out.lesson.style)
-    out.questions = [to_public(q) for q in pick_unseen_first(pool, seen, LESSON_QUESTIONS)]
+    if step.kind in ("lesson", "fallback", "review"):
+        cs = state.concepts.setdefault(step.concept_id, ConceptState(concept_id=step.concept_id))
+        pool: list[Question] = await repos.get_questions(course.course_id, cs.concept_id)
+        # Practice first, then transfer, then diagnostic (already seen by everyone).
+        rank = {"practice": 0, "review": 0, "transfer": 1, "diagnostic": 2}
+        pool.sort(key=lambda q: (rank[q.kind], q.id))
+        seen = await repos.seen_question_ids(state.learner_id, course.course_id)
+        if step.kind == "review":
+            picked = pick_unseen_first(pool, seen, REVIEW_QUESTIONS)
+        else:
+            avoid = step.avoid_styles or list(cs.explanations_tried)
+            state.pending_lesson_key, out.lesson = await lesson_for(course, cs, step, avoid)
+            if out.lesson and out.lesson.style not in cs.explanations_tried:
+                cs.explanations_tried.append(out.lesson.style)
+            picked = pick_unseen_first(pool, seen, LESSON_QUESTIONS)
+        out.questions = [to_public(q) for q in picked]
+    state.pending_question_ids = [q.id for q in out.questions]
+    state.served_question_ids = list(state.pending_question_ids)
+    state.pending_built = True
     return out
+
+
+async def rebuild_material(course: Course, state: LearnerState, now: datetime) -> StepOut:
+    """The StepOut already built for pending_step: same questions, lesson from the cache. No side effects."""
+    step = state.pending_step
+    by_id = {q.id: q for q in await repos.get_questions_by_ids(course.course_id, state.pending_question_ids)}
+    lesson = await repos.get_lesson(state.pending_lesson_key) if state.pending_lesson_key else None
+    return StepOut(step=step, reason=step_reason(step, state, now), lesson=lesson,
+                   questions=[to_public(by_id[q]) for q in state.pending_question_ids if q in by_id])
+
+
+def decide(course: Course, state: LearnerState, clock: Clock) -> Step:
+    """Call engine.get_next exactly once and store the decision; materials are built later."""
+    state.pending_step = engine.get_next(state, course.graph, CONFIG, clock, PARAMS)
+    state.pending_question_ids, state.served_question_ids = [], []
+    state.pending_lesson_key, state.pending_built = None, False
+    return state.pending_step
 
 
 # --- routes ---
@@ -168,14 +207,15 @@ async def start(cid: str, lid: str) -> StartOut:
         learner_id=lid, course_id=cid, roadmap=roadmap,
         concepts={c: ConceptState(concept_id=c) for c in roadmap},
     )
-    await repos.save_state(state)
-
     diagnostic: dict[str, Question] = {}
     for q in await repos.get_questions(cid):         # sorted by id
         current = diagnostic.get(q.concept_id)
         if current is None or (q.kind == "diagnostic" and current.kind != "diagnostic"):
             diagnostic[q.concept_id] = q
-    return StartOut(questions=[to_public(diagnostic[c]) for c in roadmap if c in diagnostic])
+    questions = [diagnostic[c] for c in roadmap if c in diagnostic]
+    state.served_question_ids = [q.id for q in questions]
+    await repos.save_state(state)
+    return StartOut(questions=[to_public(q) for q in questions])
 
 
 @router.post("/attempts", response_model=AttemptResultOut)
@@ -183,6 +223,9 @@ async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
     course, state = await load(cid, lid)
     if not body.answers:
         raise HTTPException(422, "no answers")
+    unserved = sorted({a.question_id for a in body.answers} - set(state.served_question_ids))
+    if unserved:
+        raise HTTPException(422, f"questions not served to this learner: {unserved}")
     questions = {q.id: q for q in await repos.get_questions_by_ids(cid, [a.question_id for a in body.answers])}
     try:
         graded = grade(questions, body.answers)
@@ -198,15 +241,15 @@ async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
     msgs = messages(prev, state, graded, days_left=left, params=PARAMS)
     placed = place_known(state, graded, clock.now(), PARAMS) if diagnostic else []
     if placed:
-        msgs.append(placement_message(placed))
+        msgs.append(placement_message(state, placed))
     await repos.record_attempts(lid, cid, graded, {a.question_id: a.chosen_index for a in body.answers},
                                 clock.now())
     await repos.save_state(state)
 
-    step = engine.get_next(state, course.graph, CONFIG, clock, PARAMS)
+    step = decide(course, state, clock)
     await repos.save_state(state)
-    nxt = await step_out(course, state, step, clock.now())
-    await repos.save_state(state)                    # explanations_tried
+    nxt = await build_material(course, state, clock.now())
+    await repos.save_state(state)                    # material ids, explanations_tried
     if step.kind in ("done", "session_end"):
         msgs.append(nxt.reason)
     if placed:
@@ -253,19 +296,39 @@ async def get_state(cid: str, lid: str) -> MasteryOut:
 
 @router.post("/advance", response_model=AdvanceOut)
 async def advance(cid: str, lid: str, body: AdvanceIn) -> AdvanceOut:
-    _, state = await load(cid, lid)
+    course, state = await load(cid, lid)
     if body.days <= 0:
         raise HTTPException(422, "days must be positive")
     state.clock_offset_days += body.days
     state.session_questions = 0                      # a new day is a new session
+    clock = learner_clock(state)
+    step = decide(course, state, clock)              # no materials here: advance never calls the LLM
     await repos.save_state(state)
-    now = learner_clock(state).now()
-    return AdvanceOut(now=now, due_now=[c for c, cs in state.concepts.items() if is_due(cs, now)])
+    now = clock.now()
+    return AdvanceOut(now=now, due_now=[c for c, cs in state.concepts.items() if is_due(cs, now)],
+                      next_kind=step.kind, next_concept_id=step.concept_id)
 
 
 @router.post("/sessions/new")
 async def new_session(cid: str, lid: str) -> dict:
-    _, state = await load(cid, lid)
+    course, state = await load(cid, lid)
     state.session_questions = 0
+    step = decide(course, state, learner_clock(state))   # the session cap ended the last decision
     await repos.save_state(state)
-    return {"session_questions": 0}
+    return {"session_questions": 0, "next_kind": step.kind, "next_concept_id": step.concept_id}
+
+
+@router.get("/next", response_model=StepOut)
+async def next_step(cid: str, lid: str) -> StepOut:
+    """Serve the stored decision. Idempotent: materials are built once, later calls rebuild them."""
+    course, state = await load(cid, lid)
+    if state.pending_step is None:
+        if is_diagnostic_round(state):
+            raise HTTPException(409, "no step decided yet: answer the diagnostic from /start first")
+        decide(course, state, learner_clock(state))  # a learner stored before decisions were kept
+    now = learner_clock(state).now()
+    if state.pending_built:
+        return await rebuild_material(course, state, now)
+    out = await build_material(course, state, now)
+    await repos.save_state(state)
+    return out

@@ -1,0 +1,66 @@
+{
+  "graded": [
+    {
+      "question_id": "f707cec4-context_window-p1",
+      "concept_id": "context_window",
+      "correct": false,
+      "chosen_tag": "context_window__model_remembers_everything",
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-context_window-p2",
+      "concept_id": "context_window",
+      "correct": false,
+      "chosen_tag": "context_window__earlier_text_always_visible",
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-context_window-t1",
+      "concept_id": "context_window",
+      "correct": false,
+      "chosen_tag": "context_window__limit_is_only_words",
+      "confidence": "medium"
+    }
+  ],
+  "correct_indices": {
+    "f707cec4-context_window-t1": 0,
+    "f707cec4-context_window-p1": 0,
+    "f707cec4-context_window-p2": 3
+  },
+  "explanations": {
+    "f707cec4-context_window-t1": "A new session only includes the text sent in that request. Without the day-one text, the model has no access to the order number.",
+    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be split into several tokens. So a word count can understate the token count.",
+    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most relevant sections in pieces works within the limit. Relying on memory or assuming a fit does not."
+  },
+  "mastery": {
+    "language_model_basics": 0.9977042871374661,
+    "prompt_structure": 0.85,
+    "sampling_temperature": 0.85,
+    "context_window": 0.17307692307692307,
+    "clear_instructions": 0.85,
+    "role_prompting": 0.85,
+    "few_shot_examples": 0.85,
+    "output_formatting": 0.85,
+    "iterative_refinement": 0.85,
+    "hallucination_checking": 0.85
+  },
+  "new_confirmed_misconceptions": [],
+  "messages": [
+    "context_window is flagged for help: it may need a different resource or a person.",
+    "every reachable concept is mastered; needs help: context_window"
+  ],
+  "next": {
+    "step": {
+      "kind": "done",
+      "concept_id": null,
+      "target_misconceptions": [],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "every reachable concept is mastered; needs help: context_window",
+    "lesson": null,
+    "questions": []
+  }
+}

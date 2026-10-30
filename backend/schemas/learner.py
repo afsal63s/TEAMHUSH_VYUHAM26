@@ -34,6 +34,11 @@ class LearnerState(BaseModel):
     roadmap: list[str] = Field(default_factory=list)
     session_questions: int = 0
     clock_offset_days: float = 0.0     # demo clock: how far this learner's "now" is shifted
+    pending_step: 'Step | None' = None              # the stored decision; get_next runs once per decision
+    pending_question_ids: list[str] = Field(default_factory=list)   # material built for pending_step
+    served_question_ids: list[str] = Field(default_factory=list)    # ids /attempts accepts
+    pending_lesson_key: str | None = None           # lesson cache key of the built material
+    pending_built: bool = False                     # material for pending_step has been built
 
 
 class BktParams(BaseModel):

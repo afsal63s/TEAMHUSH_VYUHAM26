@@ -1,0 +1,114 @@
+{
+  "questions": [
+    {
+      "id": "f707cec4-language_model_basics-d1",
+      "concept_id": "language_model_basics",
+      "prompt": "What does a language model do when it receives a prompt?",
+      "options": [
+        "Understands the prompt's meaning the way a person does",
+        "Predicts the likely next text given the input",
+        "Picks a fixed reply it wrote for that exact prompt",
+        "Searches a stored database for the matching answer"
+      ]
+    },
+    {
+      "id": "f707cec4-prompt_structure-d1",
+      "concept_id": "prompt_structure",
+      "prompt": "Which part of a prompt tells the model what task to perform?",
+      "options": [
+        "Input data",
+        "Instruction",
+        "Context",
+        "Output format"
+      ]
+    },
+    {
+      "id": "f707cec4-sampling_temperature-d1",
+      "concept_id": "sampling_temperature",
+      "prompt": "What does a low sampling temperature mainly change in a model's output?",
+      "options": [
+        "It makes the model pick its least likely words",
+        "It makes word choices more predictable and repeatable",
+        "It makes the model's answers more factually accurate",
+        "It teaches the model new facts for the reply"
+      ]
+    },
+    {
+      "id": "f707cec4-context_window-d1",
+      "concept_id": "context_window",
+      "prompt": "A user chatted with a model for an hour, then sends a new request containing none of that earlier text. What can the model use to answer?",
+      "options": [
+        "A saved summary of the earlier chat",
+        "Only the last sentence the user typed before",
+        "Only the text included in this new request",
+        "Everything from the previous hour of chat"
+      ]
+    },
+    {
+      "id": "f707cec4-clear_instructions-d1",
+      "concept_id": "clear_instructions",
+      "prompt": "Which prompt is most likely to get a useful result?",
+      "options": [
+        "Summarize this article in three bullet points.",
+        "Summarize this article for me.",
+        "Give me a summary; you'll know the style I want.",
+        "Summarize this article, but avoid being too long."
+      ]
+    },
+    {
+      "id": "f707cec4-role_prompting-d1",
+      "concept_id": "role_prompting",
+      "prompt": "What is the main effect of telling a model to act as a nutritionist?",
+      "options": [
+        "It works the same for any topic you pick",
+        "It shifts the tone and focus of its answer",
+        "It gives the model new nutrition facts it lacked",
+        "It removes the need to describe the question"
+      ]
+    },
+    {
+      "id": "f707cec4-few_shot_examples-d1",
+      "concept_id": "few_shot_examples",
+      "prompt": "You want a model to label reviews as positive or negative, but it returns free-form sentences. What is the best first fix?",
+      "options": [
+        "Add fifty unlabeled reviews so it sees more text",
+        "Add a list of product facts for it to memorize",
+        "Add two labeled reviews showing the exact label format",
+        "Add two recipe examples to show it variety"
+      ]
+    },
+    {
+      "id": "f707cec4-output_formatting-d1",
+      "concept_id": "output_formatting",
+      "prompt": "Why ask for JSON with fixed keys when your program will read the model's output?",
+      "options": [
+        "So the answer looks more polished to human readers",
+        "So the model will return exactly the same fields every time",
+        "So the program can parse each field reliably without manual cleanup",
+        "Because a clear task already sets the output structure"
+      ]
+    },
+    {
+      "id": "f707cec4-iterative_refinement-d1",
+      "concept_id": "iterative_refinement",
+      "prompt": "Your first prompt gives a decent answer on one input. What should you do next?",
+      "options": [
+        "Test it on several different inputs and revise where it falls short.",
+        "Submit it, since a first prompt should work perfectly.",
+        "Keep it, since a decent answer means the prompt is done.",
+        "Rewrite its tone, length, and format together to save time."
+      ]
+    },
+    {
+      "id": "f707cec4-hallucination_checking-d1",
+      "concept_id": "hallucination_checking",
+      "prompt": "A model answers a factual question in a very assured tone. What should you do before trusting it?",
+      "options": [
+        "Ask it to add citations for support",
+        "Trust it, since the tone shows expertise",
+        "Accept it, since it sounds certain",
+        "Verify the claim against a reliable source"
+      ]
+    }
+  ]
+}

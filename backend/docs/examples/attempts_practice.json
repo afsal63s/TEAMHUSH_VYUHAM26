@@ -1,0 +1,105 @@
+{
+  "graded": [
+    {
+      "question_id": "f707cec4-context_window-p1",
+      "concept_id": "context_window",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-context_window-p2",
+      "concept_id": "context_window",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-context_window-t1",
+      "concept_id": "context_window",
+      "correct": false,
+      "chosen_tag": "context_window__limit_is_only_words",
+      "confidence": "medium"
+    }
+  ],
+  "correct_indices": {
+    "f707cec4-context_window-t1": 0,
+    "f707cec4-context_window-p1": 0,
+    "f707cec4-context_window-p2": 3
+  },
+  "explanations": {
+    "f707cec4-context_window-t1": "A new session only includes the text sent in that request. Without the day-one text, the model has no access to the order number.",
+    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be split into several tokens. So a word count can understate the token count.",
+    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most relevant sections in pieces works within the limit. Relying on memory or assuming a fit does not."
+  },
+  "mastery": {
+    "language_model_basics": 0.85,
+    "prompt_structure": 0.85,
+    "sampling_temperature": 0.85,
+    "context_window": 0.4814035218438767,
+    "clear_instructions": 0.85,
+    "role_prompting": 0.1774193548387097,
+    "few_shot_examples": 0.85,
+    "output_formatting": 0.85,
+    "iterative_refinement": 0.85,
+    "hallucination_checking": 0.85
+  },
+  "new_confirmed_misconceptions": [],
+  "messages": [
+    "Misconception context_window__model_remembers_everything resolved."
+  ],
+  "next": {
+    "step": {
+      "kind": "lesson",
+      "concept_id": "role_prompting",
+      "target_misconceptions": [],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "role_prompting: mastery 0.18, lowest among unlocked concepts",
+    "lesson": {
+      "concept_id": "role_prompting",
+      "style": "worked_example",
+      "explanation": "Role prompting means telling the model who it should act as before you ask your question, such as a nurse, a copy editor, or a chess coach. The role shapes the tone, the expertise it draws on, and what it chooses to focus on. Let's walk through one small example. Suppose you want advice about a sore back after lifting boxes. Step one: write the plain question, 'My back hurts after moving boxes. What should I do?' Step two: add a role, so the prompt becomes, 'You are a calm physical therapist. My back hurts after moving boxes. What should I do?' Step three: compare the two answers. The plain version may give a generic list. The role version usually sounds more measured, emphasizes rest and gentle movement, and flags when to see a doctor. Your turn: pick a task you care about, like summarizing meeting notes, and write one role-based prompt for it. Then ask yourself whether the role changed the focus, the tone, or both. Keep the role specific, because 'expert' tells the model less than 'an editor who cuts jargon for beginners'.",
+      "targets": [],
+      "resources": []
+    },
+    "questions": [
+      {
+        "id": "f707cec4-role_prompting-p1",
+        "concept_id": "role_prompting",
+        "prompt": "A prompt says 'You are a tax lawyer' and asks about a student's gig income. Why might the answer still be wrong?",
+        "options": [
+          "Any professional role would be equally accurate here",
+          "The role only changes style; facts can still be wrong",
+          "The role gives it current tax law it lacked",
+          "The role makes stating the income question unnecessary"
+        ]
+      },
+      {
+        "id": "f707cec4-role_prompting-p2",
+        "concept_id": "role_prompting",
+        "prompt": "You want a critical review of a startup pitch. Which role and task pairing is strongest?",
+        "options": [
+          "A skeptical investor asked to flag risks",
+          "A licensed CPA who audits the numbers",
+          "Skeptical reviewer, with the pitch left out",
+          "A cheerful children's book author writing praise"
+        ]
+      },
+      {
+        "id": "f707cec4-role_prompting-t1",
+        "concept_id": "role_prompting",
+        "prompt": "Which setup best gets a calm, short reply to an angry customer?",
+        "options": [
+          "Support agent role, with the complaint omitted",
+          "A chemistry professor role for refund rules",
+          "Support agent role, complaint text, and length limit",
+          "A poet role, since any role fits equally"
+        ]
+      }
+    ]
+  }
+}

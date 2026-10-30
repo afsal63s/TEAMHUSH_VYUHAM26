@@ -1,0 +1,58 @@
+{
+  "step": {
+    "kind": "lesson",
+    "concept_id": "context_window",
+    "target_misconceptions": [
+      "context_window__model_remembers_everything"
+    ],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": null,
+    "give_up_after": false
+  },
+  "reason": "context_window__model_remembers_everything confirmed, evidence 2; context_window needs it",
+  "lesson": {
+    "concept_id": "context_window",
+    "style": "contrast",
+    "explanation": "You may believe the model remembers every conversation you have ever had with it. That belief is wrong. The right idea is that a model only works with the text inside its context window, meaning the text sent in one request. Think of it as a desk with limited space. Whatever is on the desk, the model can read and use. Whatever has been pushed off the desk, or was never placed there, is invisible to it. So when you start a new chat, earlier conversations are not automatically present. The model has no stored memory of your last session unless that text is included again in the new request. Here is where the wrong belief breaks: memory implies everything persists, but the context window is a fixed, limited input for each request. If a long conversation exceeds that limit, the oldest parts can be dropped, and the model will act as if they never happened. To get reliable answers, put the information the model needs directly into your current request.",
+    "targets": [
+      "context_window__model_remembers_everything"
+    ],
+    "resources": []
+  },
+  "questions": [
+    {
+      "id": "f707cec4-context_window-p1",
+      "concept_id": "context_window",
+      "prompt": "A 500-word English paragraph uses more than 500 tokens in a model's context window. Why?",
+      "options": [
+        "Tokens are often shorter than words, so one word can span several",
+        "The window also stores a saved copy of the words",
+        "Tokens are counted per sentence rather than per word",
+        "Each word is counted twice in the window"
+      ]
+    },
+    {
+      "id": "f707cec4-context_window-p2",
+      "concept_id": "context_window",
+      "prompt": "You need a model to analyze a 60-page report, but the chat's context window is too small to hold all of it. What is the best approach?",
+      "options": [
+        "Assume the first pages stay visible while the rest is dropped",
+        "Count pages as words and assume the report fits",
+        "Expect the model to recall the report from last week's chat",
+        "Split the report and send the key sections that fit the window"
+      ]
+    },
+    {
+      "id": "f707cec4-context_window-t1",
+      "concept_id": "context_window",
+      "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely cause?",
+      "options": [
+        "The day-one text is no longer in the context window",
+        "The order number used more words than the bot's limit",
+        "Earlier messages stay in view but were misread",
+        "The bot saved the order number in permanent memory and forgot it"
+      ]
+    }
+  ]
+}

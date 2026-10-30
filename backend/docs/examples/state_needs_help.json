@@ -1,0 +1,212 @@
+{
+  "concepts": [
+    {
+      "concept_id": "language_model_basics",
+      "p_mastery": 0.9977042871374661,
+      "attempts": 4,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [
+        "worked_example"
+      ],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "prompt_structure",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "sampling_temperature",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "context_window",
+      "p_mastery": 0.17307692307692307,
+      "attempts": 19,
+      "failed_rounds": 4,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [
+        "worked_example",
+        "contrast",
+        "analogy",
+        "step_by_step"
+      ],
+      "fallbacks": 1,
+      "needs_help": true
+    },
+    {
+      "concept_id": "clear_instructions",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "role_prompting",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "few_shot_examples",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "output_formatting",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "iterative_refinement",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "hallucination_checking",
+      "p_mastery": 0.85,
+      "attempts": 1,
+      "failed_rounds": 0,
+      "stability_days": 2.0,
+      "last_reviewed_at": "2026-10-30T17:01:54.879000",
+      "due_at": "2026-11-01T17:01:54.879000",
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    }
+  ],
+  "misconceptions": [
+    {
+      "tag": "context_window__model_remembers_everything",
+      "concept_id": "context_window",
+      "status": "confirmed",
+      "evidence": 6.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "context_window__earlier_text_always_visible",
+      "concept_id": "context_window",
+      "status": "confirmed",
+      "evidence": 7.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "context_window__limit_is_only_words",
+      "concept_id": "context_window",
+      "status": "confirmed",
+      "evidence": 6.0,
+      "clean_streak": 0
+    }
+  ],
+  "next_due": "2026-11-01T17:01:54.879000",
+  "due": {
+    "language_model_basics": "2026-11-01T17:01:54.879000",
+    "prompt_structure": "2026-11-01T17:01:54.879000",
+    "sampling_temperature": "2026-11-01T17:01:54.879000",
+    "clear_instructions": "2026-11-01T17:01:54.879000",
+    "role_prompting": "2026-11-01T17:01:54.879000",
+    "few_shot_examples": "2026-11-01T17:01:54.879000",
+    "output_formatting": "2026-11-01T17:01:54.879000",
+    "iterative_refinement": "2026-11-01T17:01:54.879000",
+    "hallucination_checking": "2026-11-01T17:01:54.879000"
+  },
+  "roadmap": [
+    "language_model_basics",
+    "prompt_structure",
+    "sampling_temperature",
+    "context_window",
+    "clear_instructions",
+    "role_prompting",
+    "few_shot_examples",
+    "output_formatting",
+    "iterative_refinement",
+    "hallucination_checking"
+  ],
+  "needs_help": [
+    "context_window"
+  ],
+  "days_left": null,
+  "gaps": [
+    "context_window"
+  ],
+  "retrievability": {
+    "language_model_basics": 0.9999999309315505,
+    "prompt_structure": 0.9999999309315505,
+    "sampling_temperature": 0.9999999309315505,
+    "context_window": 1.0,
+    "clear_instructions": 0.9999999309315505,
+    "role_prompting": 0.9999999309315505,
+    "few_shot_examples": 0.9999999309315505,
+    "output_formatting": 0.9999999309315505,
+    "iterative_refinement": 0.9999999309315505,
+    "hallucination_checking": 0.9999999309315505
+  },
+  "pace": {
+    "mastered": 9.0,
+    "total": 10.0,
+    "attempts_per_mastered": 3.4444444444444446
+  }
+}

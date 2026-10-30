@@ -1,0 +1,31 @@
+{
+  "generation": {
+    "seconds": 142.0,
+    "polls": 71,
+    "status": "ready",
+    "when": "2026-10-30 22:28",
+    "routes": {
+      "courses_create_generating": "POST /courses",
+      "course_get_generating": "GET /courses/{cid}"
+    },
+    "methods": {
+      "courses_create_generating": "POST",
+      "course_get_generating": "GET"
+    },
+    "paths": {
+      "courses_create_generating": "/courses",
+      "course_get_generating": "/courses/c6aaba84"
+    },
+    "ms": {
+      "courses_create_generating": null,
+      "course_get_generating": null
+    }
+  },
+  "lesson_llm": {
+    "ms": [
+      4968.0,
+      10063.0
+    ],
+    "when": "2026-10-30 22:28, the slowest attempts and GET /next calls of the first run"
+  }
+}

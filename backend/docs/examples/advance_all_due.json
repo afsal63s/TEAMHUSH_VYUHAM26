@@ -1,0 +1,17 @@
+{
+  "now": "2026-11-02T17:01:54.847080",
+  "due_now": [
+    "language_model_basics",
+    "prompt_structure",
+    "sampling_temperature",
+    "context_window",
+    "clear_instructions",
+    "role_prompting",
+    "few_shot_examples",
+    "output_formatting",
+    "iterative_refinement",
+    "hallucination_checking"
+  ],
+  "next_kind": "review",
+  "next_concept_id": "language_model_basics"
+}

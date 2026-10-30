@@ -61,7 +61,7 @@ def test_placement_marks_right_concepts_known_and_due_tomorrow(bundle):
         assert cs.due_at == NOW + timedelta(days=1)
     for c, p in wrong_before.items():
         assert state.concepts[c].p_mastery == p < THR and state.concepts[c].due_at is None
-    assert placement_message(placed) == "Placed 3 concepts as already known; I'll check them again tomorrow."
+    assert placement_message(state, placed) == "Placed 3 concepts as already known; I'll check them again tomorrow."
 
 
 def test_placed_concepts_are_skipped_then_reviewed(bundle):

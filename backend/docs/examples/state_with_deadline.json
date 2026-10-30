@@ -1,0 +1,253 @@
+{
+  "concepts": [
+    {
+      "concept_id": "tables_rows_columns",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [
+        "worked_example"
+      ],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "select_columns",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "null_values",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "primary_keys",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "foreign_keys",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "where_filtering",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "table_aliases",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "inner_join",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "left_join",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    },
+    {
+      "concept_id": "join_multiple_tables",
+      "p_mastery": 0.1774193548387097,
+      "attempts": 1,
+      "failed_rounds": 1,
+      "stability_days": 0.0,
+      "last_reviewed_at": null,
+      "due_at": null,
+      "lapses": 0,
+      "explanations_tried": [],
+      "fallbacks": 0,
+      "needs_help": false
+    }
+  ],
+  "misconceptions": [
+    {
+      "tag": "tables_rows_columns__table_is_one_value",
+      "concept_id": "tables_rows_columns",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "select_columns__select_changes_data",
+      "concept_id": "select_columns",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "null_values__null_equals_zero",
+      "concept_id": "null_values",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "primary_keys__keys_can_repeat",
+      "concept_id": "primary_keys",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "foreign_keys__foreign_key_copies_row",
+      "concept_id": "foreign_keys",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "where_filtering__single_equals_only",
+      "concept_id": "where_filtering",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "table_aliases__alias_before_from",
+      "concept_id": "table_aliases",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "inner_join__join_is_union",
+      "concept_id": "inner_join",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "left_join__left_join_keeps_right_unmatched",
+      "concept_id": "left_join",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    },
+    {
+      "tag": "join_multiple_tables__one_join_per_query",
+      "concept_id": "join_multiple_tables",
+      "status": "suspected",
+      "evidence": 1.0,
+      "clean_streak": 0
+    }
+  ],
+  "next_due": null,
+  "due": {},
+  "roadmap": [
+    "tables_rows_columns",
+    "select_columns",
+    "null_values",
+    "primary_keys",
+    "foreign_keys",
+    "where_filtering",
+    "table_aliases",
+    "inner_join",
+    "left_join",
+    "join_multiple_tables"
+  ],
+  "needs_help": [],
+  "days_left": 2,
+  "gaps": [
+    "tables_rows_columns",
+    "select_columns",
+    "null_values",
+    "primary_keys",
+    "foreign_keys",
+    "where_filtering",
+    "table_aliases",
+    "inner_join",
+    "left_join",
+    "join_multiple_tables"
+  ],
+  "retrievability": {
+    "tables_rows_columns": 1.0,
+    "select_columns": 1.0,
+    "null_values": 1.0,
+    "primary_keys": 1.0,
+    "foreign_keys": 1.0,
+    "where_filtering": 1.0,
+    "table_aliases": 1.0,
+    "inner_join": 1.0,
+    "left_join": 1.0,
+    "join_multiple_tables": 1.0
+  },
+  "pace": {
+    "mastered": 0.0,
+    "total": 10.0,
+    "attempts_per_mastered": 0.0
+  }
+}

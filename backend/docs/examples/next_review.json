@@ -1,0 +1,37 @@
+{
+  "step": {
+    "kind": "review",
+    "concept_id": "clear_instructions",
+    "target_misconceptions": [],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": null,
+    "give_up_after": false
+  },
+  "reason": "clear_instructions review due since 2026-10-31; recall now 0.90",
+  "lesson": null,
+  "questions": [
+    {
+      "id": "f707cec4-clear_instructions-p1",
+      "concept_id": "clear_instructions",
+      "prompt": "You want a model to avoid technical terms. Which rewrite is clearest?",
+      "options": [
+        "Explain this simply; you know what I mean.",
+        "Don't use technical terms in your explanation.",
+        "Explain this in plain words for a child.",
+        "Explain this in a way that is good."
+      ]
+    },
+    {
+      "id": "f707cec4-clear_instructions-p2",
+      "concept_id": "clear_instructions",
+      "prompt": "A prompt says 'Improve this code.' The model only renames variables. What is the best fix?",
+      "options": [
+        "Make this code better and cleaner overall.",
+        "Improve this code; don't change what it does.",
+        "Refactor this function to remove duplication.",
+        "Improve this code; you know what I'm going for."
+      ]
+    }
+  ]
+}

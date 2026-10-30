@@ -1,0 +1,168 @@
+{
+  "graded": [
+    {
+      "question_id": "d3f0e36a-tables_rows_columns-d1",
+      "concept_id": "tables_rows_columns",
+      "correct": false,
+      "chosen_tag": "tables_rows_columns__table_is_one_value",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-select_columns-d1",
+      "concept_id": "select_columns",
+      "correct": false,
+      "chosen_tag": "select_columns__select_changes_data",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-null_values-d1",
+      "concept_id": "null_values",
+      "correct": false,
+      "chosen_tag": "null_values__null_equals_zero",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-primary_keys-d1",
+      "concept_id": "primary_keys",
+      "correct": false,
+      "chosen_tag": "primary_keys__keys_can_repeat",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-foreign_keys-d1",
+      "concept_id": "foreign_keys",
+      "correct": false,
+      "chosen_tag": "foreign_keys__foreign_key_copies_row",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-where_filtering-d1",
+      "concept_id": "where_filtering",
+      "correct": false,
+      "chosen_tag": "where_filtering__single_equals_only",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-table_aliases-d1",
+      "concept_id": "table_aliases",
+      "correct": false,
+      "chosen_tag": "table_aliases__alias_before_from",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-inner_join-d1",
+      "concept_id": "inner_join",
+      "correct": false,
+      "chosen_tag": "inner_join__join_is_union",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-left_join-d1",
+      "concept_id": "left_join",
+      "correct": false,
+      "chosen_tag": "left_join__left_join_keeps_right_unmatched",
+      "confidence": null
+    },
+    {
+      "question_id": "d3f0e36a-join_multiple_tables-d1",
+      "concept_id": "join_multiple_tables",
+      "correct": false,
+      "chosen_tag": "join_multiple_tables__one_join_per_query",
+      "confidence": null
+    }
+  ],
+  "correct_indices": {
+    "d3f0e36a-table_aliases-d1": 1,
+    "d3f0e36a-select_columns-d1": 2,
+    "d3f0e36a-foreign_keys-d1": 1,
+    "d3f0e36a-where_filtering-d1": 1,
+    "d3f0e36a-primary_keys-d1": 1,
+    "d3f0e36a-left_join-d1": 3,
+    "d3f0e36a-join_multiple_tables-d1": 1,
+    "d3f0e36a-tables_rows_columns-d1": 3,
+    "d3f0e36a-null_values-d1": 2,
+    "d3f0e36a-inner_join-d1": 2
+  },
+  "explanations": {
+    "d3f0e36a-table_aliases-d1": "The alias e is declared in FROM and exists only for this query; the table itself is unchanged.",
+    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the stored table is not changed.",
+    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, which links the order to one customer row.",
+    "d3f0e36a-where_filtering-d1": "WHERE filters rows, so only rows where the condition is true appear in the result. Columns are chosen by the SELECT list.",
+    "d3f0e36a-primary_keys-d1": "A student_id gives each student a unique value that identifies exactly one row. Names and class years can be shared by many students.",
+    "d3f0e36a-left_join-d1": "LEFT JOIN keeps every left-table row, so each customer appears once per match, or once with NULL if they have no orders.",
+    "d3f0e36a-join_multiple_tables-d1": "Each JOIN adds one table through its own matching keys, so two chained joins connect three tables.",
+    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across the table's columns.",
+    "d3f0e36a-null_values-d1": "NULL marks a value that is absent or unknown. It is not a number or a string with content.",
+    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, pairing each customer with their own orders."
+  },
+  "mastery": {
+    "tables_rows_columns": 0.1774193548387097,
+    "select_columns": 0.1774193548387097,
+    "null_values": 0.1774193548387097,
+    "primary_keys": 0.1774193548387097,
+    "foreign_keys": 0.1774193548387097,
+    "where_filtering": 0.1774193548387097,
+    "table_aliases": 0.1774193548387097,
+    "inner_join": 0.1774193548387097,
+    "left_join": 0.1774193548387097,
+    "join_multiple_tables": 0.1774193548387097
+  },
+  "new_confirmed_misconceptions": [],
+  "messages": [
+    "2 days left before your deadline."
+  ],
+  "next": {
+    "step": {
+      "kind": "lesson",
+      "concept_id": "tables_rows_columns",
+      "target_misconceptions": [],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "tables_rows_columns: mastery 0.18, lowest among unlocked concepts",
+    "lesson": {
+      "concept_id": "tables_rows_columns",
+      "style": "worked_example",
+      "explanation": "Think of a table as a spreadsheet with a fixed structure. Its columns are the fields that describe each item, and its rows are the records, with one record per row. Let's walk through a small example. Suppose a table called students has three columns: id, name, and grade_level. Step one: read the header to identify the fields. The columns are id, name, and grade_level. Step two: read one row. The row with id 1, name Maya, and grade_level 10 is a single student record, and each value lines up under its column. Step three: count the rows. There are three rows, so the table holds three student records. Step four: find one specific value by moving across a row to the right column. The name in row 2 is Jordan. Notice that every row has the same columns, and each column holds one kind of data. Now try it yourself: how many columns does students have, and what is the grade_level for Maya?",
+      "targets": [],
+      "resources": []
+    },
+    "questions": [
+      {
+        "id": "d3f0e36a-tables_rows_columns-p1",
+        "concept_id": "tables_rows_columns",
+        "prompt": "A table stores orders with columns order_id, customer and total. A new order arrives. What is added to the table?",
+        "options": [
+          "An update to the single table value",
+          "A new row with one value per column",
+          "A new file replacing the table",
+          "A new column to hold the order"
+        ]
+      },
+      {
+        "id": "d3f0e36a-tables_rows_columns-p2",
+        "concept_id": "tables_rows_columns",
+        "prompt": "A table has one row per student and columns for name and grade. Why is this layout sensible?",
+        "options": [
+          "Each row is one student's record",
+          "The whole table holds one class grade",
+          "Each column is one student's record",
+          "Each student needs a separate grade file"
+        ]
+      },
+      {
+        "id": "d3f0e36a-tables_rows_columns-t1",
+        "concept_id": "tables_rows_columns",
+        "prompt": "A library catalog table has columns title, author and year. Which item is one row?",
+        "options": [
+          "The entry for the book Dune by Herbert, 1965",
+          "The year column listing every publication year",
+          "The whole catalog stored as one value",
+          "The file catalog.xlsx saved on disk"
+        ]
+      }
+    ]
+  }
+}

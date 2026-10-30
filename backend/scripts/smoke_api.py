@@ -83,6 +83,11 @@ class Run:
     def state(self) -> dict:
         return call(self.c, "GET", f"{self.base}/state")
 
+    def next(self) -> dict:
+        nxt = call(self.c, "GET", f"{self.base}/next")
+        print(f"GET /next: {nxt['step']['kind']} {nxt['step']['concept_id']} | questions: {[q['id'] for q in nxt['questions']]}")
+        return nxt
+
     def advance(self, days: int) -> dict:
         adv = call(self.c, "POST", f"{self.base}/advance", json={"days": days})
         print(f"advance {days}: now={adv['now']} due_now={adv['due_now']}")
@@ -130,7 +135,7 @@ def main() -> None:
         print("new confirmed:", res["new_confirmed_misconceptions"])
         check([g["correct"] for g in res["graded"]] == [q["concept_id"] in right for q in diag], "grading matches script")
         check(all(res["mastery"][x] == 0.85 for x in right), "right concepts placed at 0.85")
-        check("Placed 3 concepts as already known; I'll check them again tomorrow." in res["messages"],
+        check(any(m.startswith("Placed 3 concepts as already known") for m in res["messages"]),
               "placement message")
         check(step["reason"].startswith("placed as known:"), "placement in the step reason")
         check(step["step"]["kind"] == "lesson" and step["step"]["concept_id"] not in right,
@@ -144,6 +149,14 @@ def main() -> None:
         check(state["gaps"] == [x for x in state["roadmap"] if x not in right], "gaps = unplaced concepts, roadmap order")
         check(set(state["due"]) == right, "placed concepts have a verification review scheduled")
 
+        nxt = run.next()
+        check([q["id"] for q in nxt["questions"]] == [q["id"] for q in step["questions"]]
+              and nxt["step"] == step["step"], "GET /next serves the same step and questions as the attempt")
+        check(run.next() == nxt, "GET /next is idempotent")
+        stranger = next(q for q in key if q not in {x["id"] for x in step["questions"]})
+        r = c.post(f"{run.base}/attempts", json={"answers": [{"question_id": stranger, "chosen_index": 0}]})
+        check(r.status_code == 422 and stranger in r.text, f"unserved question -> {r.status_code}")
+
         lesson_cid = step["step"]["concept_id"]
         res = run.answer(step["questions"], {lesson_cid})
         print(f"{lesson_cid} mastery={res['mastery'][lesson_cid]:.3f}")
@@ -154,6 +167,12 @@ def main() -> None:
         print(f"before advance: R[{placed}]={before['retrievability'][placed]:.4f} pace={before['pace']}")
         adv = run.advance(3)
         check(right | {lesson_cid} <= set(adv["due_now"]), "placed and learned concepts due after 3 days")
+        check(adv["next_kind"] == "review" and adv["next_concept_id"] in adv["due_now"],
+              f"advance reports the next step: {adv['next_kind']} {adv['next_concept_id']}")
+        review = run.next()
+        check(review["step"]["kind"] == "review" and review["step"]["concept_id"] == adv["next_concept_id"]
+              and len(review["questions"]) == 2, "GET /next after advance serves the review with 2 questions")
+        check(run.next() == review, "GET /next after advance is idempotent")
         after = run.state()
         print(f"after advance: R[{placed}]={after['retrievability'][placed]:.4f} next_due={after['next_due']}")
         check(after["retrievability"][placed] < before["retrievability"][placed], "retrievability dropped")
@@ -169,6 +188,7 @@ def main() -> None:
               "placement message")
         check(sum("placed as known" in m for m in res["messages"]) == 0, "placement not repeated in messages")
         adv = run.advance(1)
+        check(adv["next_kind"] == "review", f"advance reports a review next ({adv['next_kind']})")
         check(set(adv["due_now"]) == all_ids, "every concept due for review after 1 day")
 
         # --- all wrong ---

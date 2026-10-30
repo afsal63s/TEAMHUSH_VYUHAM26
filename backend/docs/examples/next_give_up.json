@@ -1,0 +1,54 @@
+{
+  "step": {
+    "kind": "lesson",
+    "concept_id": "context_window",
+    "target_misconceptions": [],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": null,
+    "give_up_after": true
+  },
+  "reason": "last try on context_window after 3 failed rounds",
+  "lesson": {
+    "concept_id": "context_window",
+    "style": "worked_example",
+    "explanation": "Imagine you paste a long document into a chat and ask a question about its last paragraph. The model only sees what fits inside its context window, the fixed amount of text it can receive in one request. Anything beyond that limit is simply not visible to it. Let's walk through a small example. Suppose the window holds 1,000 tokens, and your prompt is 900 tokens of notes plus a 200-token question. Step one: add the sizes, 900 plus 200 gives 1,100. Step two: compare that to the limit, 1,100 is more than 1,000, so 100 tokens do not fit. Step three: decide what to trim. Usually the oldest or least relevant notes get cut, so you would remove roughly 100 tokens of background text. Step four: resend the shortened request, now totaling 1,000 or fewer tokens, so the model sees your question and the key notes together. The lesson is that the model forgets nothing it was never given, and it has no memory beyond the current request. Whenever a task is long, plan what the model must see, and place the most important information where it will fit.",
+    "targets": [],
+    "resources": []
+  },
+  "questions": [
+    {
+      "id": "f707cec4-context_window-p1",
+      "concept_id": "context_window",
+      "prompt": "A 500-word English paragraph uses more than 500 tokens in a model's context window. Why?",
+      "options": [
+        "Tokens are often shorter than words, so one word can span several",
+        "The window also stores a saved copy of the words",
+        "Tokens are counted per sentence rather than per word",
+        "Each word is counted twice in the window"
+      ]
+    },
+    {
+      "id": "f707cec4-context_window-p2",
+      "concept_id": "context_window",
+      "prompt": "You need a model to analyze a 60-page report, but the chat's context window is too small to hold all of it. What is the best approach?",
+      "options": [
+        "Assume the first pages stay visible while the rest is dropped",
+        "Count pages as words and assume the report fits",
+        "Expect the model to recall the report from last week's chat",
+        "Split the report and send the key sections that fit the window"
+      ]
+    },
+    {
+      "id": "f707cec4-context_window-t1",
+      "concept_id": "context_window",
+      "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely cause?",
+      "options": [
+        "The day-one text is no longer in the context window",
+        "The order number used more words than the bot's limit",
+        "Earlier messages stay in view but were misread",
+        "The bot saved the order number in permanent memory and forgot it"
+      ]
+    }
+  ]
+}

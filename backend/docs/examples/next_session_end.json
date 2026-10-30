@@ -1,0 +1,14 @@
+{
+  "step": {
+    "kind": "session_end",
+    "concept_id": null,
+    "target_misconceptions": [],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": null,
+    "give_up_after": false
+  },
+  "reason": "15 questions this session; start a new session to continue",
+  "lesson": null,
+  "questions": []
+}

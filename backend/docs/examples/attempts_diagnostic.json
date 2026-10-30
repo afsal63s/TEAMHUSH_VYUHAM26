@@ -1,0 +1,175 @@
+{
+  "graded": [
+    {
+      "question_id": "f707cec4-language_model_basics-d1",
+      "concept_id": "language_model_basics",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-prompt_structure-d1",
+      "concept_id": "prompt_structure",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-sampling_temperature-d1",
+      "concept_id": "sampling_temperature",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-context_window-d1",
+      "concept_id": "context_window",
+      "correct": false,
+      "chosen_tag": "context_window__model_remembers_everything",
+      "confidence": "high"
+    },
+    {
+      "question_id": "f707cec4-clear_instructions-d1",
+      "concept_id": "clear_instructions",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": null
+    },
+    {
+      "question_id": "f707cec4-role_prompting-d1",
+      "concept_id": "role_prompting",
+      "correct": false,
+      "chosen_tag": "role_prompting__any_role_works_equally",
+      "confidence": "low"
+    },
+    {
+      "question_id": "f707cec4-few_shot_examples-d1",
+      "concept_id": "few_shot_examples",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "high"
+    },
+    {
+      "question_id": "f707cec4-output_formatting-d1",
+      "concept_id": "output_formatting",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "high"
+    },
+    {
+      "question_id": "f707cec4-iterative_refinement-d1",
+      "concept_id": "iterative_refinement",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "high"
+    },
+    {
+      "question_id": "f707cec4-hallucination_checking-d1",
+      "concept_id": "hallucination_checking",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "high"
+    }
+  ],
+  "correct_indices": {
+    "f707cec4-iterative_refinement-d1": 0,
+    "f707cec4-sampling_temperature-d1": 1,
+    "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-context_window-d1": 2,
+    "f707cec4-hallucination_checking-d1": 3,
+    "f707cec4-prompt_structure-d1": 1,
+    "f707cec4-clear_instructions-d1": 0,
+    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-language_model_basics-d1": 1
+  },
+  "explanations": {
+    "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it works and where it fails. Revising based on those results is the core of iterative refinement.",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predictable. It does not change accuracy or the model's knowledge.",
+    "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples in the exact format teach the model what to return.",
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by software.",
+    "f707cec4-context_window-d1": "The model only sees the text inside the current request's context window. Earlier chats are not available unless they are included again.",
+    "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need checking against reliable sources.",
+    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or translate. The other parts supply information or shape the reply but do not name the task.",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to guess.",
+    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same model. It does not add knowledge the model already lacks, and the task still has to be stated.",
+    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input it receives and patterns learned in training."
+  },
+  "mastery": {
+    "language_model_basics": 0.85,
+    "prompt_structure": 0.85,
+    "sampling_temperature": 0.85,
+    "context_window": 0.1774193548387097,
+    "clear_instructions": 0.85,
+    "role_prompting": 0.1774193548387097,
+    "few_shot_examples": 0.85,
+    "output_formatting": 0.85,
+    "iterative_refinement": 0.85,
+    "hallucination_checking": 0.85
+  },
+  "new_confirmed_misconceptions": [
+    "context_window__model_remembers_everything"
+  ],
+  "messages": [
+    "3 correct in a row.",
+    "Placed 8 concepts as already known; I'll check them again within 3 days."
+  ],
+  "next": {
+    "step": {
+      "kind": "lesson",
+      "concept_id": "context_window",
+      "target_misconceptions": [
+        "context_window__model_remembers_everything"
+      ],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "placed as known: language_model_basics, prompt_structure, sampling_temperature, clear_instructions, few_shot_examples, output_formatting, iterative_refinement, hallucination_checking; context_window__model_remembers_everything confirmed, evidence 2; context_window needs it",
+    "lesson": {
+      "concept_id": "context_window",
+      "style": "contrast",
+      "explanation": "You may believe the model remembers every conversation you have ever had with it. That belief is wrong. The right idea is that a model only works with the text inside its context window, meaning the text sent in one request. Think of it as a desk with limited space. Whatever is on the desk, the model can read and use. Whatever has been pushed off the desk, or was never placed there, is invisible to it. So when you start a new chat, earlier conversations are not automatically present. The model has no stored memory of your last session unless that text is included again in the new request. Here is where the wrong belief breaks: memory implies everything persists, but the context window is a fixed, limited input for each request. If a long conversation exceeds that limit, the oldest parts can be dropped, and the model will act as if they never happened. To get reliable answers, put the information the model needs directly into your current request.",
+      "targets": [
+        "context_window__model_remembers_everything"
+      ],
+      "resources": []
+    },
+    "questions": [
+      {
+        "id": "f707cec4-context_window-p1",
+        "concept_id": "context_window",
+        "prompt": "A 500-word English paragraph uses more than 500 tokens in a model's context window. Why?",
+        "options": [
+          "Tokens are often shorter than words, so one word can span several",
+          "The window also stores a saved copy of the words",
+          "Tokens are counted per sentence rather than per word",
+          "Each word is counted twice in the window"
+        ]
+      },
+      {
+        "id": "f707cec4-context_window-p2",
+        "concept_id": "context_window",
+        "prompt": "You need a model to analyze a 60-page report, but the chat's context window is too small to hold all of it. What is the best approach?",
+        "options": [
+          "Assume the first pages stay visible while the rest is dropped",
+          "Count pages as words and assume the report fits",
+          "Expect the model to recall the report from last week's chat",
+          "Split the report and send the key sections that fit the window"
+        ]
+      },
+      {
+        "id": "f707cec4-context_window-t1",
+        "concept_id": "context_window",
+        "prompt": "A support bot answers a customer's question correctly on day one. On day two, in a new session with no earlier text, it ignores the order number the customer gave on day one. What is the most likely cause?",
+        "options": [
+          "The day-one text is no longer in the context window",
+          "The order number used more words than the bot's limit",
+          "Earlier messages stay in view but were misread",
+          "The bot saved the order number in permanent memory and forgot it"
+        ]
+      }
+    ]
+  }
+}

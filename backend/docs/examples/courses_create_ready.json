@@ -1,0 +1,74 @@
+{
+  "course_id": "b0dafa63",
+  "status": "ready",
+  "topic": "prompt engineering",
+  "concepts": [
+    {
+      "id": "language_model_basics",
+      "name": "Language model basics",
+      "prerequisites": []
+    },
+    {
+      "id": "prompt_structure",
+      "name": "Prompt structure",
+      "prerequisites": []
+    },
+    {
+      "id": "sampling_temperature",
+      "name": "Sampling temperature",
+      "prerequisites": []
+    },
+    {
+      "id": "context_window",
+      "name": "Context window",
+      "prerequisites": [
+        "language_model_basics"
+      ]
+    },
+    {
+      "id": "clear_instructions",
+      "name": "Clear instructions",
+      "prerequisites": [
+        "prompt_structure"
+      ]
+    },
+    {
+      "id": "role_prompting",
+      "name": "Role prompting",
+      "prerequisites": [
+        "prompt_structure"
+      ]
+    },
+    {
+      "id": "few_shot_examples",
+      "name": "Few-shot examples",
+      "prerequisites": [
+        "prompt_structure",
+        "clear_instructions"
+      ]
+    },
+    {
+      "id": "output_formatting",
+      "name": "Output formatting",
+      "prerequisites": [
+        "clear_instructions"
+      ]
+    },
+    {
+      "id": "iterative_refinement",
+      "name": "Iterative refinement",
+      "prerequisites": [
+        "clear_instructions",
+        "few_shot_examples"
+      ]
+    },
+    {
+      "id": "hallucination_checking",
+      "name": "Hallucination checking",
+      "prerequisites": [
+        "context_window",
+        "sampling_temperature"
+      ]
+    }
+  ]
+}

@@ -71,3 +71,5 @@ class AdvanceIn(BaseModel):
 class AdvanceOut(BaseModel):
     now: datetime                    # the learner's simulated "now"
     due_now: list[str]               # concepts due for review
+    next_kind: str | None = None     # the decision stored for GET .../next
+    next_concept_id: str | None = None

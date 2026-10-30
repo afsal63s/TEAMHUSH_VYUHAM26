@@ -1,0 +1,60 @@
+{
+  "step": {
+    "kind": "lesson",
+    "concept_id": "clear_instructions",
+    "target_misconceptions": [
+      "clear_instructions__model_reads_intent",
+      "clear_instructions__vague_request_is_fine"
+    ],
+    "avoid_styles": [],
+    "difficulty": null,
+    "target_concept": null,
+    "give_up_after": false
+  },
+  "reason": "relearning clear_instructions first: it was mastered, slipped to 0.26 (lapses 1)",
+  "lesson": {
+    "concept_id": "clear_instructions",
+    "style": "contrast",
+    "explanation": "Here is the right idea set against the belief it replaces. You may think the model knows the goals you leave unstated, such as who the audience is or how long the answer should be. It does not. The model only acts on what is written in your prompt, so anything you omit is a guess. Compare two requests. The vague one says: Write about our product. The clear one says: Write a 100-word product description for busy parents, mentioning price and the free returns policy, in a friendly tone. The vague version forces the model to choose the topic, length, audience, and tone on its own, and each choice is another chance to miss what you wanted. The belief that vague requests get good results breaks here: vagueness does not make the model smarter, it only increases guessing. A specific task removes most of those guesses, so the output is more likely to match your intent. Before you send a prompt, ask yourself what the model would have to guess, then write that answer down.",
+    "targets": [
+      "clear_instructions__model_reads_intent",
+      "clear_instructions__vague_request_is_fine"
+    ],
+    "resources": []
+  },
+  "questions": [
+    {
+      "id": "f707cec4-clear_instructions-t1",
+      "concept_id": "clear_instructions",
+      "prompt": "You want a customer support reply that includes a refund policy link. Which instruction is clearest?",
+      "options": [
+        "Reply in under 100 words with the refund link.",
+        "Don't write a long reply or leave out key items.",
+        "Write a helpful reply to the customer.",
+        "Reply briefly and cover the usual details."
+      ]
+    },
+    {
+      "id": "f707cec4-clear_instructions-t2",
+      "concept_id": "clear_instructions",
+      "prompt": "A model keeps adding disclaimers to medical summaries. Which change most directly fixes it?",
+      "options": [
+        "Specify: output only the summary paragraph.",
+        "Don't add any disclaimers to the reply.",
+        "You understand why disclaimers aren't needed here.",
+        "Write the summary the way you normally would."
+      ]
+    },
+    {
+      "id": "f707cec4-clear_instructions-d2",
+      "concept_id": "clear_instructions",
+      "prompt": "Which instruction states the desired behavior directly?",
+      "options": [
+        "Answer as you think best.",
+        "Don't include extra commentary.",
+        "Reply with only the final answer.",
+        "Answer the question somehow."
+      ]
+    }
+  ]
+}
