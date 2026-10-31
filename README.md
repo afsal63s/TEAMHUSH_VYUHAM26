@@ -3,6 +3,9 @@
 An adaptive tutor that learns how you learn: it finds what you already know, spots the specific mistakes you
 make, teaches to those mistakes, and brings ideas back right before you would forget them.
 
+- **Demo:** https://onlynerds-frontend.vercel.app/
+- **Demo video:** https://drive.google.com/file/d/1anBcibbKdrnpEPouV94bqIvSuDiwzX9C/view?usp=sharing
+
 ---
 
 ## 1. Problem statement
