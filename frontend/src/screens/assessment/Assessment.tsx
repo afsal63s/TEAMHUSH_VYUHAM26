@@ -1,61 +1,212 @@
-import { useEffect, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, Navigate, useSearchParams } from 'react-router'
+import { api, ApiError, errorText, setCurrentCourse } from '../../api/client'
+import { levelFromPct, nameMap } from '../../api/format'
+import { refreshCourses, useControlPanelSignal, useCourse } from '../../api/hooks'
+import type { AttemptResultOut, QuestionPublic, StartOut } from '../../api/types'
 import logo from '../../assets/logo.png'
 import { AnswerReview } from '../../components/AnswerReview'
 import { Icon } from '../../components/Icon'
+import { CONFIDENCE_VALUES, confidenceIndex, nextConfidence } from '../../components/confidence'
+import { QuestionOptions } from '../../components/QuestionOptions'
 import { Ring } from '../../components/Ring'
-import { updateCourse } from '../../data/courseStore'
-import { assessment, previousChats } from '../../data/placeholder'
+import { ErrorBox, Loading, MessagesBanner } from '../../components/Status'
+import { buildCourseLink, chatLink, diagnosticLink } from '../../routes'
 import './Assessment.css'
 
-const LETTERS = ['A', 'B', 'C', 'D']
-const CONFIDENCE = ['Not sure', 'Fairly sure', 'Certain'] as const
 const SKIPPED = -1
 
-// The diagnostic (new topic) or a spaced review (mode=review): questions one at a time, then results.
+// POST .../start is not idempotent (a second call returns 409), so dedupe it and keep the questions
+// in the browser: after a reload mid-diagnostic, start answers 409 and nothing else serves them again.
+const startCalls = new Map<string, Promise<StartOut>>()
+const diagKey = (cid: string) => `onlynerds.diagnostic.${cid}`
+function savedDiagnostic(cid: string): QuestionPublic[] | null {
+  try {
+    const raw = localStorage.getItem(diagKey(cid))
+    return raw ? (JSON.parse(raw) as QuestionPublic[]) : null
+  } catch {
+    return null
+  }
+}
+function saveDiagnostic(cid: string, qs: QuestionPublic[] | null) {
+  try {
+    if (qs) localStorage.setItem(diagKey(cid), JSON.stringify(qs))
+    else localStorage.removeItem(diagKey(cid))
+  } catch {
+    // Storage blocked: a reload mid-diagnostic will need "Start over".
+  }
+}
+function startOnce(cid: string) {
+  let p = startCalls.get(cid)
+  if (!p) {
+    p = api.start(cid)
+    p.then((r) => saveDiagnostic(cid, r.questions)).catch(() => startCalls.delete(cid))
+    startCalls.set(cid, p)
+  }
+  return p
+}
+
+type Load =
+  | { kind: 'loading' }
+  | { kind: 'ready'; questions: QuestionPublic[]; reviewConcept?: string | null }
+  | { kind: 'error'; message: string }
+  | { kind: 'redirect'; to: string }
+
+// The diagnostic (POST .../start) or a spaced review (mode=review: GET .../next), one question per screen,
+// then results built only from the POST .../attempts response.
 export function Assessment() {
   const [params] = useSearchParams()
   const isReview = params.get('mode') === 'review'
-  const topic = params.get('topic') ?? assessment.title
-  const level = params.get('level') ?? assessment.level
-  // Set when the diagnostic belongs to a course built on the Build screen.
-  const courseId = params.get('course') ?? undefined
-  const questions = assessment.questions
+  const courseId = params.get('course') ?? ''
+  const course = useCourse(courseId || undefined)
+  const name = nameMap(course.data)
 
+  const [load, setLoad] = useState<Load>({ kind: 'loading' })
   const [q, setQ] = useState(0)
-  const [picks, setPicks] = useState<(number | undefined)[]>([])
-  const [conf, setConf] = useState<(number | undefined)[]>([])
-  const [done, setDone] = useState(false)
+  const [picks, setPicks] = useState<Record<string, number>>({})
+  const [conf, setConf] = useState<Record<string, number | undefined>>({})
+  const [result, setResult] = useState<AttemptResultOut | null>(null)
+  const [submitting, setSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState<string | null>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+  const [attempt, setAttempt] = useState(0)
+  const submitted = useRef(false)
 
-  const exitTo = courseId ? `/chat/${courseId}` : isReview ? '/' : '/new'
-
-  function pick(option: number, confidence?: number) {
-    const sameOption = picks[q] === option
-    setPicks((p) => Object.assign([...p], { [q]: option }))
-    setConf((c) => {
-      let next: number | undefined
-      if (confidence === undefined) {
-        // Picking a different answer clears the confidence given for the old one.
-        next = sameOption ? c[q] : undefined
-      } else {
-        // Confidence is optional: clicking the chosen level again unchecks it.
-        next = sameOption && c[q] === confidence ? undefined : confidence
-      }
-      return Object.assign([...c], { [q]: next })
-    })
+  const resetAnswers = () => {
+    setQ(0)
+    setPicks({})
+    setConf({})
+    setSubmitError(null)
   }
 
-  function advance() {
+  // Load the questions.
+  useEffect(() => {
+    if (!courseId) return
+    setCurrentCourse(courseId)
+    let live = true
+    const done = (l: Load) => {
+      if (live) setLoad(l)
+    }
+
+    if (isReview) {
+      api.next(courseId).then(
+        (s) =>
+          s.step.kind === 'review' && s.questions?.length
+            ? done({ kind: 'ready', questions: s.questions, reviewConcept: s.step.concept_id })
+            : done({ kind: 'redirect', to: chatLink(courseId) }),
+        (e) =>
+          e instanceof ApiError && e.status === 409
+            ? done({ kind: 'redirect', to: diagnosticLink(courseId) })
+            : done({ kind: 'error', message: errorText(e) }),
+      )
+    } else {
+      startOnce(courseId).then(
+        (r) => done({ kind: 'ready', questions: r.questions }),
+        (e) => {
+          if (e instanceof ApiError && e.status === 409) {
+            if (/generating|not ready/i.test(String(e.detail))) {
+              done({ kind: 'redirect', to: buildCourseLink(courseId) })
+              return
+            }
+            // Already started: finish the saved diagnostic, or go to the course page.
+            const saved = savedDiagnostic(courseId)
+            done(saved ? { kind: 'ready', questions: saved } : { kind: 'redirect', to: chatLink(courseId) })
+            return
+          }
+          done({ kind: 'error', message: errorText(e) })
+        },
+      )
+    }
+    return () => {
+      live = false
+    }
+  }, [courseId, isReview, attempt])
+
+  // The control panel moved the clock or started a session: served questions are stale.
+  const onSignal = useCallback(() => {
+    if (submitted.current) return
+    if (isReview) {
+      resetAnswers()
+      setNotice('The clock moved, so here are fresh questions.')
+      setLoad({ kind: 'loading' })
+      setAttempt((a) => a + 1)
+    } else {
+      setNotice('The clock moved in the control panel. If submitting fails, start the assessment over.')
+    }
+  }, [isReview])
+  useControlPanelSignal(onSignal)
+
+  if (!courseId) return <Navigate to="/" replace />
+  if (load.kind === 'redirect') return <Navigate to={load.to} replace />
+
+  const questions = load.kind === 'ready' ? load.questions : []
+  const answeredCount = Object.values(picks).filter((p) => p !== SKIPPED).length
+  const topic = course.data?.topic ?? 'Your course'
+
+  function pick(qid: string, option: number, confidence?: number) {
+    setPicks((p) => ({ ...p, [qid]: option }))
+    setConf((c) => ({ ...c, [qid]: nextConfidence(picks[qid], c[qid], option, confidence) }))
+  }
+
+  function skip(qid: string) {
+    setPicks((p) => ({ ...p, [qid]: SKIPPED }))
+    setConf((c) => ({ ...c, [qid]: undefined }))
     if (q < questions.length - 1) setQ(q + 1)
-    else setDone(true)
   }
 
-  function skip() {
-    setPicks((p) => Object.assign([...p], { [q]: SKIPPED }))
-    setConf((c) => Object.assign([...c], { [q]: undefined }))
-    advance()
+  // Skipped questions are left out; the backend reports them in `skipped`.
+  async function submit() {
+    if (submitting || answeredCount === 0) return
+    setSubmitting(true)
+    setSubmitError(null)
+    try {
+      const answers = questions
+        .filter((x) => picks[x.id] !== undefined && picks[x.id] !== SKIPPED)
+        .map((x) => {
+          const c = conf[x.id]
+          return {
+            question_id: x.id,
+            chosen_index: picks[x.id],
+            ...(c !== undefined && { confidence: CONFIDENCE_VALUES[c] }),
+          }
+        })
+      const r = await api.submitAttempts(courseId, answers)
+      submitted.current = true
+      if (!isReview) saveDiagnostic(courseId, null)
+      setResult(r)
+      void refreshCourses()
+      window.scrollTo(0, 0)
+    } catch (e) {
+      setSubmitError(
+        e instanceof ApiError && e.status === 422
+          ? 'These questions are no longer valid (the clock may have moved).'
+          : errorText(e),
+      )
+    } finally {
+      setSubmitting(false)
+    }
   }
 
+  // Diagnostic questions went stale: POST .../reset, then .../start again.
+  async function startOver() {
+    setLoad({ kind: 'loading' })
+    try {
+      await api.reset(courseId)
+      startCalls.delete(courseId)
+      saveDiagnostic(courseId, null)
+      resetAnswers()
+      setNotice(null)
+      setAttempt((a) => a + 1)
+    } catch (e) {
+      setLoad({ kind: 'error', message: errorText(e) })
+    }
+  }
+
+  const reloadReview = () => {
+    resetAnswers()
+    setLoad({ kind: 'loading' })
+    setAttempt((a) => a + 1)
+  }
 
   return (
     <div className="assess">
@@ -68,33 +219,63 @@ export function Assessment() {
             <div className="assess__heading-title">
               {topic} {isReview ? 'review' : 'assessment'}
             </div>
-            <div className="assess__heading-sub">{isReview ? 'Spaced review' : `${level} level`}</div>
+            <div className="assess__heading-sub">
+              {isReview
+                ? load.kind === 'ready' && load.reviewConcept
+                  ? `Time to review: ${name(load.reviewConcept)}`
+                  : 'Spaced review'
+                : 'Diagnostic · one question per concept'}
+            </div>
           </div>
-          <Link to={exitTo} className="icon-btn" aria-label={isReview ? 'Exit review' : 'Exit assessment'}>
+          <Link to={chatLink(courseId)} className="icon-btn" aria-label={isReview ? 'Exit review' : 'Exit assessment'}>
             <Icon name="close" strokeWidth={2} />
           </Link>
         </div>
       </header>
 
       <main className="assess__main">
-        {done ? (
-          <Results
-            topic={topic}
-            isReview={isReview}
-            picks={picks}
-            conf={conf}
-            courseId={courseId}
-          />
-        ) : (
+        {notice && !result && <p className="assess__notice">{notice}</p>}
+
+        {load.kind === 'loading' && <Loading label={isReview ? 'Getting your review…' : 'Loading your assessment…'} />}
+        {load.kind === 'error' && <ErrorBox message={load.message} onRetry={() => setAttempt((a) => a + 1)} />}
+
+        {load.kind === 'ready' && !result && questions.length > 0 && (
           <Question
             index={q}
-            picked={picks[q]}
-            confidence={conf[q]}
-            onPick={pick}
+            question={questions[q]}
+            total={questions.length}
+            topicLabel={name(questions[q].concept_id)}
+            picked={picks[questions[q].id]}
+            confidence={conf[questions[q].id]}
+            answeredCount={answeredCount}
+            submitting={submitting}
+            onPick={(o, c) => pick(questions[q].id, o, c)}
             onBack={() => setQ(Math.max(0, q - 1))}
-            onNext={advance}
-            onSkip={skip}
-            showConfidence={isReview}
+            onNext={() => setQ(Math.min(questions.length - 1, q + 1))}
+            onSkip={() => skip(questions[q].id)}
+            onSubmit={submit}
+          />
+        )}
+
+        {submitError && !result && (
+          <ErrorBox message={submitError} onRetry={isReview ? reloadReview : undefined}>
+            {!isReview && (
+              <button type="button" className="btn btn-soft status-box__btn" onClick={startOver}>
+                Start over
+              </button>
+            )}
+          </ErrorBox>
+        )}
+
+        {result && (
+          <Results
+            isReview={isReview}
+            courseId={courseId}
+            questions={questions}
+            picks={picks}
+            conf={conf}
+            result={result}
+            name={name}
           />
         )}
       </main>
@@ -104,39 +285,46 @@ export function Assessment() {
 
 function Question({
   index,
+  question,
+  total,
+  topicLabel,
   picked,
   confidence,
+  answeredCount,
+  submitting,
   onPick,
   onBack,
   onNext,
   onSkip,
-  showConfidence,
+  onSubmit,
 }: {
   index: number
+  question: QuestionPublic
+  total: number
+  topicLabel: string
   picked: number | undefined
   confidence: number | undefined
+  answeredCount: number
+  submitting: boolean
   onPick: (option: number, confidence?: number) => void
   onBack: () => void
   onNext: () => void
   onSkip: () => void
-  /** Confidence is asked on reviews only, not on the first (diagnostic) assessment. */
-  showConfidence: boolean
+  onSubmit: () => void
 }) {
-  const questions = assessment.questions
-  const cur = questions[index]
   // A skipped question counts as answered, so Back then Next works past it.
   const answered = picked !== undefined
-  const pct = Math.round(((index + (answered ? 1 : 0)) / questions.length) * 100)
-  const last = index === questions.length - 1
+  const pct = Math.round(((index + (answered ? 1 : 0)) / total) * 100)
+  const last = index === total - 1
 
   return (
     <>
       <div className="assess__progress">
         <div className="assess__progress-row">
           <span className="assess__qlabel">
-            Question {index + 1} of {questions.length}
+            Question {index + 1} of {total}
           </span>
-          <span className="assess__qtopic">Topic: {cur.topic}</span>
+          <span className="assess__qtopic">Topic: {topicLabel}</span>
         </div>
         <div
           className="assess__track"
@@ -152,40 +340,16 @@ function Question({
 
       <section className="card assess__card" aria-labelledby="qt">
         <h1 id="qt" className="assess__question">
-          {cur.text}
+          {question.prompt}
         </h1>
-        <div role="group" aria-label="Answer choices" className="assess__options">
-          {cur.options.map((text, i) => {
-            const on = picked === i
-            return (
-              <div key={i} className={`opt${on ? ' opt--on' : ''}`}>
-                <button type="button" className="opt__main" aria-pressed={on} onClick={() => onPick(i)}>
-                  <span className="opt__letter">{LETTERS[i]}</span>
-                  <span className="opt__text">{text}</span>
-                </button>
-                {showConfidence && (
-                  <div role="group" aria-label="How sure are you? (optional)" className="opt__conf">
-                    {CONFIDENCE.map((label, ci) => {
-                      const cOn = on && confidence === ci
-                      return (
-                        <button
-                          key={label}
-                          type="button"
-                          className={`opt__conf-btn${cOn ? ' opt__conf-btn--on' : ''}`}
-                          aria-pressed={cOn}
-                          onClick={() => onPick(i, ci)}
-                        >
-                          {label}
-                        </button>
-                      )
-                    })}
-                  </div>
-                )}
-              </div>
-            )
-          })}
-        </div>
-        <button type="button" className="assess__skip" onClick={onSkip}>
+        <QuestionOptions
+          options={question.options}
+          picked={picked === SKIPPED ? undefined : picked}
+          confidence={confidence}
+          onPick={onPick}
+          disabled={submitting}
+        />
+        <button type="button" className="assess__skip" onClick={onSkip} disabled={submitting}>
           I'm not sure, skip this one
         </button>
       </section>
@@ -195,76 +359,74 @@ function Question({
           className="btn btn-ghost"
           type="button"
           onClick={onBack}
+          disabled={submitting}
           style={{ visibility: index === 0 ? 'hidden' : 'visible' }}
         >
           Back
         </button>
-        <button className="btn btn-primary" type="button" onClick={onNext} disabled={!answered}>
-          {last ? 'See my results' : 'Next'}
-        </button>
+        {last ? (
+          <button
+            className="btn btn-primary"
+            type="button"
+            onClick={onSubmit}
+            disabled={!answered || answeredCount === 0 || submitting}
+          >
+            {submitting ? 'Checking…' : 'See my results'}
+          </button>
+        ) : (
+          <button className="btn btn-primary" type="button" onClick={onNext} disabled={!answered}>
+            Next
+          </button>
+        )}
       </div>
       <p className="assess__hint">
-        {showConfidence ? 'Confidence is optional. Skipping a question is fine too.' : 'Skipping a question is fine.'}
+        {last && answered && answeredCount === 0
+          ? 'Answer at least one question to see your results.'
+          : 'Confidence is optional. Skipping a question is fine too.'}
       </p>
     </>
   )
 }
 
 function Results({
-  topic,
   isReview,
+  courseId,
+  questions,
   picks,
   conf,
-  courseId,
+  result,
+  name,
 }: {
-  topic: string
   isReview: boolean
-  picks: (number | undefined)[]
-  conf: (number | undefined)[]
-  courseId?: string
+  courseId: string
+  questions: QuestionPublic[]
+  picks: Record<string, number>
+  conf: Record<string, number | undefined>
+  result: AttemptResultOut
+  name: (id: string) => string
 }) {
-  const questions = assessment.questions
+  const graded = new Map(result.graded.map((g) => [g.question_id, g]))
   const total = questions.length
-  const results = questions.map((x, i) => ({
-    topic: x.topic,
-    ok: picks[i] === x.correct,
-    skipped: picks[i] === SKIPPED || picks[i] === undefined,
-    conf: conf[i],
-  }))
-  const score = results.filter((r) => r.ok).length
-  const skipCount = results.filter((r) => r.skipped).length
-  const wrongCount = total - score - skipCount
-  const pct = Math.round((score / total) * 100)
-  const levelName = pct >= 85 ? 'Advanced' : pct >= 65 ? 'Intermediate' : pct >= 40 ? 'Beginner' : 'Novice'
+  const score = result.graded.filter((g) => g.correct).length
+  const wrongCount = result.graded.length - score
+  const skipCount = questions.filter((x) => !graded.has(x.id)).length
+  const pct = total ? Math.round((score / total) * 100) : 0
 
-  const byTopic = new Map<string, { ok: number; n: number }>()
-  for (const r of results) {
-    const t = byTopic.get(r.topic) ?? { ok: 0, n: 0 }
+  const byConcept = new Map<string, { ok: number; n: number }>()
+  for (const g of result.graded) {
+    const t = byConcept.get(g.concept_id) ?? { ok: 0, n: 0 }
     t.n++
-    if (r.ok) t.ok++
-    byTopic.set(r.topic, t)
+    if (g.correct) t.ok++
+    byConcept.set(g.concept_id, t)
   }
-  const topicRows = [...byTopic].map(([name, t]) => {
+  const topicRows = [...byConcept].map(([id, t]) => {
     const f = t.ok / t.n
     const state = f >= 0.75 ? 'solid' : f >= 0.5 ? 'mid' : 'weak'
-    return { name, fraction: `${t.ok} of ${t.n} correct`, width: Math.max(6, Math.round(f * 100)), state }
+    return { id, name: name(id), fraction: `${t.ok} of ${t.n} correct`, width: Math.max(6, Math.round(f * 100)), state }
   })
-  const weakCount = topicRows.filter((t) => t.state !== 'solid').length
-  const certainWrong = results.filter((r) => !r.ok && !r.skipped && r.conf === 2).length
-  const unsureRight = results.filter((r) => r.ok && r.conf === 0).length
-  const hasConf = results.some((r) => r.conf !== undefined)
-  const chat = previousChats.find((c) => c.topic === topic || c.title === topic) ?? previousChats[0]
-  const materialsLink = courseId ? `/chat/${courseId}` : `/chat/${chat.id}`
-
-  // A built course records its diagnostic, so its chat stops asking for the assessment.
-  useEffect(() => {
-    if (courseId) updateCourse(courseId, { assessed: true, score: pct })
-  }, [courseId, pct])
-
-  const summary =
-    weakCount === 0
-      ? 'You are solid across every topic. Nice work.'
-      : `${weakCount} ${weakCount === 1 ? 'topic is' : 'topics are'} worth strengthening. I gathered material for exactly that.`
+  const certainWrong = result.graded.filter((g) => !g.correct && g.confidence === 'high').length
+  const unsureRight = result.graded.filter((g) => g.correct && g.confidence === 'low').length
+  const hasConf = result.graded.some((g) => g.confidence)
 
   return (
     <>
@@ -278,11 +440,12 @@ function Results({
         <div className="results__hero-text">
           <div className="label results__done">{isReview ? 'Review complete' : 'Assessment complete'}</div>
           <h1 id="hero" className="results__level">
-            Your level: {levelName}
+            Your level: {levelFromPct(pct)}
           </h1>
-          <p className="results__summary">{summary}</p>
         </div>
       </section>
+
+      <MessagesBanner messages={result.messages} />
 
       <section aria-label="Totals" className="results__totals">
         <div className="card results__total">
@@ -300,32 +463,41 @@ function Results({
       </section>
 
       <AnswerReview
-        answers={questions.map((x, i) => ({
-          ...x,
-          picked: picks[i] === SKIPPED ? undefined : picks[i],
-          confidence: conf[i],
-        }))}
+        answers={questions.map((x) => {
+          const g = graded.get(x.id)
+          return {
+            topic: name(x.concept_id),
+            text: x.prompt,
+            options: x.options,
+            correct: result.correct_indices[x.id],
+            graded: g?.correct,
+            picked: g ? picks[x.id] : undefined,
+            confidence: g ? (confidenceIndex(g.confidence) ?? conf[x.id]) : undefined,
+          }
+        })}
       />
 
-      <section className="card results__topics" aria-labelledby="tp">
-        <h2 id="tp" className="label results__section-title">
-          Results by topic
-        </h2>
-        {topicRows.map((t) => (
-          <div key={t.name} className="results__topic">
-            <div className="results__topic-name">
-              <div className="results__topic-title">{t.name}</div>
-              <div className="results__topic-sub">{t.fraction}</div>
+      {topicRows.length > 0 && (
+        <section className="card results__topics" aria-labelledby="tp">
+          <h2 id="tp" className="label results__section-title">
+            Results by topic
+          </h2>
+          {topicRows.map((t) => (
+            <div key={t.id} className="results__topic">
+              <div className="results__topic-name">
+                <div className="results__topic-title">{t.name}</div>
+                <div className="results__topic-sub">{t.fraction}</div>
+              </div>
+              <div className="results__bar">
+                <div className={`results__bar-fill results__bar-fill--${t.state}`} style={{ width: `${t.width}%` }} />
+              </div>
+              <span className={`results__tag results__tag--${t.state}`}>
+                {t.state === 'solid' ? 'Solid' : t.state === 'mid' ? 'Developing' : 'To strengthen'}
+              </span>
             </div>
-            <div className="results__bar">
-              <div className={`results__bar-fill results__bar-fill--${t.state}`} style={{ width: `${t.width}%` }} />
-            </div>
-            <span className={`results__tag results__tag--${t.state}`}>
-              {t.state === 'solid' ? 'Solid' : t.state === 'mid' ? 'Developing' : 'To strengthen'}
-            </span>
-          </div>
-        ))}
-      </section>
+          ))}
+        </section>
+      )}
 
       {hasConf && (
         <section className="card results__conf" aria-labelledby="cf">
@@ -347,26 +519,18 @@ function Results({
         </section>
       )}
 
-      <section className="results__scheduled">
-        <Icon name="calendar" color="#0659A3" strokeWidth={1.8} />
-        <div className="results__scheduled-text">
-          <strong>Re-assessment scheduled.</strong> After you finish the material, I'll re-check these topics
-          after 1, 3 and 7 days to measure what you actually retain.
-        </div>
-      </section>
-
       <section className="card results__ready" aria-labelledby="ready">
         <div className="results__ready-head">
           <div className="results__ready-icon" aria-hidden="true">
             <Icon name="book" size={24} strokeWidth={1.8} />
           </div>
           <div className="results__ready-text">
-            <h2 id="ready">Your learning materials are ready</h2>
-            <div>{assessment.materialCount} articles, videos and notes picked for your weak spots.</div>
+            <h2 id="ready">{isReview ? 'Back to your course' : 'Your learning materials are ready'}</h2>
+            <div>Your next step is waiting on the course page.</div>
           </div>
         </div>
-        <Link to={materialsLink} className="btn btn-primary results__open">
-          Open my learning materials
+        <Link to={chatLink(courseId)} className="btn btn-primary results__open">
+          {isReview ? 'Continue' : 'Open my learning materials'}
         </Link>
       </section>
     </>

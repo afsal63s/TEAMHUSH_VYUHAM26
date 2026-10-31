@@ -1,4 +1,4 @@
-import type { CoverKind } from '../../data/placeholder'
+export type CoverKind = 'nn' | 'matrix' | 'code' | 'attention'
 
 // Decorative course covers from the design reference (640x230, cropped to fill).
 const svgProps = {

@@ -1,8 +1,10 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
 import logo from '../assets/logo.png'
-import { useBuiltCourses, whenLabel } from '../data/courseStore'
-import { previousChats, user } from '../data/placeholder'
+import { ago, levelName } from '../api/format'
+import { useCourses } from '../api/hooks'
+import { user } from '../data/placeholder'
+import { buildCourseLink, chatLink } from '../routes'
 import { Icon, type IconName } from './Icon'
 import './AppShell.css'
 
@@ -24,18 +26,22 @@ export function AppShell({
   activeChatId?: string
   children: ReactNode
 }) {
-  // Courses built in this browser come first, then the placeholder history.
-  const built = useBuiltCourses()
-  const chats = [
-    ...built.map((c) => ({
-      id: c.id,
-      title: c.topic,
-      meta: `${whenLabel(c.createdAt)} · ${c.assessed ? c.level : 'Assessment pending'}`,
-    })),
-    ...previousChats,
-  ]
-  // "My courses" has no screen of its own yet: it opens the latest course's tutor chat.
-  const navTo = (item: (typeof navItems)[number]) => (item.key === 'courses' ? `/chat/${chats[0].id}` : item.to)
+  // GET /courses (newest first) is the "Previous chats" list.
+  const { courses, error } = useCourses()
+  const chats = (courses ?? []).map((c) => ({
+    id: c.course_id,
+    to: c.status === 'generating' ? buildCourseLink(c.course_id) : chatLink(c.course_id),
+    title: c.topic,
+    meta:
+      c.status === 'generating'
+        ? 'Building…'
+        : c.status === 'failed'
+          ? 'Build failed'
+          : `${ago(c.last_activity_at ?? c.created_at)} · ${c.started ? levelName(c.level) : 'Assessment pending'}`,
+  }))
+  // "My courses" has no screen of its own: it opens the latest course, or New chat when there is none.
+  const navTo = (item: (typeof navItems)[number]) =>
+    item.key === 'courses' ? (chats[0]?.to ?? '/new') : item.to
 
   return (
     <div className="shell">
@@ -66,10 +72,13 @@ export function AppShell({
 
           <div className="sidenav__chats">
             <div className="label sidenav__chats-label">Previous chats</div>
+            {!courses && !error && <div className="sidenav__chats-empty">Loading…</div>}
+            {error && <div className="sidenav__chats-empty">Could not load courses</div>}
+            {courses && chats.length === 0 && <div className="sidenav__chats-empty">No courses yet</div>}
             {chats.map((c) => (
               <Link
                 key={c.id}
-                to={`/chat/${c.id}`}
+                to={c.to}
                 className={`row-link sidenav__chat${c.id === activeChatId ? ' sidenav__chat--active' : ''}`}
                 aria-current={c.id === activeChatId ? 'page' : undefined}
               >
@@ -80,10 +89,6 @@ export function AppShell({
           </div>
 
           <div className="sidenav__footer">
-            <a href="#" className="nav">
-              <Icon name="settings" />
-              Settings
-            </a>
             <a href="#" className="row-link sidenav__profile" aria-label="My profile">
               <div className="av" style={{ width: 42, height: 42, fontSize: 14 }} aria-hidden="true">
                 {user.initials}

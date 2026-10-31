@@ -1,0 +1,82 @@
+/* Answer options with an optional confidence picker (Assessment and lesson questions). */
+.assess__options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.opt {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  padding-right: 10px;
+  border: 2px solid var(--border);
+  border-radius: 14px;
+  background: var(--surface);
+}
+.opt:hover {
+  border-color: #7fb5e6;
+}
+.opt--on,
+.opt--on:hover {
+  border-color: var(--primary);
+  background: #f1f7fd;
+}
+.opt__main {
+  flex: 1 1 280px;
+  min-width: 0;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border: none;
+  background: transparent;
+  color: var(--text);
+  font: 15px/1.45 var(--font);
+  text-align: left;
+  cursor: pointer;
+}
+.opt__letter {
+  flex: 0 0 30px;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #eef2f6;
+  color: var(--text-3);
+  font-size: 13px;
+  font-weight: 700;
+}
+.opt--on .opt__letter {
+  background: var(--primary);
+  color: #fff;
+}
+.opt__text {
+  flex: 1;
+}
+.opt__conf {
+  display: flex;
+  gap: 2px;
+  padding: 4px 0;
+}
+.opt__conf-btn {
+  min-height: 36px;
+  padding: 0 10px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-icon);
+  font: 600 12px var(--font);
+  cursor: pointer;
+}
+.opt__conf-btn:hover {
+  background: var(--surface-hover);
+}
+.opt__conf-btn--on,
+.opt__conf-btn--on:hover {
+  background: var(--primary);
+  color: #fff;
+}

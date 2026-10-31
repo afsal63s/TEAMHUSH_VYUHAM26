@@ -1,14 +1,16 @@
 // Link builders shared by the screens.
 
-/** Spaced-review quiz on a topic (same assessment screen, review wording). */
-export const reviewLink = (topic: string) =>
-  `/assessment?mode=review&topic=${encodeURIComponent(topic)}`
+/** The first (diagnostic) assessment of a course. */
+export const diagnosticLink = (courseId: string) => `/assessment?course=${encodeURIComponent(courseId)}`
 
-/** Diagnostic for a new topic at a level; `courseId` ties the result to a built course. */
-export const diagnosticLink = (topic: string, level: string, courseId?: string) =>
-  `/assessment?topic=${encodeURIComponent(topic)}&level=${encodeURIComponent(level)}` +
-  (courseId ? `&course=${encodeURIComponent(courseId)}` : '')
+/** A spaced review: the backend picks the concept (GET .../next). */
+export const reviewLink = (courseId: string) => `/assessment?mode=review&course=${encodeURIComponent(courseId)}`
 
-/** Course-building screen shown after New chat. */
+/** Create a course for a topic and level, then watch it build. */
 export const buildLink = (topic: string, levelKey: string) =>
   `/build?topic=${encodeURIComponent(topic)}&level=${encodeURIComponent(levelKey)}`
+
+/** Watch an existing course build (or show it ready). */
+export const buildCourseLink = (courseId: string) => `/build?course=${encodeURIComponent(courseId)}`
+
+export const chatLink = (courseId: string) => `/chat/${encodeURIComponent(courseId)}`

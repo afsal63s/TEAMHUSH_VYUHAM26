@@ -95,88 +95,6 @@
   line-height: 1.35;
   letter-spacing: -0.01em;
 }
-.assess__options {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.opt {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  padding-right: 10px;
-  border: 2px solid var(--border);
-  border-radius: 14px;
-  background: var(--surface);
-}
-.opt:hover {
-  border-color: #7fb5e6;
-}
-.opt--on,
-.opt--on:hover {
-  border-color: var(--primary);
-  background: #f1f7fd;
-}
-.opt__main {
-  flex: 1 1 280px;
-  min-width: 0;
-  min-height: 52px;
-  box-sizing: border-box;
-  padding: 14px 16px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  border: none;
-  background: transparent;
-  color: var(--text);
-  font: 15px/1.45 var(--font);
-  text-align: left;
-  cursor: pointer;
-}
-.opt__letter {
-  flex: 0 0 30px;
-  width: 30px;
-  height: 30px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 999px;
-  background: #eef2f6;
-  color: var(--text-3);
-  font-size: 13px;
-  font-weight: 700;
-}
-.opt--on .opt__letter {
-  background: var(--primary);
-  color: #fff;
-}
-.opt__text {
-  flex: 1;
-}
-.opt__conf {
-  display: flex;
-  gap: 2px;
-  padding: 4px 0;
-}
-.opt__conf-btn {
-  min-height: 36px;
-  padding: 0 10px;
-  border: none;
-  border-radius: 999px;
-  background: transparent;
-  color: var(--text-icon);
-  font: 600 12px var(--font);
-  cursor: pointer;
-}
-.opt__conf-btn:hover {
-  background: var(--surface-hover);
-}
-.opt__conf-btn--on,
-.opt__conf-btn--on:hover {
-  background: var(--primary);
-  color: #fff;
-}
 
 .assess__skip {
   align-self: flex-start;
@@ -379,21 +297,6 @@
   color: var(--muted);
 }
 
-.results__scheduled {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
-  border: 1px solid #cfe2f5;
-  border-radius: 14px;
-  background: var(--primary-soft);
-}
-.results__scheduled-text {
-  flex: 1 1 260px;
-  font-size: 14px;
-  line-height: 1.5;
-}
 
 .results__ready {
   padding: 22px 24px;
@@ -456,4 +359,14 @@
   .results__conf-grid {
     grid-template-columns: 1fr;
   }
+}
+
+.assess__notice {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: var(--warn-bg);
+  color: var(--warn-fg);
+  font-size: 13px;
+  font-weight: 600;
 }

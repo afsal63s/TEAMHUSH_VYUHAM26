@@ -82,6 +82,11 @@
   color: var(--muted);
   font-size: 12px;
 }
+.sidenav__chats-empty {
+  padding: 6px 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
 .sidenav__chat {
   flex-direction: column;
   align-items: flex-start;

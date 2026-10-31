@@ -1,39 +1,56 @@
-// Typed client for the verified OnlyNerds backend routes (docs/API_REFERENCE.md).
+// Typed client for the OnlyNerds backend (backend/docs/API_REFERENCE.md).
 import type {
   AdvanceOut,
   AnswerIn,
   AttemptResultOut,
+  AuthCheckOut,
+  CourseSummary,
   CreateCourseIn,
   CreateCourseOut,
+  DueItem,
   HealthResponse,
   MasteryOut,
   NewSessionResponse,
+  ResetOut,
+  ResourcesResponse,
   StartOut,
   StepOut,
   ValidationError,
 } from './types'
 
-export const API_BASE_URL: string =
-  import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
+export const API_BASE_URL: string = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000'
 
-// Shared with the control panel window through localStorage.
+/** The app has one learner. */
+export const LEARNER = 'me'
+
+// Shared with the control panel (public/control.html) through localStorage.
 const PASSWORD_KEY = 'onlynerds.password'
+const COURSE_KEY = 'onlynerds.course'
 
-export function getPassword(): string {
+function read(key: string): string {
   try {
-    return localStorage.getItem(PASSWORD_KEY) ?? ''
+    return localStorage.getItem(key) ?? ''
   } catch {
     return ''
   }
 }
 
-export function setPassword(password: string): void {
+function write(key: string, value: string | null) {
   try {
-    localStorage.setItem(PASSWORD_KEY, password)
+    if (value === null) localStorage.removeItem(key)
+    else localStorage.setItem(key, value)
   } catch {
-    // Storage blocked: the password lasts only until reload.
+    // Storage blocked: the value lasts only until reload.
   }
 }
+
+export const getPassword = () => read(PASSWORD_KEY)
+export const setPassword = (password: string | null) => write(PASSWORD_KEY, password)
+/** Tells the control panel which course to watch. */
+export const setCurrentCourse = (courseId: string) => write(COURSE_KEY, courseId)
+
+/** Fired on any 401 so the app can send the user to /login. */
+export const UNAUTHORIZED_EVENT = 'onlynerds:unauthorized'
 
 export class ApiError extends Error {
   status: number
@@ -47,15 +64,16 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const res = await fetch(`${API_BASE_URL}${path}`, {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Master-Password': getPassword(),
-      ...init.headers,
-    },
-  })
+async function request<T>(path: string, init: RequestInit = {}, password = getPassword()): Promise<T> {
+  let res: Response
+  try {
+    res = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      headers: { 'Content-Type': 'application/json', 'X-Master-Password': password, ...init.headers },
+    })
+  } catch {
+    throw new ApiError(0, 'Cannot reach the server.')
+  }
   if (!res.ok) {
     let detail: string | ValidationError[] = res.statusText
     try {
@@ -63,6 +81,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
     } catch {
       // Non-JSON error body: keep the status text.
     }
+    if (res.status === 401) window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
     throw new ApiError(res.status, detail)
   }
   return res.json() as Promise<T>
@@ -71,28 +90,31 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
 const post = <T>(path: string, body?: unknown) =>
   request<T>(path, { method: 'POST', body: body === undefined ? undefined : JSON.stringify(body) })
 
-const learner = (cid: string, lid: string) =>
-  `/courses/${encodeURIComponent(cid)}/learners/${encodeURIComponent(lid)}`
+const learner = (cid: string) => `/courses/${encodeURIComponent(cid)}/learners/${LEARNER}`
 
 export const api = {
   health: () => request<HealthResponse>('/health'),
+  /** Checks a candidate password without storing it. */
+  authCheck: (password: string) => request<AuthCheckOut>('/auth/check', {}, password),
 
+  listCourses: () => request<CourseSummary[]>(`/courses?learner_id=${LEARNER}`),
+  due: () => request<DueItem[]>(`/due?learner_id=${LEARNER}`),
   createCourse: (body: CreateCourseIn) => post<CreateCourseOut>('/courses', body),
   getCourse: (cid: string) => request<CreateCourseOut>(`/courses/${encodeURIComponent(cid)}`),
 
-  start: (cid: string, lid: string) => post<StartOut>(`${learner(cid, lid)}/start`),
-  submitAttempts: (cid: string, lid: string, answers: AnswerIn[]) =>
-    post<AttemptResultOut>(`${learner(cid, lid)}/attempts`, { answers }),
-  next: (cid: string, lid: string) => request<StepOut>(`${learner(cid, lid)}/next`),
-  state: (cid: string, lid: string) => request<MasteryOut>(`${learner(cid, lid)}/state`),
-  advance: (cid: string, lid: string, days: number) =>
-    post<AdvanceOut>(`${learner(cid, lid)}/advance`, { days }),
-  newSession: (cid: string, lid: string) =>
-    post<NewSessionResponse>(`${learner(cid, lid)}/sessions/new`),
+  start: (cid: string) => post<StartOut>(`${learner(cid)}/start`),
+  submitAttempts: (cid: string, answers: AnswerIn[]) =>
+    post<AttemptResultOut>(`${learner(cid)}/attempts`, { answers }),
+  next: (cid: string) => request<StepOut>(`${learner(cid)}/next`),
+  state: (cid: string) => request<MasteryOut>(`${learner(cid)}/state`),
+  resources: (cid: string) => request<ResourcesResponse>(`${learner(cid)}/resources`),
+  newSession: (cid: string) => post<NewSessionResponse>(`${learner(cid)}/sessions/new`),
+  reset: (cid: string) => post<ResetOut>(`${learner(cid)}/reset`),
+  advance: (cid: string, days: number) => post<AdvanceOut>(`${learner(cid)}/advance`, { days }),
 }
 
-// Backend datetimes are naive UTC strings without a trailing 'Z'.
-export function parseUtc(s: string | null | undefined): Date | null {
-  if (!s) return null
-  return new Date(/[zZ]|[+-]\d\d:\d\d$/.test(s) ? s : `${s}Z`)
+/** A short, user-facing message for any thrown error. */
+export function errorText(err: unknown): string {
+  if (err instanceof ApiError) return err.status === 0 ? err.message : `${err.message} (${err.status})`
+  return err instanceof Error ? err.message : String(err)
 }

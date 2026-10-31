@@ -622,3 +622,42 @@
     flex-basis: 90px;
   }
 }
+
+.ret__kpi-empty {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--muted);
+}
+.ret__concept {
+  width: 100%;
+  border: none;
+  border-bottom: 1px solid var(--divider);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.ret__concept:disabled {
+  cursor: default;
+}
+.ret__concept:not(:disabled):hover,
+.ret__concept--on {
+  background: #f7fafd;
+}
+.ret__memory--none {
+  background: #eef2f6;
+  color: var(--text-icon);
+}
+.ret__none {
+  margin: 4px 0 8px;
+  font-size: 13px;
+}
+.ret__empty {
+  align-items: center;
+  text-align: center;
+}
+.ret__empty-title {
+  font-size: 20px;
+  font-weight: 700;
+}

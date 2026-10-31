@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useId, useState } from 'react'
 import './AnswerReview.css'
 
 const LETTERS = ['A', 'B', 'C', 'D']
@@ -8,7 +8,10 @@ export interface ReviewedAnswer {
   topic: string
   text: string
   options: string[]
-  correct: number
+  /** Correct option index from the grader; undefined if the backend did not send one. */
+  correct: number | undefined
+  /** Right or wrong as graded by the backend (ignored when skipped). */
+  graded?: boolean
   /** Index picked, or undefined when skipped. */
   picked: number | undefined
   /** 0 = not sure, 1 = fairly sure, 2 = certain; undefined when not given. */
@@ -20,8 +23,10 @@ type Filter = 'all' | 'wrong' | 'skipped'
 // Question-by-question feedback after grading: what was picked and the right answer.
 export function AnswerReview({ answers }: { answers: ReviewedAnswer[] }) {
   const [filter, setFilter] = useState<Filter>('all')
+  const headingId = useId()
   const isSkipped = (a: ReviewedAnswer) => a.picked === undefined
-  const isWrong = (a: ReviewedAnswer) => !isSkipped(a) && a.picked !== a.correct
+  const isRight = (a: ReviewedAnswer) => !isSkipped(a) && (a.graded ?? a.picked === a.correct)
+  const isWrong = (a: ReviewedAnswer) => !isSkipped(a) && !isRight(a)
   const counts = {
     all: answers.length,
     wrong: answers.filter(isWrong).length,
@@ -32,9 +37,9 @@ export function AnswerReview({ answers }: { answers: ReviewedAnswer[] }) {
     .filter(({ a }) => filter === 'all' || (filter === 'wrong' ? isWrong(a) : isSkipped(a)))
 
   return (
-    <section className="card review" aria-labelledby="qbq">
+    <section className="card review" aria-labelledby={headingId}>
       <div className="review__head">
-        <h2 id="qbq" className="label review__title">
+        <h2 id={headingId} className="label review__title">
           Question by question
         </h2>
         <div role="tablist" aria-label="Filter questions" className="review__filters">
@@ -60,7 +65,7 @@ export function AnswerReview({ answers }: { answers: ReviewedAnswer[] }) {
       <ol className="review__list">
         {shown.map(({ a, n }) => {
           const skipped = isSkipped(a)
-          const right = !skipped && a.picked === a.correct
+          const right = isRight(a)
           const verdict = skipped ? 'skipped' : right ? 'right' : 'wrong'
           const callout =
             !skipped && a.confidence === 2 && !right
@@ -88,7 +93,7 @@ export function AnswerReview({ answers }: { answers: ReviewedAnswer[] }) {
                 {a.options.map((opt, i) => {
                   const isCorrect = i === a.correct
                   const isPicked = i === a.picked
-                  const state = isPicked ? (isCorrect ? 'right' : 'wrong') : isCorrect ? 'answer' : 'plain'
+                  const state = isPicked ? (right ? 'right' : 'wrong') : isCorrect ? 'answer' : 'plain'
                   return (
                     <li key={i} className={`rq__opt rq__opt--${state}`}>
                       <span className="rq__letter" aria-hidden="true">

@@ -103,6 +103,16 @@
   letter-spacing: 0.04em;
   cursor: pointer;
 }
+.login__btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.login__error {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: #b91c1c;
+}
 .login__btn:hover {
   background: var(--primary-hover);
 }

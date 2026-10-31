@@ -55,9 +55,23 @@ export interface AttemptResultOut {
   messages?: string[];
   /** The next step with its material (same as GET .../next right after). */
   next: StepOut;
+  /** Served question ids not answered in this round: not graded, no effect. */
+  skipped?: string[];
 }
 
-export interface ConceptState {
+export interface AuthCheckOut {
+  /** Always true on 200. */
+  ok?: boolean;
+}
+
+export interface ConceptResearch {
+  /** `pending` while research runs, then `ready` or `failed`. */
+  status?: "pending" | "ready" | "failed";
+  /** Articles and videos found (at most 2 articles and 1 video). */
+  resources?: Resource[];
+}
+
+export interface ConceptStateOut {
   /** Concept. */
   concept_id: string;
   /** Probability the concept is known (0..1); 0.85 or more counts as mastered. */
@@ -80,6 +94,41 @@ export interface ConceptState {
   fallbacks?: number;
   /** Stuck after the last try: show a 'get help' card. */
   needs_help?: boolean;
+  /** This concept's last 20 review rounds `{at, passed}`, oldest first. */
+  reviews?: ReviewMark[];
+}
+
+export interface CourseSummary {
+  /** Course id. */
+  course_id: string;
+  /** Topic name. */
+  topic: string;
+  /** Level the course was made for. */
+  level: "novice" | "beginner" | "intermediate" | "advanced";
+  /** `generating`, `ready` or `failed`. */
+  status: string;
+  /** When the course was created (real UTC). */
+  created_at: string;
+  /** Course deadline. */
+  deadline?: string | null;
+  /** Concepts in the graph. */
+  concept_count?: number;
+  /** Whether this learner has started the course. */
+  started?: boolean;
+  /** Concepts at 0.85 or more. */
+  mastered?: number;
+  /** Mean p_mastery over the course's concepts. */
+  avg_mastery?: number;
+  /** Mean recall probability now (learner's clock). */
+  avg_retrievability?: number;
+  /** Earliest scheduled review (past means overdue). */
+  next_due_at?: string | null;
+  /** Reviews due now on the learner's simulated clock. */
+  overdue_count?: number;
+  /** Concepts flagged needs_help. */
+  needs_help_count?: number;
+  /** Simulated time of the last attempt, advance or new session. */
+  last_activity_at?: string | null;
 }
 
 export interface CreateCourseIn {
@@ -102,8 +151,44 @@ export interface CreateCourseOut {
   concepts?: Record<string, unknown>[];
 }
 
+export interface DueItem {
+  /** Course id. */
+  course_id: string;
+  /** Course topic. */
+  topic: string;
+  /** Concept id. */
+  concept_id: string;
+  /** Concept display name. */
+  concept_name: string;
+  /** When the review is due. */
+  due_at: string;
+  /** Days past due on the learner's simulated clock (fractional). */
+  overdue_days?: number;
+  /** Recall probability now. */
+  retrievability?: number;
+}
+
 export interface HTTPValidationError {
   detail?: ValidationError[];
+}
+
+export interface HistoryPoint {
+  /** Simulated time of the sample. */
+  at: string;
+  /** What produced it: `attempt`, `advance` or `session`. */
+  event: "attempt" | "advance" | "session";
+  /** Mean p_mastery over every concept of the course. */
+  avg_mastery: number;
+  /** Mean retrievability over every concept at that time. */
+  avg_retrievability: number;
+  /** Concepts at 0.85 or more. */
+  mastered_count: number;
+  /** Total answers so far (diagnostic included). */
+  questions_answered: number;
+  /** Mean stability over concepts that have one, else 0. */
+  avg_stability_days: number;
+  /** concept_id -> p_mastery for every concept at that time. */
+  mastery?: Record<string, number>;
 }
 
 export interface Lesson {
@@ -115,15 +200,15 @@ export interface Lesson {
   explanation: string;
   /** Misconception tags addressed. */
   targets?: string[];
-  /** Articles and videos for the concept. */
+  /** Researched articles and videos for the concept. */
   resources?: Resource[];
 }
 
 export interface MasteryOut {
   /** Per-concept state, roadmap order. */
-  concepts: ConceptState[];
+  concepts: ConceptStateOut[];
   /** Every misconception seen so far with its status. */
-  misconceptions: MisconceptionState[];
+  misconceptions: MisconceptionOut[];
   /** Earliest scheduled review. */
   next_due?: string | null;
   /** concept_id -> scheduled review time (past times are due now). */
@@ -140,9 +225,21 @@ export interface MasteryOut {
   retrievability?: Record<string, number>;
   /** `{mastered, total, attempts_per_mastered}`. */
   pace?: Record<string, number>;
+  /** The learner's simulated now (real UTC now plus the clock offset). */
+  now?: string | null;
+  /** Progress samples, oldest first, one per attempts, advance and sessions/new call (last 500). */
+  history?: HistoryPoint[];
+  /** Mean change in average mastery per answered question over the last 10 answers. */
+  learning_rate?: number;
+  /** Mean stability over concepts that have one. */
+  avg_stability_days?: number;
+  /** concept_id -> stability_days. */
+  stability?: Record<string, number>;
+  /** Review pass rates overall and after a delay of 7+ days. */
+  retention?: Retention;
 }
 
-export interface MisconceptionState {
+export interface MisconceptionOut {
   /** Misconception id, `<concept_id>__<slug>`. */
   tag: string;
   /** Its concept. */
@@ -153,6 +250,12 @@ export interface MisconceptionState {
   evidence?: number;
   /** Correct answers in a row on questions testing it; 2 resolves it. */
   clean_streak?: number;
+  /** Simulated time it was first picked. */
+  first_seen_at?: string | null;
+  /** Simulated time it became resolved. */
+  resolved_at?: string | null;
+  /** What the learner wrongly believes (from the course's catalog). */
+  description?: string;
 }
 
 export interface QuestionPublic {
@@ -166,6 +269,11 @@ export interface QuestionPublic {
   options: string[];
 }
 
+export interface ResetOut {
+  /** Always true on 200. */
+  ok?: boolean;
+}
+
 export interface Resource {
   /** article or video. */
   kind: "article" | "video";
@@ -175,6 +283,28 @@ export interface Resource {
   url: string;
   /** Short excerpt. */
   snippet?: string;
+}
+
+export interface Retention {
+  /** Review rounds so far (verification reviews of placed concepts included). */
+  reviews_total?: number;
+  /** Review rounds that did not lapse the concept. */
+  reviews_passed?: number;
+  /** reviews_passed / reviews_total. */
+  review_pass_rate?: number | null;
+  /** Reviews at least `delayed_threshold_days` after the concept was last seen. */
+  delayed_reviews_total?: number;
+  /** Pass rate of those delayed reviews: evidence of long-term retention. */
+  delayed_pass_rate?: number | null;
+  /** Days since last seen that make a review 'delayed' (7). */
+  delayed_threshold_days?: number;
+}
+
+export interface ReviewMark {
+  /** Simulated time of the review round. */
+  at: string;
+  /** False if the round lapsed the concept. */
+  passed: boolean;
 }
 
 export interface StartOut {
@@ -226,11 +356,11 @@ export interface ValidationError {
 // Responses without a response model in the schema: shapes inferred from the live responses.
 export type HealthResponse = { status: string };
 export type NewSessionResponse = { session_questions: number; next_kind: string; next_concept_id: string };
+/** GET .../resources: concept_id -> research status and resources. */
+export type ResourcesResponse = Record<string, ConceptResearch>;
 export interface ErrorResponse { detail: string | ValidationError[]; }
 
 // Planned, NOT AVAILABLE yet (404 today). Code against them behind feature detection.
-export type ResearchStatus = "pending" | "ready" | "failed";
-export type ResourcesResponse = Record<string, { status: ResearchStatus; resources: Resource[] }>;
 export interface VirtualStartIn { persona: string; speed: number; days: number; reset: boolean; }
 export interface VirtualSpeedIn { speed: number; }
 export interface VirtualEvent { n: number; at: string; kind: string; text: string; source: string; }

@@ -1,4 +1,6 @@
 import { useState, type FormEvent } from 'react'
+import { useNavigate } from 'react-router'
+import { api, ApiError, errorText, setPassword } from '../../api/client'
 import logo from '../../assets/logo.png'
 import mark from '../../assets/mark.png'
 import './Login.css'
@@ -10,70 +12,40 @@ const points = [
   { n: '4', title: 'Re-check and retain', sub: 'Spaced reviews measure what you really remember' },
 ]
 
-export type LoginMode = 'login' | 'signup'
-
-// Not routed yet, and not wired to the backend (which has no user accounts).
-export function Login({
-  mode = 'login',
-  onSubmit,
-}: {
-  mode?: LoginMode
-  onSubmit?: (values: { name: string; email: string; password: string }) => void
-}) {
+// The backend has one shared password (no accounts): check it with GET /auth/check, then store it.
+export function Login() {
+  const navigate = useNavigate()
   const [showPw, setShowPw] = useState(false)
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const login = mode === 'login'
+  const [password, setPw] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  function handleSubmit(e: FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault()
-    onSubmit?.({ name, email, password })
+    if (busy) return
+    setBusy(true)
+    setError(null)
+    try {
+      await api.authCheck(password)
+      setPassword(password)
+      navigate('/', { replace: true })
+    } catch (err) {
+      setError(err instanceof ApiError && err.status === 401 ? 'Wrong password' : errorText(err))
+      setBusy(false)
+    }
   }
 
   return (
     <div className="login">
       <main className="login__form-side">
         <div className="login__form-wrap">
-          <a href="/" aria-label="OnlyNerds home">
-            <img src={logo} alt="OnlyNerds" className="login__logo" />
-          </a>
+          <img src={logo} alt="OnlyNerds" className="login__logo" />
           <div className="login__heading">
-            <h1>{login ? 'Welcome back' : 'Create your account'}</h1>
-            <p>{login ? 'Log in to continue learning' : 'Start learning in under a minute'}</p>
+            <h1>Welcome back</h1>
+            <p>Enter the password to continue learning</p>
           </div>
 
           <form className="login__form" onSubmit={handleSubmit}>
-            {!login && (
-              <div>
-                <label className="login__label" htmlFor="nm">
-                  Full name
-                </label>
-                <input
-                  id="nm"
-                  className="login__field"
-                  type="text"
-                  autoComplete="name"
-                  placeholder="Alex Rivera"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                />
-              </div>
-            )}
-            <div>
-              <label className="login__label" htmlFor="em">
-                Email
-              </label>
-              <input
-                id="em"
-                className="login__field"
-                type="email"
-                autoComplete="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
             <div>
               <label className="login__label" htmlFor="pw">
                 Password
@@ -83,10 +55,13 @@ export function Login({
                   id="pw"
                   className="login__field login__field--pw"
                   type={showPw ? 'text' : 'password'}
-                  autoComplete={login ? 'current-password' : 'new-password'}
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => setPw(e.target.value)}
+                  aria-invalid={error ? true : undefined}
+                  aria-describedby={error ? 'pw-error' : undefined}
+                  autoFocus
                 />
                 <button
                   type="button"
@@ -97,9 +72,14 @@ export function Login({
                   {showPw ? 'Hide' : 'Show'}
                 </button>
               </div>
+              {error && (
+                <p id="pw-error" className="login__error" role="alert">
+                  {error}
+                </p>
+              )}
             </div>
-            <button type="submit" className="login__btn">
-              {login ? 'LOG IN' : 'CREATE ACCOUNT'}
+            <button type="submit" className="login__btn" disabled={busy || !password}>
+              {busy ? 'CHECKING…' : 'LOG IN'}
             </button>
           </form>
 
