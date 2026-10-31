@@ -2,7 +2,7 @@
 @baseUrl = http://127.0.0.1:8000
 @password = <your-master-password>
 @courseId = b0dafa63
-@learnerId = docs-231157
+@learnerId = docs-040729
 
 ### GET /health
 GET {{baseUrl}}/health
@@ -23,6 +23,10 @@ X-Master-Password: {{password}}
 
 ### POST /courses/{cid}/learners/{lid}/start
 POST {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/start
+X-Master-Password: {{password}}
+
+### GET /auth/check
+GET {{baseUrl}}/auth/check
 X-Master-Password: {{password}}
 
 ### POST /courses/{cid}/learners/{lid}/attempts
@@ -152,6 +156,82 @@ Content-Type: application/json
 
 ### POST /courses/{cid}/learners/{lid}/sessions/new
 POST {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/sessions/new
+X-Master-Password: {{password}}
+
+### GET /courses
+GET {{baseUrl}}/courses?learner_id=docs-040729
+X-Master-Password: {{password}}
+
+### GET /due
+GET {{baseUrl}}/due?learner_id=docs-040729
+X-Master-Password: {{password}}
+
+### POST /courses/{cid}/learners/{lid}/attempts
+POST {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/attempts
+X-Master-Password: {{password}}
+Content-Type: application/json
+
+{
+  "answers": [
+    {
+      "question_id": "f707cec4-prompt_structure-d1",
+      "chosen_index": 1,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-sampling_temperature-d1",
+      "chosen_index": 1,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-context_window-d1",
+      "chosen_index": 2,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-clear_instructions-d1",
+      "chosen_index": 1,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-role_prompting-d1",
+      "chosen_index": 0,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-few_shot_examples-d1",
+      "chosen_index": 0,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-output_formatting-d1",
+      "chosen_index": 0,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-iterative_refinement-d1",
+      "chosen_index": 1,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-hallucination_checking-d1",
+      "chosen_index": 0,
+      "confidence": "medium"
+    }
+  ]
+}
+
+### POST /courses/{cid}/learners/{lid}/attempts
+POST {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/attempts
+X-Master-Password: {{password}}
+Content-Type: application/json
+
+{
+  "answers": []
+}
+
+### POST /courses/{cid}/learners/{lid}/reset
+POST {{baseUrl}}/courses/{{courseId}}/learners/{{learnerId}}/reset
 X-Master-Password: {{password}}
 
 ### POST /courses/{cid}/learners/{lid}/attempts
@@ -366,7 +446,7 @@ Content-Type: application/json
 {
   "prompt": "SQL joins",
   "level": "novice",
-  "deadline": "2026-11-02T05:42:08.314084"
+  "deadline": "2026-11-02T10:37:37.579606"
 }
 
 ### POST /courses/{cid}/learners/{lid}/attempts

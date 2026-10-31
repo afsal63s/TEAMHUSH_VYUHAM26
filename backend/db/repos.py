@@ -40,6 +40,12 @@ async def fail_generating_courses() -> int:
     return result.modified_count
 
 
+async def list_courses() -> list[Course]:
+    """Every course, newest first."""
+    cursor = get_db().courses.find({}).sort("created_at", DESCENDING)
+    return [Course.model_validate(d) async for d in cursor]
+
+
 async def find_course_by_prompt_hash(prompt_hash: str, level: Level) -> Course | None:
     """The newest course created from this prompt and level, whatever its status."""
     doc = await get_db().courses.find_one(
@@ -84,6 +90,12 @@ async def get_state(learner_id: str, course_id: str) -> LearnerState | None:
 async def save_state(state: LearnerState) -> None:
     sid = _state_id(state.learner_id, state.course_id)
     await get_db().learner_states.replace_one({"_id": sid}, {**state.model_dump(), "_id": sid}, upsert=True)
+
+
+async def delete_learner(learner_id: str, course_id: str) -> None:
+    """Remove a learner's state and attempt log for one course (the course and its research stay)."""
+    await get_db().learner_states.delete_one({"_id": _state_id(learner_id, course_id)})
+    await get_db().attempts.delete_many({"learner_id": learner_id, "course_id": course_id})
 
 
 # --- attempts ---

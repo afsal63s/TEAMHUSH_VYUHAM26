@@ -12,9 +12,28 @@
   "lesson": {
     "concept_id": "language_model_basics",
     "style": "worked_example",
-    "explanation": "Let's see how a language model predicts text using one small example. Suppose you give it the prompt: \"The cat sat on the\". The model does not look up a fact or understand the sentence the way you do. Instead, it scores many possible next words based on patterns it learned from huge amounts of text. Step one: it reads your prompt as a sequence of tokens, which are chunks of words. Step two: it estimates probabilities for every possible next token. Words like \"mat\" or \"floor\" might get high scores, while \"piano\" gets a low one. Step three: it picks one token, often one of the most likely, and adds it to the text. Step four: it repeats the process with the longer text until it reaches a stopping point. So if your prompt is \"The cat sat on the\", the output is likely \"mat\", then a period, then more words. Notice what this means for you: the model continues whatever text it receives, so the wording of your prompt directly shapes what comes next. Keep this in mind as you write prompts, because a clearer starting text usually leads to a more useful continuation.",
+    "explanation": "Imagine you type the start of a sentence: The cat sat on the. A language model looks at those words, which is the context it receives, and estimates which words are most likely to come next. It might assign high probability to mat, and lower probability to words like moon or pizza, because those fit the surrounding text less well. Now walk through the steps. First, the model reads the words it has been given. Second, it uses that context to estimate probabilities for possible next tokens, where a token is a word or piece of a word. Third, it picks a likely continuation, such as mat, and adds it to the text. Then the process repeats with the longer text. This is why it is often described as an ultra-smart autocomplete. Notice what this means for you as a prompt writer: the words you provide shape the context, and that context strongly influences what the model predicts. Keep in mind that predicting likely text does not guarantee correct text, so the model can still produce fluent but wrong answers.",
     "targets": [],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Prompt engineering essentials: Getting better results from LLMs | Tutorial",
+        "url": "https://www.youtube.com/watch?v=LAF-lACf2QY",
+        "snippet": "[0:52] They work by predicting the next word in a sentence, based on the context of the words that came before it, making their responses relevant and coherent to humans that use them.\n[1:02] You can think of it as an ultra-smart autocomplete.\n[1:06] There are three things you really need to know to understand LLMs: context, tokens, and limitations.\n[1:14] Think of context as the surrounding infor"
+      },
+      {
+        "kind": "article",
+        "title": "Introduction to Large Language Models \u00a0|\u00a0 Machine Learning \u00a0|\u00a0 Google for Developers",
+        "url": "https://developers.google.com/machine-learning/crash-course/llm",
+        "snippet": "This module explores language models, which estimate the probability of a token or sequence of tokens occurring within a longer sequence, enabling tasks like text generation, translation, and summarization.\n Language models utilize context, the surrounding information of a target token, to enhance prediction accuracy, with recurrent neural networks offering more context than traditional N-grams. ["
+      },
+      {
+        "kind": "video",
+        "title": "LLMs Explained in Simple Language \u2014 How ChatGPT Actually Works",
+        "url": "https://www.youtube.com/watch?v=RTw21C2hl0s",
+        "snippet": "What is an LLM, and how does ChatGPT actually work? In this video, we break down Large Language Models (LLMs) in simple, ..."
+      }
+    ]
   },
   "questions": [
     {

@@ -1,6 +1,6 @@
 # OnlyNerd API reference
 
-Generated 2026-10-30 23:12 from a live run (commit `11b8da9`, with uncommitted changes). Every field, status code and example below was captured from the running server. Routes documented: 11.
+Generated 2026-10-31 04:08 from a live run (commit `cfea76f`, with uncommitted changes). Every field, status code and example below was captured from the running server. Routes documented: 15.
 
 ## Contents
 
@@ -37,14 +37,14 @@ Generated 2026-10-30 23:12 from a live run (commit `11b8da9`, with uncommitted c
 }
 ```
 
-**409** (`POST /courses/b0dafa63/learners/docs-231157/start`):
+**409** (`POST /courses/b0dafa63/learners/docs-040729/start`):
 ```json
 {
-  "detail": "learner 'docs-231157' already started course 'b0dafa63'"
+  "detail": "learner 'docs-040729' already started course 'b0dafa63'"
 }
 ```
 
-**422** (`POST /courses/b0dafa63/learners/docs-231157/attempts`):
+**422** (`POST /courses/b0dafa63/learners/docs-040729/attempts`):
 ```json
 {
   "detail": "questions not served to this learner: ['f707cec4-language_model_basics-d2']"
@@ -122,6 +122,13 @@ Frontend                                   Backend
 
 | Screen / card | Endpoint | Fields |
 |---|---|---|
+| Login: password check | `GET /auth/check` | 200 `{ok}` or 401 |
+| Dashboard: course cards | `GET /courses` | `topic`, `level`, `status`, `started`, `mastered`/`concept_count`, `avg_mastery`, `avg_retrievability`, `next_due_at`, `overdue_count`, `needs_help_count`, `last_activity_at` |
+| Dashboard: 'Due for review' and 'Overdue' lists | `GET /due` | `topic`, `concept_name`, `due_at`, `overdue_days` (> 0 means overdue), `retrievability` |
+| Course: 'start over' | `POST .../reset` then `POST .../start` | `{ok}` |
+| Quiz: 'skip' a question | `POST .../attempts` with only the answered ids | response `skipped[]` |
+| Panel: retention evidence | `GET .../state` | `retention` (pass rates; delayed = 7+ days), `concepts[].reviews` |
+| Panel: misconception timeline | `GET .../state` | `misconceptions[].description`, `first_seen_at`, `resolved_at` |
 | Setup: topic, level, deadline form | `POST /courses` | body `prompt`, `level`, `deadline` |
 | Setup: 'building your course' spinner | `GET /courses/{cid}` | `status` |
 | Setup: concept graph | `GET /courses/{cid}` | `concepts[].id/name/prerequisites` |
@@ -143,6 +150,8 @@ Frontend                                   Backend
 | Sidebar: upcoming reviews | `GET .../state` | `due`, `next_due` |
 | Sidebar: misconceptions | `GET .../state` | `misconceptions[]` |
 | Sidebar: pace, deadline | `GET .../state` | `pace`, `days_left` |
+| Control panel: progress chart | `GET .../state` | `history[]` (x: `at` or `questions_answered`; y: `avg_mastery`, `avg_retrievability`, `mastered_count`) |
+| Control panel: learning speed, memory strength | `GET .../state` | `learning_rate`, `avg_stability_days`, `stability`, `now` |
 | Control panel: skip N days | `POST .../advance` | body `days`; response `now`, `due_now`, `next_kind`, `next_concept_id` |
 | Control panel: new session | `POST .../sessions/new` | response `next_kind`, `next_concept_id` |
 | Eval page | `GET /eval/results` | the file as-is (404 until produced) |
@@ -163,7 +172,7 @@ Liveness check. Needs no password.
 
 _health_
 
-`GET /health` -> **200** (47 ms), file `docs/examples/health.json`
+`GET /health` -> **200** (16 ms), file `docs/examples/health.json`
 
 ```json
 {
@@ -178,17 +187,291 @@ _health_
 
 **Side effects:** none
 
-**Latency:** 1 successful calls: median 0.047 s, max 0.047 s. No LLM call observed.
+**Latency:** 1 successful calls: median 0.016 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Safe to poll; no state.
+
+### `GET /auth/check`
+
+Checks the password: 200 `{ok: true}` when X-Master-Password is right (or no password is set), 401 otherwise.
+
+**When to call:** On the login screen, before storing the password in the client.
+
+**Request body:** none.
+
+**Response 200** (`AuthCheckOut`):
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `ok` | `boolean` | Always true on 200. | - |
+
+**Real examples:**
+
+_auth_check_
+
+`GET /auth/check` -> **200** (0 ms), file `docs/examples/auth_check.json`
+
+```json
+{
+  "ok": true
+}
+```
+
+**Errors:**
+
+| Status | When | Body |
+|---|---|---|
+| 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
+
+**Side effects:** none
+
+**Latency:** 1 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
+
+**Idempotency and polling:** Safe to repeat.
+
+### `GET /courses`
+
+Dashboard cards: every course, newest first, with this learner's progress (no graph). Unstarted courses have `started: false` and zeros.
+
+**When to call:** On the dashboard; after creating a course; after any learning activity.
+
+**Query parameters:** `learner_id` (string, default `me`). The app has one user: leave `learner_id` at its default `me`.
+
+**Request body:** none.
+
+**Response 200:** a JSON array of `CourseSummary`:
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `course_id` | `string` | Course id. | - |
+| `topic` | `string` | Topic name. | - |
+| `level` | `"novice" | "beginner" | "intermediate" | "advanced"` | Level the course was made for. | - |
+| `status` | `string` | `generating`, `ready` or `failed`. | - |
+| `created_at` | `string` | When the course was created (real UTC). | - |
+| `deadline` | `string | null` | Course deadline. | null without one |
+| `concept_count` | `number` | Concepts in the graph. | 0 while generating |
+| `started` | `boolean` | Whether this learner has started the course. | - |
+| `mastered` | `number` | Concepts at 0.85 or more. | 0 when not started |
+| `avg_mastery` | `number` | Mean p_mastery over the course's concepts. | 0 when not started |
+| `avg_retrievability` | `number` | Mean recall probability now (learner's clock). | 0 when not started |
+| `next_due_at` | `string | null` | Earliest scheduled review (past means overdue). | null when nothing is scheduled or not started |
+| `overdue_count` | `number` | Reviews due now on the learner's simulated clock. | - |
+| `needs_help_count` | `number` | Concepts flagged needs_help. | - |
+| `last_activity_at` | `string | null` | Simulated time of the last attempt, advance or new session. | null when not started |
+
+**Real examples:**
+
+_courses_list_
+
+`GET /courses?learner_id=docs-040729` -> **200** (0 ms), file `docs/examples/courses_list.json`
+
+```json
+[
+  {
+    "course_id": "fd072c2a",
+    "topic": "Python",
+    "level": "advanced",
+    "status": "ready",
+    "created_at": "2026-10-30T17:31:46.827000",
+    "deadline": null,
+    "concept_count": 10,
+    "started": false,
+    "mastered": 0,
+    "avg_mastery": 0.0,
+    "avg_retrievability": 0.0,
+    "next_due_at": null,
+    "overdue_count": 0,
+    "needs_help_count": 0,
+    "last_activity_at": null
+  },
+  {
+    "course_id": "c6aaba84",
+    "topic": "SQL joins",
+    "level": "novice",
+    "status": "ready",
+    "created_at": "2026-10-30T16:56:10.989000",
+    "deadline": "2026-11-02T10:36:27.916000",
+    "concept_count": 10,
+    "started": false,
+    "mastered": 0,
+    "avg_mastery": 0.0,
+    "avg_retrievability": 0.0,
+    "next_due_at": null,
+    "overdue_count": 0,
+    "needs_help_count": 0,
+    "last_activity_at": null
+  },
+  {
+    "course_id": "e221eb0a",
+    "topic": "Python",
+    "level": "novice",
+    "status": "ready",
+    "created_at": "2026-10-30T16:27:44.796000",
+    "deadline": null,
+    "concept_count": 10,
+    "started": false,
+    "mastered": 0,
+    "avg_mastery": 0.0,
+    "avg_retrievability": 0.0,
+    "next_due_at": null,
+    "overdue_count": 0,
+    "needs_help_count": 0,
+    "last_activity_at": null
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "level": "beginner",
+    "status": "ready",
+    "created_at": "2026-10-30T16:12:10.254000",
+    "deadline": null,
+    "concept_count": 10,
+    "started": true,
+    "mastered": 7,
+    "avg_mastery": 0.686454588316866,
+    "avg_retrievability": 0.970800699320422,
+    "next_due_at": "2026-11-01T22:37:37.139000",
+    "overdue_count": 0,
+    "needs_help_count": 0,
+    "last_activity_at": "2026-10-31T22:37:37.248000"
+  }
+]
+```
+
+**Errors:**
+
+| Status | When | Body |
+|---|---|---|
+| 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
+
+**Side effects:** none
+
+**Latency:** 1 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
+
+**Idempotency and polling:** Safe to poll; cheap.
+
+### `GET /due`
+
+Every scheduled review across the learner's started courses, soonest first, with how overdue each is on that course's simulated clock.
+
+**When to call:** For the dashboard's 'Due for review' and 'Overdue' lists.
+
+**Query parameters:** `learner_id` (string, default `me`). The app has one user: leave `learner_id` at its default `me`.
+
+**Request body:** none.
+
+**Response 200:** a JSON array of `DueItem`:
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `course_id` | `string` | Course id. | - |
+| `topic` | `string` | Course topic. | - |
+| `concept_id` | `string` | Concept id. | - |
+| `concept_name` | `string` | Concept display name. | - |
+| `due_at` | `string` | When the review is due. | - |
+| `overdue_days` | `number` | Days past due on the learner's simulated clock (fractional). | 0 when not yet due |
+| `retrievability` | `number` | Recall probability now. | - |
+
+**Real examples:**
+
+_due_
+
+`GET /due?learner_id=docs-040729` -> **200** (0 ms), file `docs/examples/due.json`
+
+```json
+[
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "language_model_basics",
+    "concept_name": "Language model basics",
+    "due_at": "2026-11-01T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9486832274876726
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "prompt_structure",
+    "concept_name": "Prompt structure",
+    "due_at": "2026-11-01T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9486832274876726
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "sampling_temperature",
+    "concept_name": "Sampling temperature",
+    "due_at": "2026-11-01T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9486832274876726
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "clear_instructions",
+    "concept_name": "Clear instructions",
+    "due_at": "2026-11-01T22:37:37.210000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9999999378214448
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "few_shot_examples",
+    "concept_name": "Few-shot examples",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "output_formatting",
+    "concept_name": "Output formatting",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "iterative_refinement",
+    "concept_name": "Iterative refinement",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "hallucination_checking",
+    "concept_name": "Hallucination checking",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  }
+]
+```
+
+**Errors:**
+
+| Status | When | Body |
+|---|---|---|
+| 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
+
+**Side effects:** none
+
+**Latency:** 1 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
+
+**Idempotency and polling:** Safe to poll.
 
 ### `POST /courses`
 
 Creates the course for a prompt and level, or returns the existing one for the same prompt and level (case and spacing ignored). A course that is not cached starts generating in the background and returns at once with status `generating`. Sending a deadline for an existing course updates it.
 
 **When to call:** From the setup screen, once.
-
-**Path parameters:** `x-master-password` (strings; `lid` is any id the client picks).
 
 **Request body** (`CreateCourseIn`):
 
@@ -219,7 +502,7 @@ Real request body:
 
 _courses_create_ready_
 
-`POST /courses` -> **200** (16 ms), file `docs/examples/courses_create_ready.json`
+`POST /courses` -> **200** (31 ms), file `docs/examples/courses_create_ready.json`
 
 ```json
 {
@@ -320,7 +603,7 @@ _courses_create_generating_
 
 **Side effects:** Creates a course (and starts LLM generation) or updates the deadline of the existing one.
 
-**Latency:** 2 successful calls: median 0.008 s, max 0.016 s. Never waits for the LLM: course generation and research run in the background.
+**Latency:** 2 successful calls: median 0.016 s, max 0.031 s. Never waits for the LLM: course generation and research run in the background.
 
 **Idempotency and polling:** Repeat calls with the same prompt and level return the same course_id. Poll GET /courses/{cid} every 2 s while status is `generating`.
 
@@ -330,7 +613,7 @@ Returns the course status, topic and concept graph.
 
 **When to call:** While polling after creation, and to draw the graph.
 
-**Path parameters:** `cid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body:** none.
 
@@ -347,7 +630,7 @@ Returns the course status, topic and concept graph.
 
 _course_get_
 
-`GET /courses/b0dafa63` -> **200** (0 ms), file `docs/examples/course_get.json`
+`GET /courses/b0dafa63` -> **200** (16 ms), file `docs/examples/course_get.json`
 
 ```json
 {
@@ -448,7 +731,7 @@ _course_get_generating_
 
 **Side effects:** none
 
-**Latency:** 2 successful calls: median 0.000 s, max 0.000 s. Never waits for the LLM: course generation and research run in the background.
+**Latency:** 2 successful calls: median 0.008 s, max 0.016 s. Never waits for the LLM: course generation and research run in the background.
 
 **Idempotency and polling:** Safe to poll every 2 s while `generating`; stop on `ready` or `failed`.
 
@@ -458,7 +741,7 @@ Creates the learner for this course and returns the diagnostic: one question per
 
 **When to call:** Once per learner, after the course is ready.
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body:** none.
 
@@ -481,7 +764,7 @@ Creates the learner for this course and returns the diagnostic: one question per
 
 _start_
 
-`POST /courses/b0dafa63/learners/docs-231157/start` -> **200** (16 ms), file `docs/examples/start.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-040729/start` -> **200** (16 ms), file `docs/examples/start.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -540,13 +823,13 @@ _start_
 | Status | When | Body |
 |---|---|---|
 | 404 | unknown course | {"detail": "course 'no-such-course' not found"} |
-| 409 | learner already started | {"detail": "learner 'docs-231157' already started course 'b0dafa63'"} |
+| 409 | learner already started | {"detail": "learner 'docs-040729' already started course 'b0dafa63'"} |
 | 409 | course not ready (`course '...' is generating`) | `{"detail": "..."}` |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** Creates the learner state (every concept at the prior, roadmap in prerequisite order); the diagnostic questions become the only answerable ones.
 
-**Latency:** 5 successful calls: median 0.016 s, max 0.078 s. No LLM call observed.
+**Latency:** 7 successful calls: median 0.015 s, max 0.063 s. No LLM call observed.
 
 **Idempotency and polling:** Not idempotent: a second call returns 409. Use GET .../state to detect an existing learner.
 
@@ -556,7 +839,7 @@ Grades a round of answers, updates mastery, misconceptions and the review schedu
 
 **When to call:** Whenever the learner submits the questions on screen.
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body** (`SubmitAnswersIn`):
 
@@ -640,6 +923,7 @@ Real request body:
 | `new_confirmed_misconceptions` | `string[]` | Tags that became confirmed in this round. | usually empty |
 | `messages` | `string[]` | Encouragement and status lines to show as toasts. | often empty |
 | `next` | `StepOut` | The next step with its material (same as GET .../next right after). | - |
+| `skipped` | `string[]` | Served question ids not answered in this round: not graded, no effect. | empty when all were answered |
 
 `AnswerGraded`:
 
@@ -686,7 +970,7 @@ Real request body:
 
 _attempts_diagnostic_
 
-`POST /courses/b0dafa63/learners/docs-231157/attempts` -> **200** (16 ms), file `docs/examples/attempts_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-040729/attempts` -> **200** (15 ms), file `docs/examples/attempts_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -708,28 +992,28 @@ _attempts_diagnostic_
     "... 8 more"
   ],
   "correct_indices": {
-    "f707cec4-prompt_structure-d1": 1,
     "f707cec4-iterative_refinement-d1": 0,
-    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-prompt_structure-d1": 1,
     "f707cec4-context_window-d1": 2,
-    "f707cec4-output_formatting-d1": 2,
-    "f707cec4-language_model_basics-d1": 1,
-    "f707cec4-clear_instructions-d1": 0,
     "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-language_model_basics-d1": 1,
     "f707cec4-hallucination_checking-d1": 3,
-    "f707cec4-sampling_temperature-d1": 1
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-sampling_temperature-d1": 1,
+    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-clear_instructions-d1": 0
   },
   "explanations": {
-    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or transl...",
     "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it...",
-    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same ...",
+    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or transl...",
     "f707cec4-context_window-d1": "The model only sees the text inside the current request's co...",
-    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format de...",
-    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is ...",
-    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what out...",
     "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples...",
+    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is ...",
     "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need...",
-    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probabi..."
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format de...",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probabi...",
+    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same ...",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what out..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -809,13 +1093,242 @@ _attempts_diagnostic_
       },
       "... 1 more"
     ]
-  }
+  },
+  "skipped": []
+}
+```
+
+_attempts_skipped_
+
+`POST /courses/b0dafa63/learners/docs-040729-skip/attempts` -> **200** (16 ms), file `docs/examples/attempts_skipped.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+
+```json
+{
+  "graded": [
+    {
+      "question_id": "f707cec4-prompt_structure-d1",
+      "concept_id": "prompt_structure",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    {
+      "question_id": "f707cec4-sampling_temperature-d1",
+      "concept_id": "sampling_temperature",
+      "correct": true,
+      "chosen_tag": null,
+      "confidence": "medium"
+    },
+    "... 7 more"
+  ],
+  "correct_indices": {
+    "f707cec4-iterative_refinement-d1": 0,
+    "f707cec4-prompt_structure-d1": 1,
+    "f707cec4-context_window-d1": 2,
+    "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-hallucination_checking-d1": 3,
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-sampling_temperature-d1": 1,
+    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-clear_instructions-d1": 0
+  },
+  "explanations": {
+    "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it...",
+    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or transl...",
+    "f707cec4-context_window-d1": "The model only sees the text inside the current request's co...",
+    "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples...",
+    "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need...",
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format de...",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probabi...",
+    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same ...",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what out..."
+  },
+  "mastery": {
+    "language_model_basics": 0.2,
+    "prompt_structure": 0.85,
+    "sampling_temperature": 0.85,
+    "context_window": 0.85,
+    "clear_instructions": 0.1774193548387097,
+    "role_prompting": 0.1774193548387097,
+    "few_shot_examples": 0.1774193548387097,
+    "output_formatting": 0.1774193548387097,
+    "iterative_refinement": 0.1774193548387097,
+    "hallucination_checking": 0.1774193548387097
+  },
+  "new_confirmed_misconceptions": [],
+  "messages": [
+    "3 correct in a row.",
+    "Placed 3 concepts as already known; I'll check them again wi..."
+  ],
+  "next": {
+    "step": {
+      "kind": "lesson",
+      "concept_id": "clear_instructions",
+      "target_misconceptions": [],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "placed as known: prompt_structure, sampling_temperature, con...",
+    "lesson": {
+      "concept_id": "clear_instructions",
+      "style": "worked_example",
+      "explanation": "Clear instructions tell a language model exactly what task t...",
+      "targets": [],
+      "resources": [
+        {
+          "kind": "article",
+          "title": "Prompt Engineering Guide - MSU Denver",
+          "url": "https://www.msudenver.edu/ai/prompt-engineering-guide",
+          "snippet": "Prompt engineering is the practice of writing clear, specifi..."
+        },
+        {
+          "kind": "article",
+          "title": "Best practices for prompt engineering with the OpenAI API | ...",
+          "url": "https://help.openai.com/en/articles/6654000-best-practices-f...",
+          "snippet": "Due to the way OpenAI models are trained, there are specific..."
+        },
+        "... 1 more"
+      ]
+    },
+    "questions": [
+      {
+        "id": "f707cec4-clear_instructions-p1",
+        "concept_id": "clear_instructions",
+        "prompt": "You want a model to avoid technical terms. Which rewrite is ...",
+        "options": [
+          "Explain this simply; you know what I mean.",
+          "Don't use technical terms in your explanation.",
+          "... 2 more"
+        ]
+      },
+      {
+        "id": "f707cec4-clear_instructions-p2",
+        "concept_id": "clear_instructions",
+        "prompt": "A prompt says 'Improve this code.' The model only renames va...",
+        "options": [
+          "Make this code better and cleaner overall.",
+          "Improve this code; don't change what it does.",
+          "... 2 more"
+        ]
+      },
+      "... 1 more"
+    ]
+  },
+  "skipped": [
+    "f707cec4-language_model_basics-d1"
+  ]
+}
+```
+
+_attempts_all_skipped_
+
+`POST /courses/b0dafa63/learners/docs-040729-skip/attempts` -> **200** (15 ms), file `docs/examples/attempts_all_skipped.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+
+```json
+{
+  "graded": [],
+  "correct_indices": {},
+  "explanations": {},
+  "mastery": {
+    "language_model_basics": 0.2,
+    "prompt_structure": 0.85,
+    "sampling_temperature": 0.85,
+    "context_window": 0.85,
+    "clear_instructions": 0.1774193548387097,
+    "role_prompting": 0.1774193548387097,
+    "few_shot_examples": 0.1774193548387097,
+    "output_formatting": 0.1774193548387097,
+    "iterative_refinement": 0.1774193548387097,
+    "hallucination_checking": 0.1774193548387097
+  },
+  "new_confirmed_misconceptions": [],
+  "messages": [],
+  "next": {
+    "step": {
+      "kind": "lesson",
+      "concept_id": "clear_instructions",
+      "target_misconceptions": [],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "clear_instructions: mastery 0.18, lowest among unlocked concepts",
+    "lesson": {
+      "concept_id": "clear_instructions",
+      "style": "worked_example",
+      "explanation": "Clear instructions tell a language model exactly what task to perform, and prompt engineering is the...",
+      "targets": [],
+      "resources": [
+        {
+          "kind": "article",
+          "title": "Prompt Engineering Guide - MSU Denver",
+          "url": "https://www.msudenver.edu/ai/prompt-engineering-guide",
+          "snippet": "Prompt engineering is the practice of writing clear, specific instructions or questions that guide a..."
+        },
+        {
+          "kind": "article",
+          "title": "Best practices for prompt engineering with the OpenAI API | OpenAI Help Center",
+          "url": "https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-ap...",
+          "snippet": "Due to the way OpenAI models are trained, there are specific prompt formats that work particularly w..."
+        },
+        {
+          "kind": "video",
+          "title": "Prompt Engineering Tutorial \u2013 Master ChatGPT and LLM Responses",
+          "url": "https://www.youtube.com/watch?v=_ZvnD73m40o",
+          "snippet": "Learn prompt engineering techniques to get better results from ChatGPT and other LLMs. \u270f\ufe0f Course dev..."
+        }
+      ]
+    },
+    "questions": [
+      {
+        "id": "f707cec4-clear_instructions-p1",
+        "concept_id": "clear_instructions",
+        "prompt": "You want a model to avoid technical terms. Which rewrite is clearest?",
+        "options": [
+          "Explain this simply; you know what I mean.",
+          "Don't use technical terms in your explanation.",
+          "Explain this in plain words for a child.",
+          "... 1 more"
+        ]
+      },
+      {
+        "id": "f707cec4-clear_instructions-p2",
+        "concept_id": "clear_instructions",
+        "prompt": "A prompt says 'Improve this code.' The model only renames variables. What is the best fix?",
+        "options": [
+          "Make this code better and cleaner overall.",
+          "Improve this code; don't change what it does.",
+          "Refactor this function to remove duplication.",
+          "... 1 more"
+        ]
+      },
+      {
+        "id": "f707cec4-clear_instructions-t1",
+        "concept_id": "clear_instructions",
+        "prompt": "You want a customer support reply that includes a refund policy link. Which instruction is clearest?",
+        "options": [
+          "Reply in under 100 words with the refund link.",
+          "Don't write a long reply or leave out key items.",
+          "Write a helpful reply to the customer.",
+          "... 1 more"
+        ]
+      }
+    ]
+  },
+  "skipped": [
+    "f707cec4-clear_instructions-p1",
+    "f707cec4-clear_instructions-p2",
+    "f707cec4-clear_instructions-t1"
+  ]
 }
 ```
 
 _attempts_practice_
 
-`POST /courses/b0dafa63/learners/docs-231157/attempts` -> **200** (16 ms), file `docs/examples/attempts_practice.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-040729/attempts` -> **200** (15 ms), file `docs/examples/attempts_practice.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -838,13 +1351,13 @@ _attempts_practice_
   ],
   "correct_indices": {
     "f707cec4-context_window-t1": 0,
-    "f707cec4-context_window-p1": 0,
-    "f707cec4-context_window-p2": 3
+    "f707cec4-context_window-p2": 3,
+    "f707cec4-context_window-p1": 0
   },
   "explanations": {
     "f707cec4-context_window-t1": "A new session only includes the text sent in that request. W...",
-    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be s...",
-    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most r..."
+    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most r...",
+    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be s..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -917,13 +1430,14 @@ _attempts_practice_
       },
       "... 1 more"
     ]
-  }
+  },
+  "skipped": []
 }
 ```
 
 _attempts_review_failed_
 
-`POST /courses/b0dafa63/learners/docs-231157/attempts` -> **200** (16 ms), file `docs/examples/attempts_review_failed.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-040729/attempts` -> **200** (15 ms), file `docs/examples/attempts_review_failed.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -948,8 +1462,8 @@ _attempts_review_failed_
     "f707cec4-clear_instructions-p1": 2
   },
   "explanations": {
-    "f707cec4-clear_instructions-p2": "Naming the specific change and the constraint tells the model the exact task, rather than leaving 'improve' open to interpretation.",
-    "f707cec4-clear_instructions-p1": "Naming the target audience and style describes the desired behavior, which is more actionable than a prohibition or a vague quality request."
+    "f707cec4-clear_instructions-p2": "Naming the specific change and the constraint tells the mode...",
+    "f707cec4-clear_instructions-p1": "Naming the target audience and style describes the desired b..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -968,7 +1482,7 @@ _attempts_review_failed_
     "clear_instructions__vague_request_is_fine"
   ],
   "messages": [
-    "You slipped on clear_instructions. This happens, it is why reviews exist."
+    "You slipped on clear_instructions. This happens, it is why r..."
   ],
   "next": {
     "step": {
@@ -983,59 +1497,62 @@ _attempts_review_failed_
       "target_concept": null,
       "give_up_after": false
     },
-    "reason": "relearning clear_instructions first: it was mastered, slipped to 0.26 (lapses 1)",
+    "reason": "relearning clear_instructions first: it was mastered, slippe...",
     "lesson": {
       "concept_id": "clear_instructions",
       "style": "contrast",
-      "explanation": "Here is the right idea set against the belief it replaces. You may think the model knows the goals you leave unstated, such as who the audience is or how long the answer should be. It does not. The mo...",
+      "explanation": "Here is the first misconception, and the correction. You may...",
       "targets": [
         "clear_instructions__model_reads_intent",
         "clear_instructions__vague_request_is_fine"
       ],
-      "resources": []
+      "resources": [
+        {
+          "kind": "article",
+          "title": "Prompt Engineering Guide - MSU Denver",
+          "url": "https://www.msudenver.edu/ai/prompt-engineering-guide",
+          "snippet": "Prompt engineering is the practice of writing clear, specifi..."
+        },
+        {
+          "kind": "article",
+          "title": "Best practices for prompt engineering with the OpenAI API | ...",
+          "url": "https://help.openai.com/en/articles/6654000-best-practices-f...",
+          "snippet": "Due to the way OpenAI models are trained, there are specific..."
+        },
+        "... 1 more"
+      ]
     },
     "questions": [
       {
         "id": "f707cec4-clear_instructions-t1",
         "concept_id": "clear_instructions",
-        "prompt": "You want a customer support reply that includes a refund policy link. Which instruction is clearest?",
+        "prompt": "You want a customer support reply that includes a refund pol...",
         "options": [
           "Reply in under 100 words with the refund link.",
           "Don't write a long reply or leave out key items.",
-          "Write a helpful reply to the customer.",
-          "Reply briefly and cover the usual details."
+          "... 2 more"
         ]
       },
       {
         "id": "f707cec4-clear_instructions-t2",
         "concept_id": "clear_instructions",
-        "prompt": "A model keeps adding disclaimers to medical summaries. Which change most directly fixes it?",
+        "prompt": "A model keeps adding disclaimers to medical summaries. Which...",
         "options": [
           "Specify: output only the summary paragraph.",
           "Don't add any disclaimers to the reply.",
-          "You understand why disclaimers aren't needed here.",
-          "Write the summary the way you normally would."
+          "... 2 more"
         ]
       },
-      {
-        "id": "f707cec4-clear_instructions-d2",
-        "concept_id": "clear_instructions",
-        "prompt": "Which instruction states the desired behavior directly?",
-        "options": [
-          "Answer as you think best.",
-          "Don't include extra commentary.",
-          "Reply with only the final answer.",
-          "Answer the question somehow."
-        ]
-      }
+      "... 1 more"
     ]
-  }
+  },
+  "skipped": []
 }
 ```
 
 _attempts_all_known_done_
 
-`POST /courses/b0dafa63/learners/docs-231157-all/attempts` -> **200** (16 ms), file `docs/examples/attempts_all_known_done.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/b0dafa63/learners/docs-040729-all/attempts` -> **200** (16 ms), file `docs/examples/attempts_all_known_done.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1064,28 +1581,28 @@ _attempts_all_known_done_
     "... 7 more"
   ],
   "correct_indices": {
-    "f707cec4-prompt_structure-d1": 1,
     "f707cec4-iterative_refinement-d1": 0,
-    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-prompt_structure-d1": 1,
     "f707cec4-context_window-d1": 2,
-    "f707cec4-output_formatting-d1": 2,
-    "f707cec4-language_model_basics-d1": 1,
-    "f707cec4-clear_instructions-d1": 0,
     "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-language_model_basics-d1": 1,
     "f707cec4-hallucination_checking-d1": 3,
-    "f707cec4-sampling_temperature-d1": 1
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-sampling_temperature-d1": 1,
+    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-clear_instructions-d1": 0
   },
   "explanations": {
-    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or translate. The other parts supply information ...",
     "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it works and where it fails. Revising base...",
-    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same model. It does not add knowledge the mod...",
+    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or translate. The other parts supply information ...",
     "f707cec4-context_window-d1": "The model only sees the text inside the current request's context window. Earlier chats are not avai...",
-    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by s...",
-    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input ...",
-    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to g...",
     "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples in the exact format teach the model wha...",
+    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input ...",
     "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need checking against reliable sources.",
-    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predi..."
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by s...",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predi...",
+    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same model. It does not add knowledge the mod...",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to g..."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -1118,13 +1635,14 @@ _attempts_all_known_done_
     "reason": "placed as known: language_model_basics, prompt_structure, sampling_temperature, context_window, clea...",
     "lesson": null,
     "questions": []
-  }
+  },
+  "skipped": []
 }
 ```
 
 _attempts_needs_help_
 
-`POST /courses/b0dafa63/learners/docs-231157-stuck/attempts` -> **200** (15 ms), file `docs/examples/attempts_needs_help.json`
+`POST /courses/b0dafa63/learners/docs-040729-stuck/attempts` -> **200** (15 ms), file `docs/examples/attempts_needs_help.json`
 
 ```json
 {
@@ -1153,13 +1671,13 @@ _attempts_needs_help_
   ],
   "correct_indices": {
     "f707cec4-context_window-t1": 0,
-    "f707cec4-context_window-p1": 0,
-    "f707cec4-context_window-p2": 3
+    "f707cec4-context_window-p2": 3,
+    "f707cec4-context_window-p1": 0
   },
   "explanations": {
     "f707cec4-context_window-t1": "A new session only includes the text sent in that request. Without the day-one text, the model has no access to the order number.",
-    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be split into several tokens. So a word count can understate the token count.",
-    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most relevant sections in pieces works within the limit. Relying on memory or assuming a fit does not."
+    "f707cec4-context_window-p2": "Only text inside the window is usable, so sending the most relevant sections in pieces works within the limit. Relying on memory or assuming a fit does not.",
+    "f707cec4-context_window-p1": "The window is measured in tokens, and a single word can be split into several tokens. So a word count can understate the token count."
   },
   "mastery": {
     "language_model_basics": 0.9977042871374661,
@@ -1191,13 +1709,14 @@ _attempts_needs_help_
     "reason": "every reachable concept is mastered; needs help: context_window",
     "lesson": null,
     "questions": []
-  }
+  },
+  "skipped": []
 }
 ```
 
 _attempts_with_deadline_
 
-`POST /courses/c6aaba84/learners/docs-231157-deadline/attempts` -> **200** (15 ms), file `docs/examples/attempts_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`POST /courses/c6aaba84/learners/docs-040729-deadline/attempts` -> **200** (125 ms), file `docs/examples/attempts_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1219,28 +1738,28 @@ _attempts_with_deadline_
     "... 8 more"
   ],
   "correct_indices": {
-    "d3f0e36a-primary_keys-d1": 1,
+    "d3f0e36a-tables_rows_columns-d1": 3,
     "d3f0e36a-table_aliases-d1": 1,
     "d3f0e36a-join_multiple_tables-d1": 1,
-    "d3f0e36a-select_columns-d1": 2,
-    "d3f0e36a-inner_join-d1": 2,
+    "d3f0e36a-foreign_keys-d1": 1,
     "d3f0e36a-where_filtering-d1": 1,
+    "d3f0e36a-inner_join-d1": 2,
     "d3f0e36a-null_values-d1": 2,
-    "d3f0e36a-tables_rows_columns-d1": 3,
     "d3f0e36a-left_join-d1": 3,
-    "d3f0e36a-foreign_keys-d1": 1
+    "d3f0e36a-primary_keys-d1": 1,
+    "d3f0e36a-select_columns-d1": 2
   },
   "explanations": {
-    "d3f0e36a-primary_keys-d1": "A student_id gives each student a unique value that identifi...",
+    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across th...",
     "d3f0e36a-table_aliases-d1": "The alias e is declared in FROM and exists only for this que...",
     "d3f0e36a-join_multiple_tables-d1": "Each JOIN adds one table through its own matching keys, so t...",
-    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the store...",
-    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, p...",
+    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, ...",
     "d3f0e36a-where_filtering-d1": "WHERE filters rows, so only rows where the condition is true...",
+    "d3f0e36a-inner_join-d1": "INNER JOIN keeps only rows where the ON condition matches, p...",
     "d3f0e36a-null_values-d1": "NULL marks a value that is absent or unknown. It is not a nu...",
-    "d3f0e36a-tables_rows_columns-d1": "A row is one record, holding one customer's values across th...",
     "d3f0e36a-left_join-d1": "LEFT JOIN keeps every left-table row, so each customer appea...",
-    "d3f0e36a-foreign_keys-d1": "A foreign key stores only the referenced primary key value, ..."
+    "d3f0e36a-primary_keys-d1": "A student_id gives each student a unique value that identifi...",
+    "d3f0e36a-select_columns-d1": "SELECT only reads data and returns it as a result; the store..."
   },
   "mastery": {
     "tables_rows_columns": 0.1774193548387097,
@@ -1299,7 +1818,8 @@ _attempts_with_deadline_
       },
       "... 1 more"
     ]
-  }
+  },
+  "skipped": []
 }
 ```
 
@@ -1307,14 +1827,15 @@ _attempts_with_deadline_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-040729' has not started course 'b0dafa63'"} |
 | 422 | a question was not served to this learner (lists the ids) | {"detail": "questions not served to this learner: ['f707cec4-language_model_basics-d2']"} |
-| 422 | empty `answers`, `chosen_index` out of range, or body invalid | `{"detail": "..."}` |
+| 409 | `answers: []` on the diagnostic (it cannot be skipped entirely) | {"detail": "the diagnostic cannot be skipped entirely: answer at least one question"} |
+| 422 | `chosen_index` out of range, or body invalid | `{"detail": "..."}` |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** Records every answer; updates the learner state; stores the next step and its questions (only those become answerable). May call the LLM to write the next lesson.
 
-**Latency:** 14 successful calls: median 0.016 s, max 0.203 s. No LLM call observed.
+**Latency:** 16 successful calls: median 0.015 s, max 0.125 s. No LLM call observed.
 
 **Idempotency and polling:** Not idempotent: answers count once; resubmitting the same ids returns 422 because they are no longer served.
 
@@ -1324,7 +1845,7 @@ Serves the stored next step with its lesson and questions. The first call after 
 
 **When to call:** After advance or sessions/new, after a page reload, or any time the client lost the step.
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body:** none.
 
@@ -1372,7 +1893,7 @@ Serves the stored next step with its lesson and questions. The first call after 
 
 _next_lesson_
 
-`GET /courses/b0dafa63/learners/docs-231157/next` -> **200** (15 ms), file `docs/examples/next_lesson.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-040729/next` -> **200** (16 ms), file `docs/examples/next_lesson.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1456,7 +1977,7 @@ _next_lesson_
 
 _next_review_
 
-`GET /courses/b0dafa63/learners/docs-231157/next` -> **200** (15 ms), file `docs/examples/next_review.json`
+`GET /courses/b0dafa63/learners/docs-040729/next` -> **200** (0 ms), file `docs/examples/next_review.json`
 
 ```json
 {
@@ -1500,7 +2021,7 @@ _next_review_
 
 _next_relearn_
 
-`GET /courses/b0dafa63/learners/docs-231157/next` -> **200** (15 ms), file `docs/examples/next_relearn.json`
+`GET /courses/b0dafa63/learners/docs-040729/next` -> **200** (0 ms), file `docs/examples/next_relearn.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1520,12 +2041,31 @@ _next_relearn_
   "lesson": {
     "concept_id": "clear_instructions",
     "style": "contrast",
-    "explanation": "Here is the right idea set against the belief it replaces. You may think the model knows the goals you leave unstated, such as who the audience is or how long the answer should be. It does not. The model only acts on what is written in your prompt, so anything you omit is a guess. Compare two requests. The vague one says: Write about our product. The clear one says: Write a 100-word product description for busy parents, mentioning price and the free returns policy, in a friendly tone. The vague version forces the model to choose the topic, length, audience, and tone on its own, and each choice is another chance to miss what you wanted. The belief that vague requests get good results breaks here: vagueness does not make the model smarter, it only increases guessing. A specific task removes most of those guesses, so the output is more likely to match your intent. Before you send a prompt, ask yourself what the model would have to guess, then write that answer down.",
+    "explanation": "Here is the first misconception, and the correction. You may believe the model knows what you want but never wrote down, such as your audience, length, or tone. It does not. The model only acts on wha...",
     "targets": [
       "clear_instructions__model_reads_intent",
       "clear_instructions__vague_request_is_fine"
     ],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Prompt Engineering Guide - MSU Denver",
+        "url": "https://www.msudenver.edu/ai/prompt-engineering-guide",
+        "snippet": "Prompt engineering is the practice of writing clear, specific instructions or questions that guide a computer program to produce useful outputs. In the context of generative artificial intelligence, p..."
+      },
+      {
+        "kind": "article",
+        "title": "Best practices for prompt engineering with the OpenAI API | OpenAI Help Center",
+        "url": "https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api",
+        "snippet": "Due to the way OpenAI models are trained, there are specific prompt formats that work particularly well and lead to more useful model outputs. The official prompt engineering guide by OpenAI is usuall..."
+      },
+      {
+        "kind": "video",
+        "title": "Prompt Engineering Tutorial \u2013 Master ChatGPT and LLM Responses",
+        "url": "https://www.youtube.com/watch?v=_ZvnD73m40o",
+        "snippet": "Learn prompt engineering techniques to get better results from ChatGPT and other LLMs. \u270f\ufe0f Course developed by ..."
+      }
+    ]
   },
   "questions": [
     {
@@ -1567,7 +2107,7 @@ _next_relearn_
 
 _next_fallback_
 
-`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (0 ms), file `docs/examples/next_fallback.json`
+`GET /courses/b0dafa63/learners/docs-040729-stuck/next` -> **200** (16 ms), file `docs/examples/next_fallback.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1584,9 +2124,28 @@ _next_fallback_
   "lesson": {
     "concept_id": "language_model_basics",
     "style": "worked_example",
-    "explanation": "Let's see how a language model predicts text using one small example. Suppose you give it the prompt: \"The cat sat on the\". The model does not look up a fact or understand the sentence the way you do. Instead, it scores many possible next words based on patterns it learned from huge amounts of text. Step one: it reads your prompt as a sequence of tokens, which are chunks of words. Step two: it estimates probabilities for every possible next token. Words like \"mat\" or \"floor\" might get high scores, while \"piano\" gets a low one. Step three: it picks one token, often one of the most likely, and adds it to the text. Step four: it repeats the process with the longer text until it reaches a stopping point. So if your prompt is \"The cat sat on the\", the output is likely \"mat\", then a period, then more words. Notice what this means for you: the model continues whatever text it receives, so the wording of your prompt directly shapes what comes next. Keep this in mind as you write prompts, because a clearer starting text usually leads to a more useful continuation.",
+    "explanation": "Imagine you type the start of a sentence: The cat sat on the. A language model looks at those words, which is the context it receives, and estimates which words are most likely to come next. It might ...",
     "targets": [],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Prompt engineering essentials: Getting better results from LLMs | Tutorial",
+        "url": "https://www.youtube.com/watch?v=LAF-lACf2QY",
+        "snippet": "[0:52] They work by predicting the next word in a sentence, based on the context of the words that came before it, making their responses relevant and coherent to humans that use them.\n[1:02] You can ..."
+      },
+      {
+        "kind": "article",
+        "title": "Introduction to Large Language Models \u00a0|\u00a0 Machine Learning \u00a0|\u00a0 Google for Developers",
+        "url": "https://developers.google.com/machine-learning/crash-course/llm",
+        "snippet": "This module explores language models, which estimate the probability of a token or sequence of tokens occurring within a longer sequence, enabling tasks like text generation, translation, and summariz..."
+      },
+      {
+        "kind": "video",
+        "title": "LLMs Explained in Simple Language \u2014 How ChatGPT Actually Works",
+        "url": "https://www.youtube.com/watch?v=RTw21C2hl0s",
+        "snippet": "What is an LLM, and how does ChatGPT actually work? In this video, we break down Large Language Models (LLMs) in simple, ..."
+      }
+    ]
   },
   "questions": [
     {
@@ -1628,7 +2187,7 @@ _next_fallback_
 
 _next_give_up_
 
-`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (0 ms), file `docs/examples/next_give_up.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-040729-stuck/next` -> **200** (0 ms), file `docs/examples/next_give_up.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1708,7 +2267,7 @@ _next_give_up_
 
 _next_session_end_
 
-`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (15 ms), file `docs/examples/next_session_end.json`
+`GET /courses/b0dafa63/learners/docs-040729-stuck/next` -> **200** (0 ms), file `docs/examples/next_session_end.json`
 
 ```json
 {
@@ -1729,7 +2288,7 @@ _next_session_end_
 
 _next_done_
 
-`GET /courses/b0dafa63/learners/docs-231157-all/next` -> **200** (16 ms), file `docs/examples/next_done.json`
+`GET /courses/b0dafa63/learners/docs-040729-all/next` -> **200** (0 ms), file `docs/examples/next_done.json`
 
 ```json
 {
@@ -1750,7 +2309,7 @@ _next_done_
 
 _next_done_with_needs_help_
 
-`GET /courses/b0dafa63/learners/docs-231157-stuck/next` -> **200** (16 ms), file `docs/examples/next_done_with_needs_help.json`
+`GET /courses/b0dafa63/learners/docs-040729-stuck/next` -> **200** (0 ms), file `docs/examples/next_done_with_needs_help.json`
 
 ```json
 {
@@ -1773,13 +2332,13 @@ _next_done_with_needs_help_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-040729' has not started course 'b0dafa63'"} |
 | 409 | before the diagnostic is answered | {"detail": "no step decided yet: answer the diagnostic from /start first"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** First call after a decision: stores the served question ids and records the lesson style. Later calls: none.
 
-**Latency:** 14 successful calls: median 0.015 s, max 0.016 s. No LLM call observed.
+**Latency:** 14 successful calls: median 0.000 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Idempotent: identical calls return identical bodies.
 
@@ -1789,7 +2348,7 @@ Returns the dashboard: per-concept mastery, retrievability and schedule, misconc
 
 **When to call:** For the sidebar and progress views, after every attempt or advance.
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body:** none.
 
@@ -1797,8 +2356,8 @@ Returns the dashboard: per-concept mastery, retrievability and schedule, misconc
 
 | Field | Type | Meaning | Null / empty |
 |---|---|---|---|
-| `concepts` | `ConceptState[]` | Per-concept state, roadmap order. | - |
-| `misconceptions` | `MisconceptionState[]` | Every misconception seen so far with its status. | empty before any wrong pick |
+| `concepts` | `ConceptStateOut[]` | Per-concept state, roadmap order. | - |
+| `misconceptions` | `MisconceptionOut[]` | Every misconception seen so far with its status. | empty before any wrong pick |
 | `next_due` | `string | null` | Earliest scheduled review. | null when nothing is scheduled |
 | `due` | `Record<string, string>` | concept_id -> scheduled review time (past times are due now). | empty when nothing is scheduled |
 | `roadmap` | `string[]` | Concept ids, prerequisites first. | - |
@@ -1807,8 +2366,14 @@ Returns the dashboard: per-concept mastery, retrievability and schedule, misconc
 | `gaps` | `string[]` | Concepts not yet mastered, roadmap order. | empty when all are mastered |
 | `retrievability` | `Record<string, number>` | concept_id -> recall probability now (1.0 if never mastered). | - |
 | `pace` | `Record<string, number>` | `{mastered, total, attempts_per_mastered}`. | - |
+| `now` | `string | null` | The learner's simulated now (real UTC now plus the clock offset). | never null in a live response |
+| `history` | `HistoryPoint[]` | Progress samples, oldest first, one per attempts, advance and sessions/new call (last 500). | empty before the diagnostic is answered |
+| `learning_rate` | `number` | Mean change in average mastery per answered question over the last 10 answers. | 0 with fewer than 2 history points |
+| `avg_stability_days` | `number` | Mean stability over concepts that have one. | 0 before any concept is mastered or placed |
+| `stability` | `Record<string, number>` | concept_id -> stability_days. | - |
+| `retention` | `Retention` | Review pass rates overall and after a delay of 7+ days. | - |
 
-`ConceptState`:
+`ConceptStateOut`:
 
 | Field | Type | Meaning | Null / empty |
 |---|---|---|---|
@@ -1823,8 +2388,16 @@ Returns the dashboard: per-concept mastery, retrievability and schedule, misconc
 | `explanations_tried` | `string[]` | Lesson styles shown so far. | empty before the first lesson |
 | `fallbacks` | `number` | Times the brain detoured to a prerequisite. | - |
 | `needs_help` | `boolean` | Stuck after the last try: show a 'get help' card. | - |
+| `reviews` | `ReviewMark[]` | This concept's last 20 review rounds `{at, passed}`, oldest first. | empty before its first review |
 
-`MisconceptionState`:
+`ReviewMark`:
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `at` | `string` | Simulated time of the review round. | - |
+| `passed` | `boolean` | False if the round lapsed the concept. | - |
+
+`MisconceptionOut`:
 
 | Field | Type | Meaning | Null / empty |
 |---|---|---|---|
@@ -1833,12 +2406,39 @@ Returns the dashboard: per-concept mastery, retrievability and schedule, misconc
 | `status` | `"suspected" | "confirmed" | "resolved"` | suspected, confirmed or resolved. | - |
 | `evidence` | `number` | Weight of wrong picks (1 per pick, 2 with high confidence); 2 confirms. | - |
 | `clean_streak` | `number` | Correct answers in a row on questions testing it; 2 resolves it. | - |
+| `first_seen_at` | `string | null` | Simulated time it was first picked. | - |
+| `resolved_at` | `string | null` | Simulated time it became resolved. | null until resolved; cleared if it comes back |
+| `description` | `string` | What the learner wrongly believes (from the course's catalog). | - |
+
+`HistoryPoint`:
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `at` | `string` | Simulated time of the sample. | - |
+| `event` | `"attempt" | "advance" | "session"` | What produced it: `attempt`, `advance` or `session`. | - |
+| `avg_mastery` | `number` | Mean p_mastery over every concept of the course. | - |
+| `avg_retrievability` | `number` | Mean retrievability over every concept at that time. | - |
+| `mastered_count` | `number` | Concepts at 0.85 or more. | - |
+| `questions_answered` | `number` | Total answers so far (diagnostic included). | - |
+| `avg_stability_days` | `number` | Mean stability over concepts that have one, else 0. | - |
+| `mastery` | `Record<string, number>` | concept_id -> p_mastery for every concept at that time. | - |
+
+`Retention`:
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `reviews_total` | `number` | Review rounds so far (verification reviews of placed concepts included). | - |
+| `reviews_passed` | `number` | Review rounds that did not lapse the concept. | - |
+| `review_pass_rate` | `number | null` | reviews_passed / reviews_total. | null with no reviews |
+| `delayed_reviews_total` | `number` | Reviews at least `delayed_threshold_days` after the concept was last seen. | - |
+| `delayed_pass_rate` | `number | null` | Pass rate of those delayed reviews: evidence of long-term retention. | null with no delayed reviews |
+| `delayed_threshold_days` | `number` | Days since last seen that make a review 'delayed' (7). | - |
 
 **Real examples:**
 
 _state_
 
-`GET /courses/b0dafa63/learners/docs-231157/state` -> **200** (16 ms), file `docs/examples/state.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-040729/state` -> **200** (15 ms), file `docs/examples/state.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1849,12 +2449,13 @@ _state_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "prompt_structure",
@@ -1862,42 +2463,15 @@ _state_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
-    {
-      "concept_id": "sampling_temperature",
-      "p_mastery": 0.85,
-      "attempts": 1,
-      "failed_rounds": 0,
-      "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
-      "lapses": 0,
-      "explanations_tried": [],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    {
-      "concept_id": "context_window",
-      "p_mastery": 0.4814035218438767,
-      "attempts": 4,
-      "failed_rounds": 2,
-      "stability_days": 0.0,
-      "last_reviewed_at": null,
-      "due_at": null,
-      "lapses": 0,
-      "explanations_tried": [
-        "contrast"
-      ],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    "... 6 more"
+    "... 8 more"
   ],
   "misconceptions": [
     {
@@ -1905,79 +2479,137 @@ _state_
       "concept_id": "context_window",
       "status": "resolved",
       "evidence": 0.0,
-      "clean_streak": 2
+      "clean_streak": 2,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": "2026-10-30T22:37:37.179000",
+      "description": "Believes the model remembers all past chats, but actually it..."
     },
     {
       "tag": "role_prompting__any_role_works_equally",
       "concept_id": "role_prompting",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": null,
+      "description": "Believes any role helps equally, but actually roles should m..."
     },
-    {
-      "tag": "context_window__limit_is_only_words",
-      "concept_id": "context_window",
-      "status": "suspected",
-      "evidence": 1.0,
-      "clean_streak": 0
-    },
-    {
-      "tag": "clear_instructions__model_reads_intent",
-      "concept_id": "clear_instructions",
-      "status": "confirmed",
-      "evidence": 2.0,
-      "clean_streak": 0
-    },
-    "... 1 more"
+    "... 3 more"
   ],
-  "next_due": "2026-11-01T17:42:07.820000",
+  "next_due": "2026-11-01T22:37:37.139000",
   "due": {
-    "language_model_basics": "2026-11-01T17:42:07.820000",
-    "prompt_structure": "2026-11-01T17:42:07.820000",
-    "sampling_temperature": "2026-11-01T17:42:07.820000",
-    "clear_instructions": "2026-11-01T17:42:07.946000",
-    "few_shot_examples": "2026-11-02T17:42:07.820000",
-    "output_formatting": "2026-11-02T17:42:07.820000",
-    "iterative_refinement": "2026-11-02T17:42:07.820000",
-    "hallucination_checking": "2026-11-02T17:42:07.820000"
+    "language_model_basics": "2026-11-01T22:37:37.139000",
+    "prompt_structure": "2026-11-01T22:37:37.139000",
+    "sampling_temperature": "2026-11-01T22:37:37.139000",
+    "clear_instructions": "2026-11-01T22:37:37.210000",
+    "few_shot_examples": "2026-11-02T22:37:37.139000",
+    "output_formatting": "2026-11-02T22:37:37.139000",
+    "iterative_refinement": "2026-11-02T22:37:37.139000",
+    "hallucination_checking": "2026-11-02T22:37:37.139000"
   },
   "roadmap": [
     "language_model_basics",
     "prompt_structure",
-    "sampling_temperature",
-    "context_window",
-    "... 6 more"
+    "... 8 more"
   ],
   "needs_help": [],
   "days_left": null,
   "gaps": [
     "context_window",
     "clear_instructions",
-    "role_prompting"
+    "... 1 more"
   ],
   "retrievability": {
-    "language_model_basics": 0.948683205280355,
-    "prompt_structure": 0.948683205280355,
-    "sampling_temperature": 0.948683205280355,
+    "language_model_basics": 0.9486832259172187,
+    "prompt_structure": 0.9486832259172187,
+    "sampling_temperature": 0.9486832259172187,
     "context_window": 1.0,
-    "clear_instructions": 0.9999999580740763,
+    "clear_instructions": 0.9999999345106372,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.9654893216632301,
-    "output_formatting": 0.9654893216632301,
-    "iterative_refinement": 0.9654893216632301,
-    "hallucination_checking": 0.9654893216632301
+    "few_shot_examples": 0.9654893356648633,
+    "output_formatting": 0.9654893356648633,
+    "iterative_refinement": 0.9654893356648633,
+    "hallucination_checking": 0.9654893356648633
   },
   "pace": {
     "mastered": 7.0,
     "total": 10.0,
     "attempts_per_mastered": 2.142857142857143
+  },
+  "now": "2026-10-31T22:37:37.263704",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.139000",
+      "event": "attempt",
+      "avg_mastery": 0.7154838709677419,
+      "avg_retrievability": 1.0,
+      "mastered_count": 8,
+      "questions_answered": 10,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1774193548387097,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.179000",
+      "event": "attempt",
+      "avg_mastery": 0.7458822876682587,
+      "avg_retrievability": 0.9999999811456304,
+      "mastered_count": 8,
+      "questions_answered": 13,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.4814035218438767,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    "... 3 more"
+  ],
+  "learning_rate": -0.00580585653017518,
+  "avg_stability_days": 2.375,
+  "stability": {
+    "language_model_basics": 2.0,
+    "prompt_structure": 2.0,
+    "sampling_temperature": 2.0,
+    "context_window": 0.0,
+    "clear_instructions": 1.0,
+    "role_prompting": 0.0,
+    "few_shot_examples": 3.0,
+    "output_formatting": 3.0,
+    "iterative_refinement": 3.0,
+    "hallucination_checking": 3.0
+  },
+  "retention": {
+    "reviews_total": 1,
+    "reviews_passed": 0,
+    "review_pass_rate": 0.0,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }
 ```
 
 _state_after_diagnostic_
 
-`GET /courses/b0dafa63/learners/docs-231157/state` -> **200** (16 ms), file `docs/examples/state_after_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-040729/state` -> **200** (0 ms), file `docs/examples/state_after_diagnostic.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -1988,12 +2620,13 @@ _state_after_diagnostic_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "prompt_structure",
@@ -2001,42 +2634,15 @@ _state_after_diagnostic_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
-    {
-      "concept_id": "sampling_temperature",
-      "p_mastery": 0.85,
-      "attempts": 1,
-      "failed_rounds": 0,
-      "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
-      "lapses": 0,
-      "explanations_tried": [],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    {
-      "concept_id": "context_window",
-      "p_mastery": 0.1774193548387097,
-      "attempts": 1,
-      "failed_rounds": 1,
-      "stability_days": 0.0,
-      "last_reviewed_at": null,
-      "due_at": null,
-      "lapses": 0,
-      "explanations_tried": [
-        "contrast"
-      ],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    "... 6 more"
+    "... 8 more"
   ],
   "misconceptions": [
     {
@@ -2044,33 +2650,37 @@ _state_after_diagnostic_
       "concept_id": "context_window",
       "status": "confirmed",
       "evidence": 2.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": null,
+      "description": "Believes the model remembers all past chats, but actually it..."
     },
     {
       "tag": "role_prompting__any_role_works_equally",
       "concept_id": "role_prompting",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": null,
+      "description": "Believes any role helps equally, but actually roles should m..."
     }
   ],
-  "next_due": "2026-10-31T17:42:07.820000",
+  "next_due": "2026-10-31T22:37:37.139000",
   "due": {
-    "language_model_basics": "2026-11-01T17:42:07.820000",
-    "prompt_structure": "2026-11-01T17:42:07.820000",
-    "sampling_temperature": "2026-11-01T17:42:07.820000",
-    "clear_instructions": "2026-10-31T17:42:07.820000",
-    "few_shot_examples": "2026-11-02T17:42:07.820000",
-    "output_formatting": "2026-11-02T17:42:07.820000",
-    "iterative_refinement": "2026-11-02T17:42:07.820000",
-    "hallucination_checking": "2026-11-02T17:42:07.820000"
+    "language_model_basics": "2026-11-01T22:37:37.139000",
+    "prompt_structure": "2026-11-01T22:37:37.139000",
+    "sampling_temperature": "2026-11-01T22:37:37.139000",
+    "clear_instructions": "2026-10-31T22:37:37.139000",
+    "few_shot_examples": "2026-11-02T22:37:37.139000",
+    "output_formatting": "2026-11-02T22:37:37.139000",
+    "iterative_refinement": "2026-11-02T22:37:37.139000",
+    "hallucination_checking": "2026-11-02T22:37:37.139000"
   },
   "roadmap": [
     "language_model_basics",
     "prompt_structure",
-    "sampling_temperature",
-    "context_window",
-    "... 6 more"
+    "... 8 more"
   ],
   "needs_help": [],
   "days_left": null,
@@ -2079,28 +2689,74 @@ _state_after_diagnostic_
     "role_prompting"
   ],
   "retrievability": {
-    "language_model_basics": 0.9999999786084011,
-    "prompt_structure": 0.9999999786084011,
-    "sampling_temperature": 0.9999999786084011,
+    "language_model_basics": 0.9999999867701825,
+    "prompt_structure": 0.9999999867701825,
+    "sampling_temperature": 0.9999999867701825,
     "context_window": 1.0,
-    "clear_instructions": 0.9999999572168027,
+    "clear_instructions": 0.9999999735403653,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.999999985738934,
-    "output_formatting": 0.999999985738934,
-    "iterative_refinement": 0.999999985738934,
-    "hallucination_checking": 0.999999985738934
+    "few_shot_examples": 0.9999999911801217,
+    "output_formatting": 0.9999999911801217,
+    "iterative_refinement": 0.9999999911801217,
+    "hallucination_checking": 0.9999999911801217
   },
   "pace": {
     "mastered": 8.0,
     "total": 10.0,
     "attempts_per_mastered": 1.25
+  },
+  "now": "2026-10-30T22:37:37.160698",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.139000",
+      "event": "attempt",
+      "avg_mastery": 0.7154838709677419,
+      "avg_retrievability": 1.0,
+      "mastered_count": 8,
+      "questions_answered": 10,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1774193548387097,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    }
+  ],
+  "learning_rate": 0.0,
+  "avg_stability_days": 2.375,
+  "stability": {
+    "language_model_basics": 2.0,
+    "prompt_structure": 2.0,
+    "sampling_temperature": 2.0,
+    "context_window": 0.0,
+    "clear_instructions": 1.0,
+    "role_prompting": 0.0,
+    "few_shot_examples": 3.0,
+    "output_formatting": 3.0,
+    "iterative_refinement": 3.0,
+    "hallucination_checking": 3.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }
 ```
 
 _state_after_advance_
 
-`GET /courses/b0dafa63/learners/docs-231157/state` -> **200** (0 ms), file `docs/examples/state_after_advance.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-040729/state` -> **200** (0 ms), file `docs/examples/state_after_advance.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -2111,12 +2767,13 @@ _state_after_advance_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "prompt_structure",
@@ -2124,42 +2781,15 @@ _state_after_advance_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
-    {
-      "concept_id": "sampling_temperature",
-      "p_mastery": 0.85,
-      "attempts": 1,
-      "failed_rounds": 0,
-      "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
-      "lapses": 0,
-      "explanations_tried": [],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    {
-      "concept_id": "context_window",
-      "p_mastery": 0.4814035218438767,
-      "attempts": 4,
-      "failed_rounds": 2,
-      "stability_days": 0.0,
-      "last_reviewed_at": null,
-      "due_at": null,
-      "lapses": 0,
-      "explanations_tried": [
-        "contrast"
-      ],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    "... 6 more"
+    "... 8 more"
   ],
   "misconceptions": [
     {
@@ -2167,40 +2797,38 @@ _state_after_advance_
       "concept_id": "context_window",
       "status": "resolved",
       "evidence": 0.0,
-      "clean_streak": 2
+      "clean_streak": 2,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": "2026-10-30T22:37:37.179000",
+      "description": "Believes the model remembers all past chats, but actually it..."
     },
     {
       "tag": "role_prompting__any_role_works_equally",
       "concept_id": "role_prompting",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": null,
+      "description": "Believes any role helps equally, but actually roles should m..."
     },
-    {
-      "tag": "context_window__limit_is_only_words",
-      "concept_id": "context_window",
-      "status": "suspected",
-      "evidence": 1.0,
-      "clean_streak": 0
-    }
+    "... 1 more"
   ],
-  "next_due": "2026-10-31T17:42:07.820000",
+  "next_due": "2026-10-31T22:37:37.139000",
   "due": {
-    "language_model_basics": "2026-11-01T17:42:07.820000",
-    "prompt_structure": "2026-11-01T17:42:07.820000",
-    "sampling_temperature": "2026-11-01T17:42:07.820000",
-    "clear_instructions": "2026-10-31T17:42:07.820000",
-    "few_shot_examples": "2026-11-02T17:42:07.820000",
-    "output_formatting": "2026-11-02T17:42:07.820000",
-    "iterative_refinement": "2026-11-02T17:42:07.820000",
-    "hallucination_checking": "2026-11-02T17:42:07.820000"
+    "language_model_basics": "2026-11-01T22:37:37.139000",
+    "prompt_structure": "2026-11-01T22:37:37.139000",
+    "sampling_temperature": "2026-11-01T22:37:37.139000",
+    "clear_instructions": "2026-10-31T22:37:37.139000",
+    "few_shot_examples": "2026-11-02T22:37:37.139000",
+    "output_formatting": "2026-11-02T22:37:37.139000",
+    "iterative_refinement": "2026-11-02T22:37:37.139000",
+    "hallucination_checking": "2026-11-02T22:37:37.139000"
   },
   "roadmap": [
     "language_model_basics",
     "prompt_structure",
-    "sampling_temperature",
-    "context_window",
-    "... 6 more"
+    "... 8 more"
   ],
   "needs_help": [],
   "days_left": null,
@@ -2209,28 +2837,96 @@ _state_after_advance_
     "role_prompting"
   ],
   "retrievability": {
-    "language_model_basics": 0.9486832365280501,
-    "prompt_structure": 0.9486832365280501,
-    "sampling_temperature": 0.9486832365280501,
+    "language_model_basics": 0.9486832646666522,
+    "prompt_structure": 0.9486832646666522,
+    "sampling_temperature": 0.9486832646666522,
     "context_window": 1.0,
-    "clear_instructions": 0.8999998832693362,
+    "clear_instructions": 0.8999999366585772,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.9654893428640662,
-    "output_formatting": 0.9654893428640662,
-    "iterative_refinement": 0.9654893428640662,
-    "hallucination_checking": 0.9654893428640662
+    "few_shot_examples": 0.9654893619554547,
+    "output_formatting": 0.9654893619554547,
+    "iterative_refinement": 0.9654893619554547,
+    "hallucination_checking": 0.9654893619554547
   },
   "pace": {
     "mastered": 8.0,
     "total": 10.0,
     "attempts_per_mastered": 1.625
+  },
+  "now": "2026-10-31T22:37:37.196714",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.139000",
+      "event": "attempt",
+      "avg_mastery": 0.7154838709677419,
+      "avg_retrievability": 1.0,
+      "mastered_count": 8,
+      "questions_answered": 10,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1774193548387097,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.179000",
+      "event": "attempt",
+      "avg_mastery": 0.7458822876682587,
+      "avg_retrievability": 0.9999999811456304,
+      "mastered_count": 8,
+      "questions_answered": 13,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.4814035218438767,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    "... 1 more"
+  ],
+  "learning_rate": 0.010132805566838932,
+  "avg_stability_days": 2.375,
+  "stability": {
+    "language_model_basics": 2.0,
+    "prompt_structure": 2.0,
+    "sampling_temperature": 2.0,
+    "context_window": 0.0,
+    "clear_instructions": 1.0,
+    "role_prompting": 0.0,
+    "few_shot_examples": 3.0,
+    "output_formatting": 3.0,
+    "iterative_refinement": 3.0,
+    "hallucination_checking": 3.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }
 ```
 
 _state_needs_help_
 
-`GET /courses/b0dafa63/learners/docs-231157-stuck/state` -> **200** (0 ms), file `docs/examples/state_needs_help.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/b0dafa63/learners/docs-040729-stuck/state` -> **200** (0 ms), file `docs/examples/state_needs_help.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -2241,14 +2937,15 @@ _state_needs_help_
       "attempts": 4,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [
         "worked_example"
       ],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "prompt_structure",
@@ -2256,45 +2953,15 @@ _state_needs_help_
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
-    {
-      "concept_id": "sampling_temperature",
-      "p_mastery": 0.85,
-      "attempts": 1,
-      "failed_rounds": 0,
-      "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
-      "lapses": 0,
-      "explanations_tried": [],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    {
-      "concept_id": "context_window",
-      "p_mastery": 0.17307692307692307,
-      "attempts": 19,
-      "failed_rounds": 4,
-      "stability_days": 0.0,
-      "last_reviewed_at": null,
-      "due_at": null,
-      "lapses": 0,
-      "explanations_tried": [
-        "worked_example",
-        "contrast",
-        "analogy",
-        "step_by_step"
-      ],
-      "fallbacks": 1,
-      "needs_help": true
-    },
-    "... 6 more"
+    "... 8 more"
   ],
   "misconceptions": [
     {
@@ -2302,41 +2969,39 @@ _state_needs_help_
       "concept_id": "context_window",
       "status": "confirmed",
       "evidence": 6.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.441000",
+      "resolved_at": null,
+      "description": "Believes the model remembers all past chats, but actually it..."
     },
     {
       "tag": "context_window__earlier_text_always_visible",
       "concept_id": "context_window",
       "status": "confirmed",
       "evidence": 7.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.456000",
+      "resolved_at": null,
+      "description": "Believes early text always stays visible, but actually old t..."
     },
-    {
-      "tag": "context_window__limit_is_only_words",
-      "concept_id": "context_window",
-      "status": "confirmed",
-      "evidence": 6.0,
-      "clean_streak": 0
-    }
+    "... 1 more"
   ],
-  "next_due": "2026-11-01T17:42:08.050000",
+  "next_due": "2026-11-01T22:37:37.441000",
   "due": {
-    "language_model_basics": "2026-11-01T17:42:08.050000",
-    "prompt_structure": "2026-11-01T17:42:08.050000",
-    "sampling_temperature": "2026-11-01T17:42:08.050000",
-    "clear_instructions": "2026-11-01T17:42:08.050000",
-    "role_prompting": "2026-11-01T17:42:08.050000",
-    "few_shot_examples": "2026-11-01T17:42:08.050000",
-    "output_formatting": "2026-11-01T17:42:08.050000",
-    "iterative_refinement": "2026-11-01T17:42:08.050000",
-    "hallucination_checking": "2026-11-01T17:42:08.050000"
+    "language_model_basics": "2026-11-01T22:37:37.441000",
+    "prompt_structure": "2026-11-01T22:37:37.441000",
+    "sampling_temperature": "2026-11-01T22:37:37.441000",
+    "clear_instructions": "2026-11-01T22:37:37.441000",
+    "role_prompting": "2026-11-01T22:37:37.441000",
+    "few_shot_examples": "2026-11-01T22:37:37.441000",
+    "output_formatting": "2026-11-01T22:37:37.441000",
+    "iterative_refinement": "2026-11-01T22:37:37.441000",
+    "hallucination_checking": "2026-11-01T22:37:37.441000"
   },
   "roadmap": [
     "language_model_basics",
     "prompt_structure",
-    "sampling_temperature",
-    "context_window",
-    "... 6 more"
+    "... 8 more"
   ],
   "needs_help": [
     "context_window"
@@ -2346,28 +3011,96 @@ _state_needs_help_
     "context_window"
   ],
   "retrievability": {
-    "language_model_basics": 0.9999998663281228,
-    "prompt_structure": 0.9999998663281228,
-    "sampling_temperature": 0.9999998663281228,
+    "language_model_basics": 0.9999999251233086,
+    "prompt_structure": 0.9999999251233086,
+    "sampling_temperature": 0.9999999251233086,
     "context_window": 1.0,
-    "clear_instructions": 0.9999998663281228,
-    "role_prompting": 0.9999998663281228,
-    "few_shot_examples": 0.9999998663281228,
-    "output_formatting": 0.9999998663281228,
-    "iterative_refinement": 0.9999998663281228,
-    "hallucination_checking": 0.9999998663281228
+    "clear_instructions": 0.9999999251233086,
+    "role_prompting": 0.9999999251233086,
+    "few_shot_examples": 0.9999999251233086,
+    "output_formatting": 0.9999999251233086,
+    "iterative_refinement": 0.9999999251233086,
+    "hallucination_checking": 0.9999999251233086
   },
   "pace": {
     "mastered": 9.0,
     "total": 10.0,
     "attempts_per_mastered": 3.4444444444444446
+  },
+  "now": "2026-10-30T22:37:37.563804",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.441000",
+      "event": "attempt",
+      "avg_mastery": 0.7827419354838709,
+      "avg_retrievability": 1.0,
+      "mastered_count": 9,
+      "questions_answered": 10,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1774193548387097,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.456000",
+      "event": "attempt",
+      "avg_mastery": 0.7823093771924892,
+      "avg_retrievability": 0.9999999912638573,
+      "mastered_count": 9,
+      "questions_answered": 13,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1730937719248925,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    "... 7 more"
+  ],
+  "learning_rate": -5.419474961391538e-10,
+  "avg_stability_days": 2.0,
+  "stability": {
+    "language_model_basics": 2.0,
+    "prompt_structure": 2.0,
+    "sampling_temperature": 2.0,
+    "context_window": 0.0,
+    "clear_instructions": 2.0,
+    "role_prompting": 2.0,
+    "few_shot_examples": 2.0,
+    "output_formatting": 2.0,
+    "iterative_refinement": 2.0,
+    "hallucination_checking": 2.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }
 ```
 
 _state_with_deadline_
 
-`GET /courses/c6aaba84/learners/docs-231157-deadline/state` -> **200** (0 ms), file `docs/examples/state_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
+`GET /courses/c6aaba84/learners/docs-040729-deadline/state` -> **200** (16 ms), file `docs/examples/state_with_deadline.json` (shortened here: long strings and lists cut with '...'; the file is complete)
 
 ```json
 {
@@ -2385,7 +3118,8 @@ _state_with_deadline_
         "worked_example"
       ],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "select_columns",
@@ -2398,35 +3132,10 @@ _state_with_deadline_
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
-    {
-      "concept_id": "null_values",
-      "p_mastery": 0.1774193548387097,
-      "attempts": 1,
-      "failed_rounds": 1,
-      "stability_days": 0.0,
-      "last_reviewed_at": null,
-      "due_at": null,
-      "lapses": 0,
-      "explanations_tried": [],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    {
-      "concept_id": "primary_keys",
-      "p_mastery": 0.1774193548387097,
-      "attempts": 1,
-      "failed_rounds": 1,
-      "stability_days": 0.0,
-      "last_reviewed_at": null,
-      "due_at": null,
-      "lapses": 0,
-      "explanations_tried": [],
-      "fallbacks": 0,
-      "needs_help": false
-    },
-    "... 6 more"
+    "... 8 more"
   ],
   "misconceptions": [
     {
@@ -2434,48 +3143,36 @@ _state_with_deadline_
       "concept_id": "tables_rows_columns",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes a table holds a single value, but actually it holds..."
     },
     {
       "tag": "select_columns__select_changes_data",
       "concept_id": "select_columns",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes SELECT modifies stored data, but actually it only r..."
     },
-    {
-      "tag": "null_values__null_equals_zero",
-      "concept_id": "null_values",
-      "status": "suspected",
-      "evidence": 1.0,
-      "clean_streak": 0
-    },
-    {
-      "tag": "primary_keys__keys_can_repeat",
-      "concept_id": "primary_keys",
-      "status": "suspected",
-      "evidence": 1.0,
-      "clean_streak": 0
-    },
-    "... 6 more"
+    "... 8 more"
   ],
   "next_due": null,
   "due": {},
   "roadmap": [
     "tables_rows_columns",
     "select_columns",
-    "null_values",
-    "primary_keys",
-    "... 6 more"
+    "... 8 more"
   ],
   "needs_help": [],
   "days_left": 2,
   "gaps": [
     "tables_rows_columns",
     "select_columns",
-    "null_values",
-    "primary_keys",
-    "... 6 more"
+    "... 8 more"
   ],
   "retrievability": {
     "tables_rows_columns": 1.0,
@@ -2493,6 +3190,52 @@ _state_with_deadline_
     "mastered": 0.0,
     "total": 10.0,
     "attempts_per_mastered": 0.0
+  },
+  "now": "2026-10-30T22:37:37.733042",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.593000",
+      "event": "attempt",
+      "avg_mastery": 0.1774193548387097,
+      "avg_retrievability": 1.0,
+      "mastered_count": 0,
+      "questions_answered": 10,
+      "avg_stability_days": 0.0,
+      "mastery": {
+        "tables_rows_columns": 0.1774193548387097,
+        "select_columns": 0.1774193548387097,
+        "null_values": 0.1774193548387097,
+        "primary_keys": 0.1774193548387097,
+        "foreign_keys": 0.1774193548387097,
+        "where_filtering": 0.1774193548387097,
+        "table_aliases": 0.1774193548387097,
+        "inner_join": 0.1774193548387097,
+        "left_join": 0.1774193548387097,
+        "join_multiple_tables": 0.1774193548387097
+      }
+    }
+  ],
+  "learning_rate": 0.0,
+  "avg_stability_days": 0.0,
+  "stability": {
+    "tables_rows_columns": 0.0,
+    "select_columns": 0.0,
+    "null_values": 0.0,
+    "primary_keys": 0.0,
+    "foreign_keys": 0.0,
+    "where_filtering": 0.0,
+    "table_aliases": 0.0,
+    "inner_join": 0.0,
+    "left_join": 0.0,
+    "join_multiple_tables": 0.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }
 ```
@@ -2501,12 +3244,12 @@ _state_with_deadline_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-040729' has not started course 'b0dafa63'"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** none
 
-**Latency:** 6 successful calls: median 0.007 s, max 0.016 s. No LLM call observed.
+**Latency:** 6 successful calls: median 0.000 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Safe to call any time.
 
@@ -2516,7 +3259,7 @@ Moves this learner's simulated clock forward, starts a new session, and decides 
 
 **When to call:** From the demo control panel ('skip ahead N days').
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body** (`AdvanceIn`):
 
@@ -2544,11 +3287,11 @@ Real request body:
 
 _advance_
 
-`POST /courses/b0dafa63/learners/docs-231157/advance` -> **200** (16 ms), file `docs/examples/advance.json`
+`POST /courses/b0dafa63/learners/docs-040729/advance` -> **200** (0 ms), file `docs/examples/advance.json`
 
 ```json
 {
-  "now": "2026-10-31T17:42:07.919518",
+  "now": "2026-10-31T22:37:37.193354",
   "due_now": [
     "clear_instructions"
   ],
@@ -2559,11 +3302,11 @@ _advance_
 
 _advance_all_due_
 
-`POST /courses/b0dafa63/learners/docs-231157-all/advance` -> **200** (0 ms), file `docs/examples/advance_all_due.json`
+`POST /courses/b0dafa63/learners/docs-040729-all/advance` -> **200** (0 ms), file `docs/examples/advance_all_due.json`
 
 ```json
 {
-  "now": "2026-11-02T17:42:08.035263",
+  "now": "2026-11-02T22:37:37.431679",
   "due_now": [
     "language_model_basics",
     "prompt_structure",
@@ -2585,13 +3328,13 @@ _advance_all_due_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-040729' has not started course 'b0dafa63'"} |
 | 422 | days <= 0 | {"detail": "days must be positive"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** clock_offset_days += days; session counter reset; stored next step replaced; previously served questions are no longer answerable. Call GET .../next to get the material.
 
-**Latency:** 2 successful calls: median 0.008 s, max 0.016 s. No LLM call observed.
+**Latency:** 2 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
 
 **Idempotency and polling:** Not idempotent: each call moves the clock again.
 
@@ -2601,7 +3344,7 @@ Starts a new session: resets the per-session question counter and decides the ne
 
 **When to call:** When the learner chooses to continue after a session_end step.
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body:** none.
 
@@ -2611,7 +3354,7 @@ Starts a new session: resets the per-session question counter and decides the ne
 
 _sessions_new_
 
-`POST /courses/b0dafa63/learners/docs-231157/sessions/new` -> **200** (0 ms), file `docs/examples/sessions_new.json`
+`POST /courses/b0dafa63/learners/docs-040729/sessions/new` -> **200** (16 ms), file `docs/examples/sessions_new.json`
 
 ```json
 {
@@ -2625,12 +3368,12 @@ _sessions_new_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-040729' has not started course 'b0dafa63'"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** Session counter reset; stored next step replaced; served questions cleared. Call GET .../next.
 
-**Latency:** 2 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
+**Latency:** 2 successful calls: median 0.016 s, max 0.016 s. No LLM call observed.
 
 **Idempotency and polling:** Safe to repeat (each call re-decides for the same state).
 
@@ -2640,7 +3383,7 @@ Research status and the articles and videos found for each of the learner's gap 
 
 **When to call:** After the diagnostic, to show 'researching...' and then the links; poll until no entry is `pending`.
 
-**Path parameters:** `cid`, `lid`, `x-master-password` (strings; `lid` is any id the client picks).
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
 
 **Request body:** none.
 
@@ -2742,7 +3485,7 @@ _resources_pending_
 
 _resources_after_diagnostic_
 
-`GET /courses/b0dafa63/learners/docs-231157/resources` -> **200** (0 ms), file `docs/examples/resources_after_diagnostic.json`
+`GET /courses/b0dafa63/learners/docs-040729/resources` -> **200** (0 ms), file `docs/examples/resources_after_diagnostic.json`
 
 ```json
 {
@@ -2797,7 +3540,7 @@ _resources_after_diagnostic_
 
 _resources_ready_
 
-`GET /courses/b0dafa63/learners/docs-231157/resources` -> **200** (16 ms), file `docs/examples/resources_ready.json`
+`GET /courses/b0dafa63/learners/docs-040729/resources` -> **200** (16 ms), file `docs/examples/resources_ready.json`
 
 ```json
 {
@@ -2854,22 +3597,61 @@ _resources_ready_
 
 | Status | When | Body |
 |---|---|---|
-| 404 | learner not started | {"detail": "learner 'docs-231157' has not started course 'b0dafa63'"} |
+| 404 | learner not started | {"detail": "learner 'docs-040729' has not started course 'b0dafa63'"} |
 | 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
 
 **Side effects:** none
 
-**Latency:** 3 successful calls: median 0.016 s, max 0.016 s. Never waits for the LLM: course generation and research run in the background.
+**Latency:** 3 successful calls: median 0.015 s, max 0.016 s. Never waits for the LLM: course generation and research run in the background.
 
 **Idempotency and polling:** Safe to poll every 3 to 5 s; entries go from `pending` to `ready` or `failed` and then stay.
+
+### `POST /courses/{cid}/learners/{lid}/reset`
+
+Forgets this learner on this course: state, history, review log, attempts, pending step and clock offset. The course, its lessons and research stay.
+
+**When to call:** From a 'start over' button; then call POST .../start.
+
+**Path parameters:** `cid`, `lid` (strings; the frontend always uses `lid` = `me`).
+
+**Request body:** none.
+
+**Response 200** (`ResetOut`):
+
+| Field | Type | Meaning | Null / empty |
+|---|---|---|---|
+| `ok` | `boolean` | Always true on 200. | - |
+
+**Real examples:**
+
+_reset_
+
+`POST /courses/b0dafa63/learners/docs-040729-skip/reset` -> **200** (0 ms), file `docs/examples/reset.json`
+
+```json
+{
+  "ok": true
+}
+```
+
+**Errors:**
+
+| Status | When | Body |
+|---|---|---|
+| 404 | unknown course | {"detail": "course 'no-such-course' not found"} |
+| 401 | missing or wrong password | {"detail": "missing or wrong master password"} |
+
+**Side effects:** Deletes the learner's state and attempt log for the course.
+
+**Latency:** 1 successful calls: median 0.000 s, max 0.000 s. No LLM call observed.
+
+**Idempotency and polling:** Idempotent: resetting an unstarted learner also returns ok.
 
 ### `GET /eval/results`
 
 Serves the offline evaluation results file if one has been produced, else 404.
 
 **When to call:** Optional 'how well does the brain work' page.
-
-**Path parameters:** `x-master-password` (strings; `lid` is any id the client picks).
 
 **Request body:** none.
 
@@ -2902,7 +3684,7 @@ _eval_results_
 
 ## 5. Behaviour the frontend must know
 
-**Datetimes.** Verified on 130 datetime values in this run: none carry a zone. They are naive UTC ISO strings without a trailing `Z` (e.g. `2026-10-30T17:42:07.820000`). Append `Z` before parsing:
+**Datetimes.** Verified on 199 datetime values in this run: none carry a zone. They are naive UTC ISO strings without a trailing `Z` (e.g. `2026-10-30T22:37:37.139000`). Append `Z` before parsing:
 
 ```ts
 const parseUtc = (s: string | null) => (s ? new Date(s.endsWith('Z') ? s : s + 'Z') : null);
@@ -2946,7 +3728,7 @@ Send datetimes (e.g. `deadline`) as UTC ISO; a `Z` is accepted.
 | `every reachable concept is mastered[; needs help: ...]` | the next step is done (the reason is copied into messages) | yes: `every reachable concept is mastered` |
 | `{n} questions this session; start a new session to continue` | the next step is session_end | yes: `15 questions this session; start a new session to continue` |
 
-**Lessons and latency.** A lesson is written by the LLM the first time a (concept, misconception targets, styles tried) combination is needed, then cached. Measured: responses that generated a lesson took 3.2 to 3.2 s (measured in an earlier run of this script (2026-10-30 23:08)); with a cached lesson 0.20 s or less. 
+**Lessons and latency.** A lesson is written by the LLM the first time a (concept, misconception targets, styles tried) combination is needed, then cached. Measured: responses that generated a lesson took 6.1 to 6.1 s (measured in an earlier run of this script (2026-10-31 04:06)); with a cached lesson 0.12 s or less. 
 Show a loading state on attempts and GET .../next.
 
 **Course generation.** Measured in an earlier run of this script (2026-10-30 22:28): `generating` for 142 s (71 polls), ending `ready`. Poll every 2 s; allow up to about 3 minutes; on `failed` offer to retry with POST /courses.
@@ -2993,7 +3775,7 @@ GET  .../virtual/status
 GET  .../virtual/events?after=N -> {events: [{n, at, kind, text, source}], next}
 ```
 
-`GET .../state` has no `history` or `learning_rate` field yet (checked on the live response); treat them as optional when they arrive.
+`GET .../state` includes `history` and `learning_rate` (checked on the live response).
 
 ## 8. Quick start
 
@@ -3017,7 +3799,7 @@ Five likely mistakes:
 
 ## 9. Changelog / how to regenerate
 
-Generated 2026-10-30 23:12 from commit `11b8da9` with uncommitted changes. Regenerate (MongoDB running, port 8000 free, run in `backend/`):
+Generated 2026-10-31 04:08 from commit `cfea76f` with uncommitted changes. Regenerate (MongoDB running, port 8000 free, run in `backend/`):
 
 ```bash
 uv run python scripts/gen_api_docs.py
@@ -3025,7 +3807,8 @@ uv run python scripts/gen_api_docs.py
 
 ## 10. Quirks and open questions
 
+- The `pending` resources example was captured in an earlier run of this script (2026-10-30 23:12); in this run every concept had been researched already.
 - A lesson built before its concept's research is ready comes with `resources: []`; GET .../next returns the same lesson with the resources once research is ready.
 - `pace.mastered` and `pace.total` are counts but are sent as floats (e.g. 4.0), because `pace` is typed dict[str, float].
-- Datetimes: 130 values, fraction digits seen [6]; 128 of them end in '000' (values stored in MongoDB keep only milliseconds). Open question: Python omits the fraction entirely when the microseconds are 0 (not observed here), so parse with a lenient ISO parser.
+- Datetimes: 199 values, fraction digits seen [6]; 191 of them end in '000' (values stored in MongoDB keep only milliseconds). Open question: Python omits the fraction entirely when the microseconds are 0 (not observed here), so parse with a lenient ISO parser.
 - POST .../sessions/new has no response model in the OpenAPI schema (a plain object); its shape below is taken from the live response.

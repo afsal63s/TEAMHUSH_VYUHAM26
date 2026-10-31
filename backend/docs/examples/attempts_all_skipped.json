@@ -1,0 +1,97 @@
+{
+  "graded": [],
+  "correct_indices": {},
+  "explanations": {},
+  "mastery": {
+    "language_model_basics": 0.2,
+    "prompt_structure": 0.85,
+    "sampling_temperature": 0.85,
+    "context_window": 0.85,
+    "clear_instructions": 0.1774193548387097,
+    "role_prompting": 0.1774193548387097,
+    "few_shot_examples": 0.1774193548387097,
+    "output_formatting": 0.1774193548387097,
+    "iterative_refinement": 0.1774193548387097,
+    "hallucination_checking": 0.1774193548387097
+  },
+  "new_confirmed_misconceptions": [],
+  "messages": [],
+  "next": {
+    "step": {
+      "kind": "lesson",
+      "concept_id": "clear_instructions",
+      "target_misconceptions": [],
+      "avoid_styles": [],
+      "difficulty": null,
+      "target_concept": null,
+      "give_up_after": false
+    },
+    "reason": "clear_instructions: mastery 0.18, lowest among unlocked concepts",
+    "lesson": {
+      "concept_id": "clear_instructions",
+      "style": "worked_example",
+      "explanation": "Clear instructions tell a language model exactly what task to perform, and prompt engineering is the practice of writing them well so the output matches your intent. Let's walk through one small example. Suppose you type: 'Tell me about dogs.' This request is ambiguous. Should the answer cover biology, training, or breeds, and how long should it be? Step one: name the specific task. Change it to 'Summarize the main health needs of adult dogs.' Step two: add a constraint that shapes the output, such as 'in three bullet points' or 'in under 100 words.' Step three: check that a reader with no context would interpret the request the same way. Compare the two versions. The first leaves the model guessing, while the second states the task, scope, and format directly, which helps the response align with what you actually want. Now try rewriting a vague request you have used, applying these three steps. For more prompt formats, the OpenAI prompt engineering guide is generally recommended as a starting point.",
+      "targets": [],
+      "resources": [
+        {
+          "kind": "article",
+          "title": "Prompt Engineering Guide - MSU Denver",
+          "url": "https://www.msudenver.edu/ai/prompt-engineering-guide",
+          "snippet": "Prompt engineering is the practice of writing clear, specific instructions or questions that guide a computer program to produce useful outputs. In the context of generative artificial intelligence, prompt engineering helps users communicate effectively with language models so the system can generate responses aligned with the user\u2019s intent. [...] Use Clear Instructions\n\nFor straightforward tasks,"
+        },
+        {
+          "kind": "article",
+          "title": "Best practices for prompt engineering with the OpenAI API | OpenAI Help Center",
+          "url": "https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api",
+          "snippet": "Due to the way OpenAI models are trained, there are specific prompt formats that work particularly well and lead to more useful model outputs. The official prompt engineering guide by OpenAI is usually the best place to start for prompting tips.  \n  \nBelow we present a number of prompt formats we find work well, but feel free to explore different formats, which may fit your task better.\n\n# Rules o"
+        },
+        {
+          "kind": "video",
+          "title": "Prompt Engineering Tutorial \u2013 Master ChatGPT and LLM Responses",
+          "url": "https://www.youtube.com/watch?v=_ZvnD73m40o",
+          "snippet": "Learn prompt engineering techniques to get better results from ChatGPT and other LLMs. \u270f\ufe0f Course developed by ..."
+        }
+      ]
+    },
+    "questions": [
+      {
+        "id": "f707cec4-clear_instructions-p1",
+        "concept_id": "clear_instructions",
+        "prompt": "You want a model to avoid technical terms. Which rewrite is clearest?",
+        "options": [
+          "Explain this simply; you know what I mean.",
+          "Don't use technical terms in your explanation.",
+          "Explain this in plain words for a child.",
+          "Explain this in a way that is good."
+        ]
+      },
+      {
+        "id": "f707cec4-clear_instructions-p2",
+        "concept_id": "clear_instructions",
+        "prompt": "A prompt says 'Improve this code.' The model only renames variables. What is the best fix?",
+        "options": [
+          "Make this code better and cleaner overall.",
+          "Improve this code; don't change what it does.",
+          "Refactor this function to remove duplication.",
+          "Improve this code; you know what I'm going for."
+        ]
+      },
+      {
+        "id": "f707cec4-clear_instructions-t1",
+        "concept_id": "clear_instructions",
+        "prompt": "You want a customer support reply that includes a refund policy link. Which instruction is clearest?",
+        "options": [
+          "Reply in under 100 words with the refund link.",
+          "Don't write a long reply or leave out key items.",
+          "Write a helpful reply to the customer.",
+          "Reply briefly and cover the usual details."
+        ]
+      }
+    ]
+  },
+  "skipped": [
+    "f707cec4-clear_instructions-p1",
+    "f707cec4-clear_instructions-p2",
+    "f707cec4-clear_instructions-t1"
+  ]
+}

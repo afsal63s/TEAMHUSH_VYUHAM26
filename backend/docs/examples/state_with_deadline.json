@@ -13,7 +13,8 @@
         "worked_example"
       ],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "select_columns",
@@ -26,7 +27,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "null_values",
@@ -39,7 +41,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "primary_keys",
@@ -52,7 +55,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "foreign_keys",
@@ -65,7 +69,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "where_filtering",
@@ -78,7 +83,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "table_aliases",
@@ -91,7 +97,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "inner_join",
@@ -104,7 +111,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "left_join",
@@ -117,7 +125,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "join_multiple_tables",
@@ -130,7 +139,8 @@
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     }
   ],
   "misconceptions": [
@@ -139,70 +149,100 @@
       "concept_id": "tables_rows_columns",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes a table holds a single value, but actually it holds many rows, each with several columns."
     },
     {
       "tag": "select_columns__select_changes_data",
       "concept_id": "select_columns",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes SELECT modifies stored data, but actually it only reads and returns data."
     },
     {
       "tag": "null_values__null_equals_zero",
       "concept_id": "null_values",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes NULL is the same as zero, but actually NULL means the value is unknown or absent."
     },
     {
       "tag": "primary_keys__keys_can_repeat",
       "concept_id": "primary_keys",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes primary key values may repeat, but actually each value must be unique within the table."
     },
     {
       "tag": "foreign_keys__foreign_key_copies_row",
       "concept_id": "foreign_keys",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes a foreign key copies the whole related row, but actually it stores only the matching key value."
     },
     {
       "tag": "where_filtering__single_equals_only",
       "concept_id": "where_filtering",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes WHERE only supports equality, but actually it supports comparisons, ranges, and lists."
     },
     {
       "tag": "table_aliases__alias_before_from",
       "concept_id": "table_aliases",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes you can define an alias before FROM names the table, but actually the alias is declared in FROM."
     },
     {
       "tag": "inner_join__join_is_union",
       "concept_id": "inner_join",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes a join stacks two tables vertically, but actually it places matching columns side by side for matched rows."
     },
     {
       "tag": "left_join__left_join_keeps_right_unmatched",
       "concept_id": "left_join",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes LEFT JOIN keeps unmatched rows from the right table, but actually only left-table rows are kept."
     },
     {
       "tag": "join_multiple_tables__one_join_per_query",
       "concept_id": "join_multiple_tables",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.593000",
+      "resolved_at": null,
+      "description": "Believes a query can join only two tables, but actually you can chain several joins one after another."
     }
   ],
   "next_due": null,
@@ -249,5 +289,51 @@
     "mastered": 0.0,
     "total": 10.0,
     "attempts_per_mastered": 0.0
+  },
+  "now": "2026-10-30T22:37:37.733042",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.593000",
+      "event": "attempt",
+      "avg_mastery": 0.1774193548387097,
+      "avg_retrievability": 1.0,
+      "mastered_count": 0,
+      "questions_answered": 10,
+      "avg_stability_days": 0.0,
+      "mastery": {
+        "tables_rows_columns": 0.1774193548387097,
+        "select_columns": 0.1774193548387097,
+        "null_values": 0.1774193548387097,
+        "primary_keys": 0.1774193548387097,
+        "foreign_keys": 0.1774193548387097,
+        "where_filtering": 0.1774193548387097,
+        "table_aliases": 0.1774193548387097,
+        "inner_join": 0.1774193548387097,
+        "left_join": 0.1774193548387097,
+        "join_multiple_tables": 0.1774193548387097
+      }
+    }
+  ],
+  "learning_rate": 0.0,
+  "avg_stability_days": 0.0,
+  "stability": {
+    "tables_rows_columns": 0.0,
+    "select_columns": 0.0,
+    "null_values": 0.0,
+    "primary_keys": 0.0,
+    "foreign_keys": 0.0,
+    "where_filtering": 0.0,
+    "table_aliases": 0.0,
+    "inner_join": 0.0,
+    "left_join": 0.0,
+    "join_multiple_tables": 0.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }

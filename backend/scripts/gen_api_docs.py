@@ -224,7 +224,10 @@ def run(client: httpx.Client) -> None:
     stranger = next(q.id for q in bundle.questions if q.id not in {d["id"] for d in diag})
     call(client, f"POST {lp}/attempts", "POST", f"{b}/attempts",
          {"answers": [{"question_id": stranger, "chosen_index": 0}]}, example="error_422_unserved", expect=422)
-    call(client, f"POST {lp}/attempts", "POST", f"{b}/attempts", {"answers": []}, expect=422)
+    call(client, f"POST {lp}/attempts", "POST", f"{b}/attempts", {"answers": []},
+         example="error_409_skip_diagnostic", expect=409)
+    call(client, "GET /auth/check", "GET", "/auth/check", example="auth_check")
+    call(client, "GET /auth/check", "GET", "/auth/check", auth=False, expect=401)
 
     plan = {}
     for i, q in enumerate(diag, start=1):
@@ -269,7 +272,19 @@ def run(client: httpx.Client) -> None:
     else:
         UNVERIFIED.append(f"Review flow: after advancing 1 day the next step was {rv['step']['kind']}, not a review.")
     call(client, f"POST {lp}/sessions/new", "POST", f"{b}/sessions/new", example="sessions_new")
+    call(client, "GET /courses", "GET", f"/courses?learner_id={lid}", example="courses_list")
+    call(client, "GET /due", "GET", f"/due?learner_id={lid}", example="due")
     call(client, f"GET {lp}/state", "GET", f"{b}/state", example="state")
+
+    # --- skipping, then reset and start again ---
+    bs = f"/courses/{cid}/learners/{lid}-skip"
+    ds = call(client, f"POST {lp}/start", "POST", f"{bs}/start").data["questions"]
+    part = answers_for(key, ds[1:], {q["concept_id"] for q in ds[1:4]}, "medium")
+    call(client, f"POST {lp}/attempts", "POST", f"{bs}/attempts", {"answers": part}, example="attempts_skipped")
+    call(client, f"POST {lp}/attempts", "POST", f"{bs}/attempts", {"answers": []}, example="attempts_all_skipped")
+    call(client, f"POST {lp}/reset", "POST", f"{bs}/reset", example="reset")
+    call(client, f"POST {lp}/start", "POST", f"{bs}/start")
+    call(client, f"POST {lp}/reset", "POST", "/courses/no-such-course/learners/me/reset", expect=404)
 
     # --- learner who knows everything: done ---
     b2 = f"/courses/{cid}/learners/{lid}-all"
@@ -546,6 +561,57 @@ FIELD_DOCS = {
     "MasteryOut.gaps": ("Concepts not yet mastered, roadmap order.", "empty when all are mastered"),
     "MasteryOut.retrievability": ("concept_id -> recall probability now (1.0 if never mastered).", ""),
     "MasteryOut.pace": ("`{mastered, total, attempts_per_mastered}`.", ""),
+    "MasteryOut.now": ("The learner's simulated now (real UTC now plus the clock offset).", "never null in a live response"),
+    "MasteryOut.history": ("Progress samples, oldest first, one per attempts, advance and sessions/new call (last 500).", "empty before the diagnostic is answered"),
+    "MasteryOut.learning_rate": ("Mean change in average mastery per answered question over the last 10 answers.", "0 with fewer than 2 history points"),
+    "MasteryOut.avg_stability_days": ("Mean stability over concepts that have one.", "0 before any concept is mastered or placed"),
+    "MasteryOut.stability": ("concept_id -> stability_days.", ""),
+    "HistoryPoint.at": ("Simulated time of the sample.", ""),
+    "HistoryPoint.mastery": ("concept_id -> p_mastery for every concept at that time.", ""),
+    "ConceptStateOut.reviews": ("This concept's last 20 review rounds `{at, passed}`, oldest first.", "empty before its first review"),
+    "MisconceptionOut.description": ("What the learner wrongly believes (from the course's catalog).", ""),
+    "MisconceptionState.first_seen_at": ("Simulated time it was first picked.", ""),
+    "MisconceptionState.resolved_at": ("Simulated time it became resolved.", "null until resolved; cleared if it comes back"),
+    "ReviewMark.at": ("Simulated time of the review round.", ""),
+    "ReviewMark.passed": ("False if the round lapsed the concept.", ""),
+    "Retention.reviews_total": ("Review rounds so far (verification reviews of placed concepts included).", ""),
+    "Retention.reviews_passed": ("Review rounds that did not lapse the concept.", ""),
+    "Retention.review_pass_rate": ("reviews_passed / reviews_total.", "null with no reviews"),
+    "Retention.delayed_reviews_total": ("Reviews at least `delayed_threshold_days` after the concept was last seen.", ""),
+    "Retention.delayed_pass_rate": ("Pass rate of those delayed reviews: evidence of long-term retention.", "null with no delayed reviews"),
+    "Retention.delayed_threshold_days": ("Days since last seen that make a review 'delayed' (7).", ""),
+    "MasteryOut.retention": ("Review pass rates overall and after a delay of 7+ days.", ""),
+    "AttemptResultOut.skipped": ("Served question ids not answered in this round: not graded, no effect.", "empty when all were answered"),
+    "AuthCheckOut.ok": ("Always true on 200.", ""),
+    "ResetOut.ok": ("Always true on 200.", ""),
+    "CourseSummary.course_id": ("Course id.", ""),
+    "CourseSummary.topic": ("Topic name.", ""),
+    "CourseSummary.level": ("Level the course was made for.", ""),
+    "CourseSummary.status": ("`generating`, `ready` or `failed`.", ""),
+    "CourseSummary.created_at": ("When the course was created (real UTC).", ""),
+    "CourseSummary.deadline": ("Course deadline.", "null without one"),
+    "CourseSummary.concept_count": ("Concepts in the graph.", "0 while generating"),
+    "CourseSummary.started": ("Whether this learner has started the course.", ""),
+    "CourseSummary.mastered": ("Concepts at 0.85 or more.", "0 when not started"),
+    "CourseSummary.avg_mastery": ("Mean p_mastery over the course's concepts.", "0 when not started"),
+    "CourseSummary.avg_retrievability": ("Mean recall probability now (learner's clock).", "0 when not started"),
+    "CourseSummary.next_due_at": ("Earliest scheduled review (past means overdue).", "null when nothing is scheduled or not started"),
+    "CourseSummary.overdue_count": ("Reviews due now on the learner's simulated clock.", ""),
+    "CourseSummary.needs_help_count": ("Concepts flagged needs_help.", ""),
+    "CourseSummary.last_activity_at": ("Simulated time of the last attempt, advance or new session.", "null when not started"),
+    "DueItem.course_id": ("Course id.", ""),
+    "DueItem.topic": ("Course topic.", ""),
+    "DueItem.concept_id": ("Concept id.", ""),
+    "DueItem.concept_name": ("Concept display name.", ""),
+    "DueItem.due_at": ("When the review is due.", ""),
+    "DueItem.overdue_days": ("Days past due on the learner's simulated clock (fractional).", "0 when not yet due"),
+    "DueItem.retrievability": ("Recall probability now.", ""),
+    "HistoryPoint.event": ("What produced it: `attempt`, `advance` or `session`.", ""),
+    "HistoryPoint.avg_mastery": ("Mean p_mastery over every concept of the course.", ""),
+    "HistoryPoint.avg_retrievability": ("Mean retrievability over every concept at that time.", ""),
+    "HistoryPoint.mastered_count": ("Concepts at 0.85 or more.", ""),
+    "HistoryPoint.questions_answered": ("Total answers so far (diagnostic included).", ""),
+    "HistoryPoint.avg_stability_days": ("Mean stability over concepts that have one, else 0.", ""),
     "ConceptState.concept_id": ("Concept.", ""),
     "ConceptState.p_mastery": ("Probability the concept is known (0..1); 0.85 or more counts as mastered.", ""),
     "ConceptState.attempts": ("Questions answered on this concept.", ""),
@@ -617,6 +683,21 @@ ENDPOINT_DOCS = {
         "and is shared by every learner of the course. Concepts it was never started for are not listed.",
         "After the diagnostic, to show 'researching...' and then the links; poll until no entry is `pending`.",
         "none", "Safe to poll every 3 to 5 s; entries go from `pending` to `ready` or `failed` and then stay."),
+    "GET /auth/check": ("Checks the password: 200 `{ok: true}` when X-Master-Password is right (or no password is set), "
+                        "401 otherwise.", "On the login screen, before storing the password in the client.",
+                        "none", "Safe to repeat."),
+    "GET /courses": ("Dashboard cards: every course, newest first, with this learner's progress (no graph). "
+                     "Unstarted courses have `started: false` and zeros.",
+                     "On the dashboard; after creating a course; after any learning activity.",
+                     "none", "Safe to poll; cheap."),
+    "GET /due": ("Every scheduled review across the learner's started courses, soonest first, with how overdue each is "
+                 "on that course's simulated clock.", "For the dashboard's 'Due for review' and 'Overdue' lists.",
+                 "none", "Safe to poll."),
+    "POST /courses/{cid}/learners/{lid}/reset": ("Forgets this learner on this course: state, history, review log, attempts, "
+                                                  "pending step and clock offset. The course, its lessons and research stay.",
+                                                  "From a 'start over' button; then call POST .../start.",
+                                                  "Deletes the learner's state and attempt log for the course.",
+                                                  "Idempotent: resetting an unstarted learner also returns ok."),
     "GET /eval/results": ("Serves the offline evaluation results file if one has been produced, else 404.",
                           "Optional 'how well does the brain work' page.", "none", "Safe to call."),
 }
@@ -628,13 +709,16 @@ ERRORS_BY_ROUTE = {
                                                   (409, "course not ready (`course '...' is generating`)", None)],
     "POST /courses/{cid}/learners/{lid}/attempts": [(404, "learner not started", "error_404_learner"),
                                                      (422, "a question was not served to this learner (lists the ids)", "error_422_unserved"),
-                                                     (422, "empty `answers`, `chosen_index` out of range, or body invalid", None)],
+                                                     (409, "`answers: []` on the diagnostic (it cannot be skipped entirely)", "error_409_skip_diagnostic"),
+                                                     (422, "`chosen_index` out of range, or body invalid", None)],
     "GET /courses/{cid}/learners/{lid}/next": [(404, "learner not started", "error_404_learner"),
                                                 (409, "before the diagnostic is answered", "error_409_next_before_diagnostic")],
     "GET /courses/{cid}/learners/{lid}/state": [(404, "learner not started", "error_404_learner")],
     "POST /courses/{cid}/learners/{lid}/advance": [(404, "learner not started", "error_404_learner"), (422, "days <= 0", "error_422_advance_days")],
     "POST /courses/{cid}/learners/{lid}/sessions/new": [(404, "learner not started", "error_404_learner")],
     "GET /eval/results": [(404, "no results file yet", "eval_results")],
+    "GET /auth/check": [(401, "missing or wrong password", "error_401")],
+    "POST /courses/{cid}/learners/{lid}/reset": [(404, "unknown course", "error_404")],
     "GET /courses/{cid}/learners/{lid}/resources": [(404, "learner not started", "error_404_learner")],
 }
 
@@ -643,7 +727,8 @@ EXAMPLES_BY_ROUTE = {
     "POST /courses": ["courses_create_ready", "courses_create_generating"],
     "GET /courses/{cid}": ["course_get", "course_get_generating"],
     "POST /courses/{cid}/learners/{lid}/start": ["start"],
-    "POST /courses/{cid}/learners/{lid}/attempts": ["attempts_diagnostic", "attempts_practice", "attempts_review_failed",
+    "POST /courses/{cid}/learners/{lid}/attempts": ["attempts_diagnostic", "attempts_skipped", "attempts_all_skipped",
+                                                     "attempts_practice", "attempts_review_failed",
                                                      "attempts_all_known_done", "attempts_needs_help", "attempts_with_deadline"],
     "GET /courses/{cid}/learners/{lid}/next": ["next_lesson", "next_review", "next_relearn", "next_fallback", "next_give_up",
                                                 "next_session_end", "next_done", "next_done_with_needs_help"],
@@ -651,13 +736,18 @@ EXAMPLES_BY_ROUTE = {
     "POST /courses/{cid}/learners/{lid}/advance": ["advance", "advance_all_due"],
     "POST /courses/{cid}/learners/{lid}/sessions/new": ["sessions_new"],
     "GET /eval/results": ["eval_results"],
+    "GET /auth/check": ["auth_check"],
+    "GET /courses": ["courses_list"],
+    "GET /due": ["due"],
+    "POST /courses/{cid}/learners/{lid}/reset": ["reset"],
     "GET /courses/{cid}/learners/{lid}/resources": ["resources_pending", "resources_after_diagnostic", "resources_ready"],
 }
 
-FLOW_ORDER = ["GET /health", "POST /courses", "GET /courses/{cid}", "POST /courses/{cid}/learners/{lid}/start",
+FLOW_ORDER = ["GET /health", "GET /auth/check", "GET /courses", "GET /due", "POST /courses", "GET /courses/{cid}", "POST /courses/{cid}/learners/{lid}/start",
               "POST /courses/{cid}/learners/{lid}/attempts", "GET /courses/{cid}/learners/{lid}/next",
               "GET /courses/{cid}/learners/{lid}/state", "POST /courses/{cid}/learners/{lid}/advance",
               "POST /courses/{cid}/learners/{lid}/sessions/new", "GET /courses/{cid}/learners/{lid}/resources",
+              "POST /courses/{cid}/learners/{lid}/reset",
               "GET /eval/results"]
 
 MESSAGE_TEMPLATES = [
@@ -737,7 +827,7 @@ def gen_types(openapi: dict) -> str:
         req = set(s.get("required", []))
         out.append(f"export interface {name} {{")
         for f, fs in s["properties"].items():
-            doc = FIELD_DOCS.get(f"{name}.{f}", ("", ""))[0]
+            doc = field_doc(name, f)[0]
             if doc:
                 out.append(f"  /** {doc} */")
             out.append(f"  {f}{'' if f in req else '?'}: {ts_type(fs)};")
@@ -779,12 +869,19 @@ def shorten(data, limit=EXAMPLE_LIMIT) -> tuple[str, bool]:
     return text, True
 
 
+PARENT_MODEL = {"ConceptStateOut": "ConceptState", "MisconceptionOut": "MisconceptionState"}
+
+
+def field_doc(name: str, field: str) -> tuple[str, str]:
+    return FIELD_DOCS.get(f"{name}.{field}") or FIELD_DOCS.get(f"{PARENT_MODEL.get(name, '')}.{field}", ("", ""))
+
+
 def model_table(openapi: dict, name: str) -> list[str]:
     s = schema_of(openapi, name)
     req = set(s.get("required", []))
     rows = [f"| Field | Type | Meaning | Null / empty |", "|---|---|---|---|"]
     for f, fs in s["properties"].items():
-        meaning, empty = FIELD_DOCS.get(f"{name}.{f}", ("", ""))
+        meaning, empty = field_doc(name, f)
         rows.append(f"| `{f}` | `{ts_type(fs)}` | {meaning} | {empty or '-'} |")
     return rows
 
@@ -929,6 +1026,13 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
     # 3. Screens
     add(["## 3. Screen-to-endpoint map", "",
          "| Screen / card | Endpoint | Fields |", "|---|---|---|",
+         "| Login: password check | `GET /auth/check` | 200 `{ok}` or 401 |",
+         "| Dashboard: course cards | `GET /courses` | `topic`, `level`, `status`, `started`, `mastered`/`concept_count`, `avg_mastery`, `avg_retrievability`, `next_due_at`, `overdue_count`, `needs_help_count`, `last_activity_at` |",
+         "| Dashboard: 'Due for review' and 'Overdue' lists | `GET /due` | `topic`, `concept_name`, `due_at`, `overdue_days` (> 0 means overdue), `retrievability` |",
+         "| Course: 'start over' | `POST .../reset` then `POST .../start` | `{ok}` |",
+         "| Quiz: 'skip' a question | `POST .../attempts` with only the answered ids | response `skipped[]` |",
+         "| Panel: retention evidence | `GET .../state` | `retention` (pass rates; delayed = 7+ days), `concepts[].reviews` |",
+         "| Panel: misconception timeline | `GET .../state` | `misconceptions[].description`, `first_seen_at`, `resolved_at` |",
          "| Setup: topic, level, deadline form | `POST /courses` | body `prompt`, `level`, `deadline` |",
          "| Setup: 'building your course' spinner | `GET /courses/{cid}` | `status` |",
          "| Setup: concept graph | `GET /courses/{cid}` | `concepts[].id/name/prerequisites` |",
@@ -950,6 +1054,8 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
          "| Sidebar: upcoming reviews | `GET .../state` | `due`, `next_due` |",
          "| Sidebar: misconceptions | `GET .../state` | `misconceptions[]` |",
          "| Sidebar: pace, deadline | `GET .../state` | `pace`, `days_left` |",
+         "| Control panel: progress chart | `GET .../state` | `history[]` (x: `at` or `questions_answered`; y: `avg_mastery`, `avg_retrievability`, `mastered_count`) |",
+         "| Control panel: learning speed, memory strength | `GET .../state` | `learning_rate`, `avg_stability_days`, `stability`, `now` |",
          "| Control panel: skip N days | `POST .../advance` | body `days`; response `now`, `due_now`, `next_kind`, `next_concept_id` |",
          "| Control panel: new session | `POST .../sessions/new` | response `next_kind`, `next_concept_id` |",
          "| Eval page | `GET /eval/results` | the file as-is (404 until produced) |", ""])
@@ -963,9 +1069,14 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
         what, when, side, idem = ENDPOINT_DOCS[route]
         add([f"### `{route}`", "", what, "", f"**When to call:** {when}", ""])
         req = (op.get("requestBody") or {}).get("content", {}).get("application/json", {}).get("schema")
-        params = [p["name"] for p in op.get("parameters", [])]
+        params = [p["name"] for p in op.get("parameters", []) if p.get("in") == "path"]
+        query = [p for p in op.get("parameters", []) if p.get("in") == "query"]
         if params:
-            add([f"**Path parameters:** " + ", ".join(f"`{p}`" for p in params) + " (strings; `lid` is any id the client picks).", ""])
+            add([f"**Path parameters:** " + ", ".join(f"`{p}`" for p in params) + " (strings; the frontend always uses `lid` = `me`).", ""])
+        if query:
+            add(["**Query parameters:** " + ", ".join(
+                f"`{p['name']}` ({ts_type(p.get('schema', {}))}, default `{p.get('schema', {}).get('default')}`)" for p in query)
+                + ". The app has one user: leave `learner_id` at its default `me`.", ""])
         if req:
             name = req["$ref"].split("/")[-1]
             add([f"**Request body** (`{name}`):", "", *request_table(openapi, name), ""])
@@ -981,9 +1092,13 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
             name = res["$ref"].split("/")[-1]
             add([f"**Response 200** (`{name}`):", "", *model_table(openapi, name), ""])
             nested = {"StepOut": ["Step", "Lesson", "QuestionPublic"], "AttemptResultOut": ["AnswerGraded", "StepOut", "Step", "Lesson"],
-                      "MasteryOut": ["ConceptState", "MisconceptionState"], "StartOut": ["QuestionPublic"]}.get(name, [])
+                      "MasteryOut": ["ConceptStateOut", "ReviewMark", "MisconceptionOut", "HistoryPoint", "Retention"],
+                      "StartOut": ["QuestionPublic"]}.get(name, [])
             for n in nested:
                 add([f"`{n}`:", "", *model_table(openapi, n), ""])
+        elif res.get("type") == "array" and "$ref" in res.get("items", {}):
+            name = res["items"]["$ref"].split("/")[-1]
+            add([f"**Response 200:** a JSON array of `{name}`:", "", *model_table(openapi, name), ""])
         elif isinstance(res.get("additionalProperties"), dict) and "$ref" in res["additionalProperties"]:
             name = res["additionalProperties"]["$ref"].split("/")[-1]
             add([f"**Response 200:** an object keyed by concept id; each value is a `{name}`:", "",
@@ -1085,7 +1200,9 @@ def render_reference(openapi: dict, commit: str, dirty: bool) -> str:
          "GET  .../virtual/status",
          "GET  .../virtual/events?after=N -> {events: [{n, at, kind, text, source}], next}",
          "```", "",
-         "`GET .../state` has no `history` or `learning_rate` field yet (checked on the live response); treat them as optional when they arrive.", ""])
+         ("`GET .../state` includes `history` and `learning_rate` (checked on the live response)."
+          if {"history", "learning_rate"} <= set(EXAMPLE_FILES["state"].data) else
+          "`GET .../state` has no `history` or `learning_rate` field yet (checked on the live response); treat them as optional when they arrive."), ""])
 
     # 8. Quick start
     add(["## 8. Quick start", "", "```bash", f"BASE={BASE}", f"PW='{PW_SHOWN}'",
@@ -1160,6 +1277,19 @@ def render_http() -> str:
     return "\n".join(out)
 
 
+def wait_for_research(limit: float = 180) -> None:
+    """Research this run started must finish before the server stops: a restart marks it failed for good."""
+    from pymongo import MongoClient
+
+    db = MongoClient(SETTINGS.MONGO_URI)[SETTINGS.MONGO_DB]
+    t0 = time.monotonic()
+    while (n := db.resources.count_documents({"status": "pending"})) and time.monotonic() - t0 < limit:
+        print(f"waiting for {n} research job(s) to finish ...")
+        time.sleep(5)
+    if n:
+        UNVERIFIED.append(f"{n} research job(s) were still pending when the server stopped; they will be marked failed.")
+
+
 def main() -> int:
     from main import app
     openapi = app.openapi()
@@ -1170,6 +1300,7 @@ def main() -> int:
         write(DOCS / "openapi.json", json.dumps(live_openapi, indent=2))
         with httpx.Client(base_url=BASE, headers={"X-Master-Password": PASSWORD}, timeout=300) as client:
             run(client)
+        wait_for_research()
     finally:
         SRV.stop()
     analyse()

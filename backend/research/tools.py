@@ -9,29 +9,40 @@ import html
 import logging
 import re
 import threading
-from functools import lru_cache
+from urllib.parse import urlparse
 
 from config import get_settings
 
 logger = logging.getLogger(__name__)
 
 SNIPPET_CHARS = 400
+# Article search skips social sites and video hosts: videos come from search_videos.
+EXCLUDED_ARTICLE_DOMAINS = ["facebook.com", "reddit.com", "quora.com", "pinterest.com", "linkedin.com", "youtube.com"]
+VIDEO_HOSTS = ("youtube.com", "youtu.be")
 _VIDEO_ID = re.compile(r"(?:v=|youtu\.be/|/shorts/|/embed/)([A-Za-z0-9_-]{11})")
 
 
-@lru_cache(maxsize=1)
-def _tavily():
-    from langchain_tavily import TavilySearch
-
-    key = get_settings().TAVILY_API_KEY.get_secret_value()
-    if not key:
-        raise RuntimeError("TAVILY_API_KEY is not set")
-    return TavilySearch(
-        max_results=5, topic="general", search_depth="basic", include_raw_content=False, tavily_api_key=key
-    )
-
-
 _local = threading.local()
+
+
+def _tavily():
+    """One client per thread, like the YouTube client: research searches from several threads at once."""
+    if getattr(_local, "tavily", None) is None:
+        from langchain_tavily import TavilySearch
+
+        key = get_settings().TAVILY_API_KEY.get_secret_value()
+        if not key:
+            raise RuntimeError("TAVILY_API_KEY is not set")
+        _local.tavily = TavilySearch(
+            max_results=5, topic="general", search_depth="basic", include_raw_content=False,
+            exclude_domains=EXCLUDED_ARTICLE_DOMAINS, tavily_api_key=key,
+        )
+    return _local.tavily
+
+
+def is_video_host(url: str) -> bool:
+    host = (urlparse(url).hostname or "").lower()
+    return any(host == h or host.endswith("." + h) for h in VIDEO_HOSTS)
 
 
 def _youtube():
@@ -59,7 +70,7 @@ def search_articles(query: str, max_results: int = 5) -> list[dict]:
             "snippet": (r.get("content") or "").strip()[:SNIPPET_CHARS],
         }
         for r in rows[:max_results]
-        if r.get("url")
+        if r.get("url") and not is_video_host(r["url"])
     ]
 
 

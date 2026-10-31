@@ -13,10 +13,11 @@ from core.scheduler import get_retrievability, is_due
 from db import repos
 from generation import generate_lesson
 from generation.styles import choose_style
-from schemas.api import (AdvanceIn, AdvanceOut, AttemptResultOut, ConceptResearch, MasteryOut, StartOut, StepOut,
-                         SubmitAnswersIn)
+from schemas.api import (AdvanceIn, AdvanceOut, AttemptResultOut, ConceptResearch, ConceptStateOut, MasteryOut,
+                         MisconceptionOut, ResetOut, Retention, ReviewMark, StartOut, StepOut, SubmitAnswersIn)
 from schemas.content import Course, Lesson, Question
-from schemas.learner import AnswerGraded, BktParams, ConceptState, LearnerState, PolicyConfig, Step
+from schemas.learner import (HISTORY_CAP, REVIEW_LOG_CAP, AnswerGraded, BktParams, ConceptState, HistoryPoint,
+                             LearnerState, PolicyConfig, ReviewEvent, Step)
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/courses/{cid}/learners/{lid}", dependencies=[Depends(require_master)])
@@ -101,6 +102,88 @@ def placement_message(state: LearnerState, placed: list[str]) -> str:
     longest = max(state.concepts[c].stability_days for c in placed)
     when = "tomorrow" if longest <= 1 else f"within {longest:g} days"
     return f"Placed {len(placed)} concepts as already known; I'll check them again {when}."
+
+
+# --- progress history ---
+
+LEARNING_RATE_WINDOW = 10   # answers
+
+
+def record_history(state: LearnerState, event: str, now: datetime) -> None:
+    """Append one progress sample (simulated now) over every concept of the course; keep the last HISTORY_CAP."""
+    concepts = list(state.concepts.values())
+    n = len(concepts) or 1
+    stable = [cs.stability_days for cs in concepts if cs.stability_days > 0]
+    state.history.append(HistoryPoint(
+        at=now, event=event,
+        avg_mastery=sum(cs.p_mastery for cs in concepts) / n,
+        avg_retrievability=sum(get_retrievability(cs, now) for cs in concepts) / n,
+        mastered_count=sum(cs.p_mastery >= PARAMS.mastery_threshold for cs in concepts),
+        questions_answered=sum(cs.attempts for cs in concepts),
+        avg_stability_days=sum(stable) / len(stable) if stable else 0.0,
+        mastery={cs.concept_id: cs.p_mastery for cs in concepts},
+    ))
+    del state.history[:-HISTORY_CAP]
+
+
+# --- review log and misconception timeline (API-layer bookkeeping around engine.submit_answers) ---
+
+DELAYED_DAYS = 7
+
+
+def record_review(prev: LearnerState, state: LearnerState, step: Step | None, graded: list[AnswerGraded],
+                  now: datetime) -> None:
+    """Log the round if the served step was a review and its concept was answered."""
+    if step is None or step.kind != "review" or not any(g.concept_id == step.concept_id for g in graded):
+        return
+    before = prev.concepts.get(step.concept_id) or ConceptState(concept_id=step.concept_id)
+    after = state.concepts[step.concept_id]
+    seen = before.last_reviewed_at
+    state.reviews.append(ReviewEvent(
+        concept_id=step.concept_id, at=now,
+        days_since_last_seen=(now - seen).total_seconds() / 86400 if seen else 0.0,
+        passed=after.lapses == before.lapses,
+    ))
+    del state.reviews[:-REVIEW_LOG_CAP]
+
+
+def stamp_misconceptions(prev: LearnerState, state: LearnerState, now: datetime) -> None:
+    """first_seen_at when a misconception first appears; resolved_at when it becomes resolved (cleared if it returns)."""
+    for tag, m in state.misconceptions.items():
+        old = prev.misconceptions.get(tag)
+        if old is None and m.first_seen_at is None:
+            m.first_seen_at = now
+        if m.status == "resolved" and (old is None or old.status != "resolved"):
+            m.resolved_at = now
+        elif m.status != "resolved":
+            m.resolved_at = None
+
+
+def retention(reviews: list[ReviewEvent]) -> Retention:
+    delayed = [r for r in reviews if r.days_since_last_seen >= DELAYED_DAYS]
+    passed = sum(r.passed for r in reviews)
+    return Retention(
+        reviews_total=len(reviews), reviews_passed=passed,
+        review_pass_rate=passed / len(reviews) if reviews else None,
+        delayed_reviews_total=len(delayed),
+        delayed_pass_rate=sum(r.passed for r in delayed) / len(delayed) if delayed else None,
+        delayed_threshold_days=DELAYED_DAYS,
+    )
+
+
+def learning_rate(history: list[HistoryPoint]) -> float:
+    """Mean change in avg_mastery per answered question over the last LEARNING_RATE_WINDOW answers.
+
+    Compares the latest point with the latest earlier point at least that many answers back (or the
+    oldest point). 0 with fewer than 2 points or no answers in between.
+    """
+    if len(history) < 2:
+        return 0.0
+    last = history[-1]
+    floor = last.questions_answered - LEARNING_RATE_WINDOW
+    base = next((p for p in reversed(history[:-1]) if p.questions_answered <= floor), history[0])
+    answered = last.questions_answered - base.questions_answered
+    return (last.avg_mastery - base.avg_mastery) / answered if answered > 0 else 0.0
 
 
 # --- research ---
@@ -216,6 +299,19 @@ async def rebuild_material(course: Course, state: LearnerState, now: datetime) -
                    questions=[to_public(by_id[q]) for q in state.pending_question_ids if q in by_id])
 
 
+async def retry_lesson(course: Course, state: LearnerState) -> Lesson | None:
+    """Generate the pending step's lesson again after a failed attempt; store it if it works (caller saves)."""
+    step = state.pending_step
+    cs = state.concepts.setdefault(step.concept_id, ConceptState(concept_id=step.concept_id))
+    key, lesson = await lesson_for(course, cs, step, step.avoid_styles or list(cs.explanations_tried))
+    if lesson is None:
+        return None
+    state.pending_lesson_key = key
+    if lesson.style not in cs.explanations_tried:
+        cs.explanations_tried.append(lesson.style)
+    return await with_resources(course, lesson)
+
+
 def decide(course: Course, state: LearnerState, clock: Clock) -> Step:
     """Call engine.get_next exactly once and store the decision; materials are built later."""
     state.pending_step = engine.get_next(state, course.graph, CONFIG, clock, PARAMS)
@@ -250,11 +346,13 @@ async def start(cid: str, lid: str) -> StartOut:
 @router.post("/attempts", response_model=AttemptResultOut)
 async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
     course, state = await load(cid, lid)
-    if not body.answers:
-        raise HTTPException(422, "no answers")
     unserved = sorted({a.question_id for a in body.answers} - set(state.served_question_ids))
     if unserved:
         raise HTTPException(422, f"questions not served to this learner: {unserved}")
+    answered_ids = {a.question_id for a in body.answers}
+    skipped = [q for q in state.served_question_ids if q not in answered_ids]
+    if not body.answers:
+        return await skip_all(course, state, skipped)
     questions = {q.id: q for q in await repos.get_questions_by_ids(cid, [a.question_id for a in body.answers])}
     try:
         graded = grade(questions, body.answers)
@@ -264,7 +362,10 @@ async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
     clock = learner_clock(state)
     prev = state.model_copy(deep=True)
     diagnostic = is_diagnostic_round(state)
+    served_step = state.pending_step
     engine.submit_answers(state, list(questions.values()), graded, CONFIG, clock, PARAMS)
+    record_review(prev, state, served_step, graded, clock.now())
+    stamp_misconceptions(prev, state, clock.now())
     left = days_left(course, clock.now())
     # Messages before placement, so placed concepts get one summary line, not a "mastered" line each.
     msgs = messages(prev, state, graded, days_left=left, params=PARAMS)
@@ -275,6 +376,7 @@ async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
         await start_research(cid, research_gaps(state), research_targets(course, state))
     await repos.record_attempts(lid, cid, graded, {a.question_id: a.chosen_index for a in body.answers},
                                 clock.now())
+    record_history(state, "attempt", clock.now())
     await repos.save_state(state)
 
     step = decide(course, state, clock)
@@ -297,7 +399,20 @@ async def submit(cid: str, lid: str, body: SubmitAnswersIn) -> AttemptResultOut:
         ],
         messages=msgs,
         next=nxt,
+        skipped=skipped,
     )
+
+
+async def skip_all(course: Course, state: LearnerState, skipped: list[str]) -> AttemptResultOut:
+    """Nothing answered: no grading, no state change; the same step comes back."""
+    if state.pending_step is None:
+        raise HTTPException(409, "the diagnostic cannot be skipped entirely: answer at least one question")
+    now = learner_clock(state).now()
+    nxt = (await rebuild_material(course, state, now)) if state.pending_built else \
+        StepOut(step=state.pending_step, reason=step_reason(state.pending_step, state, now))
+    return AttemptResultOut(graded=[], correct_indices={}, explanations={},
+                            mastery={c: s.p_mastery for c, s in state.concepts.items()},
+                            new_confirmed_misconceptions=[], messages=[], next=nxt, skipped=skipped)
 
 
 @router.get("/state", response_model=MasteryOut)
@@ -310,9 +425,15 @@ async def get_state(cid: str, lid: str) -> MasteryOut:
     due = {cs.concept_id: cs.due_at for cs in concepts if cs.due_at is not None}
     mastered = sum(cs.p_mastery >= thr for cs in concepts)
     attempts = sum(cs.attempts for cs in concepts)
+    stable = [cs.stability_days for cs in concepts if cs.stability_days > 0]
+    desc = {m.tag: m.description for m in course.graph.misconceptions}
+    marks: dict[str, list[ReviewMark]] = {}
+    for r in state.reviews:
+        marks.setdefault(r.concept_id, []).append(ReviewMark(at=r.at, passed=r.passed))
     return MasteryOut(
-        concepts=concepts,
-        misconceptions=list(state.misconceptions.values()),
+        concepts=[ConceptStateOut(**cs.model_dump(), reviews=marks.get(cs.concept_id, [])[-20:]) for cs in concepts],
+        misconceptions=[MisconceptionOut(**m.model_dump(), description=desc.get(m.tag, ""))
+                        for m in state.misconceptions.values()],
         next_due=min(due.values(), default=None),
         due=due,
         roadmap=state.roadmap,
@@ -322,6 +443,12 @@ async def get_state(cid: str, lid: str) -> MasteryOut:
         retrievability={cs.concept_id: get_retrievability(cs, now) for cs in concepts},
         pace={"mastered": mastered, "total": len(concepts),
               "attempts_per_mastered": attempts / mastered if mastered else 0.0},
+        now=now,
+        history=state.history,
+        learning_rate=learning_rate(state.history),
+        avg_stability_days=sum(stable) / len(stable) if stable else 0.0,
+        stability={cs.concept_id: cs.stability_days for cs in concepts},
+        retention=retention(state.reviews),
     )
 
 
@@ -334,8 +461,9 @@ async def advance(cid: str, lid: str, body: AdvanceIn) -> AdvanceOut:
     state.session_questions = 0                      # a new day is a new session
     clock = learner_clock(state)
     step = decide(course, state, clock)              # no materials here: advance never calls the LLM
-    await repos.save_state(state)
     now = clock.now()
+    record_history(state, "advance", now)
+    await repos.save_state(state)
     return AdvanceOut(now=now, due_now=[c for c, cs in state.concepts.items() if is_due(cs, now)],
                       next_kind=step.kind, next_concept_id=step.concept_id)
 
@@ -344,7 +472,9 @@ async def advance(cid: str, lid: str, body: AdvanceIn) -> AdvanceOut:
 async def new_session(cid: str, lid: str) -> dict:
     course, state = await load(cid, lid)
     state.session_questions = 0
-    step = decide(course, state, learner_clock(state))   # the session cap ended the last decision
+    clock = learner_clock(state)
+    step = decide(course, state, clock)              # the session cap ended the last decision
+    record_history(state, "session", clock.now())
     await repos.save_state(state)
     return {"session_questions": 0, "next_kind": step.kind, "next_concept_id": step.concept_id}
 
@@ -359,7 +489,11 @@ async def next_step(cid: str, lid: str) -> StepOut:
         decide(course, state, learner_clock(state))  # a learner stored before decisions were kept
     now = learner_clock(state).now()
     if state.pending_built:
-        return await rebuild_material(course, state, now)
+        out = await rebuild_material(course, state, now)
+        if out.step.kind in ("lesson", "fallback") and out.lesson is None:
+            out.lesson = await retry_lesson(course, state)
+            await repos.save_state(state)
+        return out
     out = await build_material(course, state, now)
     await repos.save_state(state)
     return out
@@ -375,3 +509,13 @@ async def resources(cid: str, lid: str) -> dict[str, ConceptResearch]:
         if doc is not None:
             out[concept_id] = ConceptResearch(status=doc["status"], resources=doc["resources"])
     return out
+
+
+@router.post("/reset", response_model=ResetOut)
+async def reset(cid: str, lid: str) -> ResetOut:
+    """Forget this learner on this course (state, history, review log, attempts, clock offset).
+    The course, its lessons and its research stay; POST .../start works again."""
+    if await repos.get_course(cid) is None:
+        raise HTTPException(404, f"course '{cid}' not found")
+    await repos.delete_learner(lid, cid)
+    return ResetOut()

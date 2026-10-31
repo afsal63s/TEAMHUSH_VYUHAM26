@@ -6,12 +6,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "prompt_structure",
@@ -19,12 +20,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "sampling_temperature",
@@ -32,12 +34,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-01T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-01T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "context_window",
@@ -52,7 +55,8 @@
         "contrast"
       ],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "clear_instructions",
@@ -60,12 +64,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 1.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-10-31T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-10-31T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "role_prompting",
@@ -80,7 +85,8 @@
         "worked_example"
       ],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "few_shot_examples",
@@ -88,12 +94,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 3.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-02T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-02T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "output_formatting",
@@ -101,12 +108,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 3.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-02T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-02T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "iterative_refinement",
@@ -114,12 +122,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 3.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-02T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-02T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "hallucination_checking",
@@ -127,12 +136,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 3.0,
-      "last_reviewed_at": "2026-10-30T17:42:07.820000",
-      "due_at": "2026-11-02T17:42:07.820000",
+      "last_reviewed_at": "2026-10-30T22:37:37.139000",
+      "due_at": "2026-11-02T22:37:37.139000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     }
   ],
   "misconceptions": [
@@ -141,33 +151,42 @@
       "concept_id": "context_window",
       "status": "resolved",
       "evidence": 0.0,
-      "clean_streak": 2
+      "clean_streak": 2,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": "2026-10-30T22:37:37.179000",
+      "description": "Believes the model remembers all past chats, but actually it only sees text inside the current context window."
     },
     {
       "tag": "role_prompting__any_role_works_equally",
       "concept_id": "role_prompting",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.139000",
+      "resolved_at": null,
+      "description": "Believes any role helps equally, but actually roles should match the task and audience."
     },
     {
       "tag": "context_window__limit_is_only_words",
       "concept_id": "context_window",
       "status": "suspected",
       "evidence": 1.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.179000",
+      "resolved_at": null,
+      "description": "Believes the limit is counted in words, but actually it is counted in tokens."
     }
   ],
-  "next_due": "2026-10-31T17:42:07.820000",
+  "next_due": "2026-10-31T22:37:37.139000",
   "due": {
-    "language_model_basics": "2026-11-01T17:42:07.820000",
-    "prompt_structure": "2026-11-01T17:42:07.820000",
-    "sampling_temperature": "2026-11-01T17:42:07.820000",
-    "clear_instructions": "2026-10-31T17:42:07.820000",
-    "few_shot_examples": "2026-11-02T17:42:07.820000",
-    "output_formatting": "2026-11-02T17:42:07.820000",
-    "iterative_refinement": "2026-11-02T17:42:07.820000",
-    "hallucination_checking": "2026-11-02T17:42:07.820000"
+    "language_model_basics": "2026-11-01T22:37:37.139000",
+    "prompt_structure": "2026-11-01T22:37:37.139000",
+    "sampling_temperature": "2026-11-01T22:37:37.139000",
+    "clear_instructions": "2026-10-31T22:37:37.139000",
+    "few_shot_examples": "2026-11-02T22:37:37.139000",
+    "output_formatting": "2026-11-02T22:37:37.139000",
+    "iterative_refinement": "2026-11-02T22:37:37.139000",
+    "hallucination_checking": "2026-11-02T22:37:37.139000"
   },
   "roadmap": [
     "language_model_basics",
@@ -188,20 +207,108 @@
     "role_prompting"
   ],
   "retrievability": {
-    "language_model_basics": 0.9486832365280501,
-    "prompt_structure": 0.9486832365280501,
-    "sampling_temperature": 0.9486832365280501,
+    "language_model_basics": 0.9486832646666522,
+    "prompt_structure": 0.9486832646666522,
+    "sampling_temperature": 0.9486832646666522,
     "context_window": 1.0,
-    "clear_instructions": 0.8999998832693362,
+    "clear_instructions": 0.8999999366585772,
     "role_prompting": 1.0,
-    "few_shot_examples": 0.9654893428640662,
-    "output_formatting": 0.9654893428640662,
-    "iterative_refinement": 0.9654893428640662,
-    "hallucination_checking": 0.9654893428640662
+    "few_shot_examples": 0.9654893619554547,
+    "output_formatting": 0.9654893619554547,
+    "iterative_refinement": 0.9654893619554547,
+    "hallucination_checking": 0.9654893619554547
   },
   "pace": {
     "mastered": 8.0,
     "total": 10.0,
     "attempts_per_mastered": 1.625
+  },
+  "now": "2026-10-31T22:37:37.196714",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.139000",
+      "event": "attempt",
+      "avg_mastery": 0.7154838709677419,
+      "avg_retrievability": 1.0,
+      "mastered_count": 8,
+      "questions_answered": 10,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1774193548387097,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.179000",
+      "event": "attempt",
+      "avg_mastery": 0.7458822876682587,
+      "avg_retrievability": 0.9999999811456304,
+      "mastered_count": 8,
+      "questions_answered": 13,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.4814035218438767,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-31T22:37:37.193000",
+      "event": "advance",
+      "avg_mastery": 0.7458822876682587,
+      "avg_retrievability": 0.9608007193273208,
+      "mastered_count": 8,
+      "questions_answered": 13,
+      "avg_stability_days": 2.375,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.4814035218438767,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.1774193548387097,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    }
+  ],
+  "learning_rate": 0.010132805566838932,
+  "avg_stability_days": 2.375,
+  "stability": {
+    "language_model_basics": 2.0,
+    "prompt_structure": 2.0,
+    "sampling_temperature": 2.0,
+    "context_window": 0.0,
+    "clear_instructions": 1.0,
+    "role_prompting": 0.0,
+    "few_shot_examples": 3.0,
+    "output_formatting": 3.0,
+    "iterative_refinement": 3.0,
+    "hallucination_checking": 3.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }

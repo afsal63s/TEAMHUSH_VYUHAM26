@@ -24,6 +24,32 @@ class MisconceptionState(BaseModel):
     status: Literal['suspected', 'confirmed', 'resolved'] = 'suspected'
     evidence: float = 0.0
     clean_streak: int = 0
+    first_seen_at: datetime | None = None   # simulated; set by the API layer
+    resolved_at: datetime | None = None     # simulated; cleared if it comes back
+
+
+class HistoryPoint(BaseModel):
+    """One sample for the progress panel, taken after every attempt, advance and new session."""
+    at: datetime                        # the learner's simulated now
+    event: Literal['attempt', 'advance', 'session']
+    avg_mastery: float
+    avg_retrievability: float
+    mastered_count: int
+    questions_answered: int
+    avg_stability_days: float           # over concepts with stability > 0, else 0
+    mastery: dict[str, float] = {}      # every concept's p_mastery
+
+
+class ReviewEvent(BaseModel):
+    """One review round of a concept (the served step was a review), for retention evidence."""
+    concept_id: str
+    at: datetime                        # simulated
+    days_since_last_seen: float         # since the concept's previous schedule change (mastery, placement, review)
+    passed: bool                        # the round did not lapse the concept
+
+
+HISTORY_CAP = 500
+REVIEW_LOG_CAP = 500
 
 
 class LearnerState(BaseModel):
@@ -39,6 +65,8 @@ class LearnerState(BaseModel):
     served_question_ids: list[str] = Field(default_factory=list)    # ids /attempts accepts
     pending_lesson_key: str | None = None           # lesson cache key of the built material
     pending_built: bool = False                     # material for pending_step has been built
+    history: list[HistoryPoint] = Field(default_factory=list)      # last HISTORY_CAP points
+    reviews: list[ReviewEvent] = Field(default_factory=list)       # last REVIEW_LOG_CAP review rounds
 
 
 class BktParams(BaseModel):

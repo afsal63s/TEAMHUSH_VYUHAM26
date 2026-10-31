@@ -6,14 +6,15 @@
       "attempts": 4,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [
         "worked_example"
       ],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "prompt_structure",
@@ -21,12 +22,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "sampling_temperature",
@@ -34,12 +36,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "context_window",
@@ -57,7 +60,8 @@
         "step_by_step"
       ],
       "fallbacks": 1,
-      "needs_help": true
+      "needs_help": true,
+      "reviews": []
     },
     {
       "concept_id": "clear_instructions",
@@ -65,12 +69,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "role_prompting",
@@ -78,12 +83,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "few_shot_examples",
@@ -91,12 +97,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "output_formatting",
@@ -104,12 +111,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "iterative_refinement",
@@ -117,12 +125,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     },
     {
       "concept_id": "hallucination_checking",
@@ -130,12 +139,13 @@
       "attempts": 1,
       "failed_rounds": 0,
       "stability_days": 2.0,
-      "last_reviewed_at": "2026-10-30T17:42:08.050000",
-      "due_at": "2026-11-01T17:42:08.050000",
+      "last_reviewed_at": "2026-10-30T22:37:37.441000",
+      "due_at": "2026-11-01T22:37:37.441000",
       "lapses": 0,
       "explanations_tried": [],
       "fallbacks": 0,
-      "needs_help": false
+      "needs_help": false,
+      "reviews": []
     }
   ],
   "misconceptions": [
@@ -144,34 +154,43 @@
       "concept_id": "context_window",
       "status": "confirmed",
       "evidence": 6.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.441000",
+      "resolved_at": null,
+      "description": "Believes the model remembers all past chats, but actually it only sees text inside the current context window."
     },
     {
       "tag": "context_window__earlier_text_always_visible",
       "concept_id": "context_window",
       "status": "confirmed",
       "evidence": 7.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.456000",
+      "resolved_at": null,
+      "description": "Believes early text always stays visible, but actually old text can be cut off when the window fills."
     },
     {
       "tag": "context_window__limit_is_only_words",
       "concept_id": "context_window",
       "status": "confirmed",
       "evidence": 6.0,
-      "clean_streak": 0
+      "clean_streak": 0,
+      "first_seen_at": "2026-10-30T22:37:37.456000",
+      "resolved_at": null,
+      "description": "Believes the limit is counted in words, but actually it is counted in tokens."
     }
   ],
-  "next_due": "2026-11-01T17:42:08.050000",
+  "next_due": "2026-11-01T22:37:37.441000",
   "due": {
-    "language_model_basics": "2026-11-01T17:42:08.050000",
-    "prompt_structure": "2026-11-01T17:42:08.050000",
-    "sampling_temperature": "2026-11-01T17:42:08.050000",
-    "clear_instructions": "2026-11-01T17:42:08.050000",
-    "role_prompting": "2026-11-01T17:42:08.050000",
-    "few_shot_examples": "2026-11-01T17:42:08.050000",
-    "output_formatting": "2026-11-01T17:42:08.050000",
-    "iterative_refinement": "2026-11-01T17:42:08.050000",
-    "hallucination_checking": "2026-11-01T17:42:08.050000"
+    "language_model_basics": "2026-11-01T22:37:37.441000",
+    "prompt_structure": "2026-11-01T22:37:37.441000",
+    "sampling_temperature": "2026-11-01T22:37:37.441000",
+    "clear_instructions": "2026-11-01T22:37:37.441000",
+    "role_prompting": "2026-11-01T22:37:37.441000",
+    "few_shot_examples": "2026-11-01T22:37:37.441000",
+    "output_formatting": "2026-11-01T22:37:37.441000",
+    "iterative_refinement": "2026-11-01T22:37:37.441000",
+    "hallucination_checking": "2026-11-01T22:37:37.441000"
   },
   "roadmap": [
     "language_model_basics",
@@ -193,20 +212,234 @@
     "context_window"
   ],
   "retrievability": {
-    "language_model_basics": 0.9999998663281228,
-    "prompt_structure": 0.9999998663281228,
-    "sampling_temperature": 0.9999998663281228,
+    "language_model_basics": 0.9999999251233086,
+    "prompt_structure": 0.9999999251233086,
+    "sampling_temperature": 0.9999999251233086,
     "context_window": 1.0,
-    "clear_instructions": 0.9999998663281228,
-    "role_prompting": 0.9999998663281228,
-    "few_shot_examples": 0.9999998663281228,
-    "output_formatting": 0.9999998663281228,
-    "iterative_refinement": 0.9999998663281228,
-    "hallucination_checking": 0.9999998663281228
+    "clear_instructions": 0.9999999251233086,
+    "role_prompting": 0.9999999251233086,
+    "few_shot_examples": 0.9999999251233086,
+    "output_formatting": 0.9999999251233086,
+    "iterative_refinement": 0.9999999251233086,
+    "hallucination_checking": 0.9999999251233086
   },
   "pace": {
     "mastered": 9.0,
     "total": 10.0,
     "attempts_per_mastered": 3.4444444444444446
+  },
+  "now": "2026-10-30T22:37:37.563804",
+  "history": [
+    {
+      "at": "2026-10-30T22:37:37.441000",
+      "event": "attempt",
+      "avg_mastery": 0.7827419354838709,
+      "avg_retrievability": 1.0,
+      "mastered_count": 9,
+      "questions_answered": 10,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1774193548387097,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.456000",
+      "event": "attempt",
+      "avg_mastery": 0.7823093771924892,
+      "avg_retrievability": 0.9999999912638573,
+      "mastered_count": 9,
+      "questions_answered": 13,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.1730937719248925,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.473000",
+      "event": "attempt",
+      "avg_mastery": 0.7823076988110622,
+      "avg_retrievability": 0.999999982220962,
+      "mastered_count": 9,
+      "questions_answered": 16,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.85,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307698811062244,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.487000",
+      "event": "attempt",
+      "avg_mastery": 0.7970781275248088,
+      "avg_retrievability": 0.9999999743847738,
+      "mastered_count": 9,
+      "questions_answered": 19,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.9977042871374661,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307698811062244,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.501000",
+      "event": "attempt",
+      "avg_mastery": 0.7970781210465403,
+      "avg_retrievability": 0.9999999669113112,
+      "mastered_count": 9,
+      "questions_answered": 22,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.9977042871374661,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307692332793706,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.516000",
+      "event": "attempt",
+      "avg_mastery": 0.7970781210215357,
+      "avg_retrievability": 0.9999999582958944,
+      "mastered_count": 9,
+      "questions_answered": 25,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.9977042871374661,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307692307789194,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.528000",
+      "event": "session",
+      "avg_mastery": 0.7970781210215357,
+      "avg_retrievability": 0.9999999519111572,
+      "mastered_count": 9,
+      "questions_answered": 25,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.9977042871374661,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307692307789194,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.539000",
+      "event": "attempt",
+      "avg_mastery": 0.7970781210214393,
+      "avg_retrievability": 0.9999999456855584,
+      "mastered_count": 9,
+      "questions_answered": 28,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.9977042871374661,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307692307692682,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    },
+    {
+      "at": "2026-10-30T22:37:37.556000",
+      "event": "attempt",
+      "avg_mastery": 0.7970781210214388,
+      "avg_retrievability": 0.999999936869847,
+      "mastered_count": 9,
+      "questions_answered": 31,
+      "avg_stability_days": 2.0,
+      "mastery": {
+        "language_model_basics": 0.9977042871374661,
+        "prompt_structure": 0.85,
+        "sampling_temperature": 0.85,
+        "context_window": 0.17307692307692307,
+        "clear_instructions": 0.85,
+        "role_prompting": 0.85,
+        "few_shot_examples": 0.85,
+        "output_formatting": 0.85,
+        "iterative_refinement": 0.85,
+        "hallucination_checking": 0.85
+      }
+    }
+  ],
+  "learning_rate": -5.419474961391538e-10,
+  "avg_stability_days": 2.0,
+  "stability": {
+    "language_model_basics": 2.0,
+    "prompt_structure": 2.0,
+    "sampling_temperature": 2.0,
+    "context_window": 0.0,
+    "clear_instructions": 2.0,
+    "role_prompting": 2.0,
+    "few_shot_examples": 2.0,
+    "output_formatting": 2.0,
+    "iterative_refinement": 2.0,
+    "hallucination_checking": 2.0
+  },
+  "retention": {
+    "reviews_total": 0,
+    "reviews_passed": 0,
+    "review_pass_rate": null,
+    "delayed_reviews_total": 0,
+    "delayed_pass_rate": null,
+    "delayed_threshold_days": 7
   }
 }

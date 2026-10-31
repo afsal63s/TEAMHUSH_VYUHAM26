@@ -5,7 +5,112 @@
     "version": "0.1.0"
   },
   "paths": {
+    "/auth/check": {
+      "get": {
+        "summary": "Auth Check",
+        "description": "200 when the X-Master-Password header is right (or no password is set); 401 otherwise.",
+        "operationId": "auth_check_auth_check_get",
+        "parameters": [
+          {
+            "name": "x-master-password",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Master-Password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuthCheckOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/courses": {
+      "get": {
+        "summary": "List Courses",
+        "operationId": "list_courses_courses_get",
+        "parameters": [
+          {
+            "name": "learner_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "me",
+              "title": "Learner Id"
+            }
+          },
+          {
+            "name": "x-master-password",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Master-Password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CourseSummary"
+                  },
+                  "title": "Response List Courses Courses Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
       "post": {
         "summary": "Create Course",
         "operationId": "create_course_courses_post",
@@ -44,6 +149,67 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/CreateCourseOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/due": {
+      "get": {
+        "summary": "Due",
+        "description": "Every scheduled review across started courses, soonest first; overdue_days on the learner's clock.",
+        "operationId": "due_due_get",
+        "parameters": [
+          {
+            "name": "learner_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "me",
+              "title": "Learner Id"
+            }
+          },
+          {
+            "name": "x-master-password",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Master-Password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DueItem"
+                  },
+                  "title": "Response Due Due Get"
                 }
               }
             }
@@ -592,6 +758,71 @@
         }
       }
     },
+    "/courses/{cid}/learners/{lid}/reset": {
+      "post": {
+        "summary": "Reset",
+        "description": "Forget this learner on this course (state, history, review log, attempts, clock offset).\nThe course, its lessons and its research stay; POST .../start works again.",
+        "operationId": "reset_courses__cid__learners__lid__reset_post",
+        "parameters": [
+          {
+            "name": "cid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Cid"
+            }
+          },
+          {
+            "name": "lid",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Lid"
+            }
+          },
+          {
+            "name": "x-master-password",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "X-Master-Password"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ResetOut"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/health": {
       "get": {
         "summary": "Health",
@@ -842,6 +1073,14 @@
           },
           "next": {
             "$ref": "#/components/schemas/StepOut"
+          },
+          "skipped": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Skipped",
+            "default": []
           }
         },
         "type": "object",
@@ -854,6 +1093,17 @@
           "next"
         ],
         "title": "AttemptResultOut"
+      },
+      "AuthCheckOut": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "AuthCheckOut"
       },
       "ConceptResearch": {
         "properties": {
@@ -879,7 +1129,7 @@
         "type": "object",
         "title": "ConceptResearch"
       },
-      "ConceptState": {
+      "ConceptStateOut": {
         "properties": {
           "concept_id": {
             "type": "string",
@@ -951,13 +1201,132 @@
             "type": "boolean",
             "title": "Needs Help",
             "default": false
+          },
+          "reviews": {
+            "items": {
+              "$ref": "#/components/schemas/ReviewMark"
+            },
+            "type": "array",
+            "title": "Reviews",
+            "default": []
           }
         },
         "type": "object",
         "required": [
           "concept_id"
         ],
-        "title": "ConceptState"
+        "title": "ConceptStateOut"
+      },
+      "CourseSummary": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "title": "Course Id"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "level": {
+            "type": "string",
+            "enum": [
+              "novice",
+              "beginner",
+              "intermediate",
+              "advanced"
+            ],
+            "title": "Level"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "deadline": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Deadline"
+          },
+          "concept_count": {
+            "type": "integer",
+            "title": "Concept Count",
+            "default": 0
+          },
+          "started": {
+            "type": "boolean",
+            "title": "Started",
+            "default": false
+          },
+          "mastered": {
+            "type": "integer",
+            "title": "Mastered",
+            "default": 0
+          },
+          "avg_mastery": {
+            "type": "number",
+            "title": "Avg Mastery",
+            "default": 0.0
+          },
+          "avg_retrievability": {
+            "type": "number",
+            "title": "Avg Retrievability",
+            "default": 0.0
+          },
+          "next_due_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Due At"
+          },
+          "overdue_count": {
+            "type": "integer",
+            "title": "Overdue Count",
+            "default": 0
+          },
+          "needs_help_count": {
+            "type": "integer",
+            "title": "Needs Help Count",
+            "default": 0
+          },
+          "last_activity_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Activity At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id",
+          "topic",
+          "level",
+          "status",
+          "created_at"
+        ],
+        "title": "CourseSummary"
       },
       "CreateCourseIn": {
         "properties": {
@@ -1027,6 +1396,50 @@
         ],
         "title": "CreateCourseOut"
       },
+      "DueItem": {
+        "properties": {
+          "course_id": {
+            "type": "string",
+            "title": "Course Id"
+          },
+          "topic": {
+            "type": "string",
+            "title": "Topic"
+          },
+          "concept_id": {
+            "type": "string",
+            "title": "Concept Id"
+          },
+          "concept_name": {
+            "type": "string",
+            "title": "Concept Name"
+          },
+          "due_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Due At"
+          },
+          "overdue_days": {
+            "type": "number",
+            "title": "Overdue Days",
+            "default": 0.0
+          },
+          "retrievability": {
+            "type": "number",
+            "title": "Retrievability",
+            "default": 1.0
+          }
+        },
+        "type": "object",
+        "required": [
+          "course_id",
+          "topic",
+          "concept_id",
+          "concept_name",
+          "due_at"
+        ],
+        "title": "DueItem"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1039,6 +1452,64 @@
         },
         "type": "object",
         "title": "HTTPValidationError"
+      },
+      "HistoryPoint": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "event": {
+            "type": "string",
+            "enum": [
+              "attempt",
+              "advance",
+              "session"
+            ],
+            "title": "Event"
+          },
+          "avg_mastery": {
+            "type": "number",
+            "title": "Avg Mastery"
+          },
+          "avg_retrievability": {
+            "type": "number",
+            "title": "Avg Retrievability"
+          },
+          "mastered_count": {
+            "type": "integer",
+            "title": "Mastered Count"
+          },
+          "questions_answered": {
+            "type": "integer",
+            "title": "Questions Answered"
+          },
+          "avg_stability_days": {
+            "type": "number",
+            "title": "Avg Stability Days"
+          },
+          "mastery": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Mastery",
+            "default": {}
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "event",
+          "avg_mastery",
+          "avg_retrievability",
+          "mastered_count",
+          "questions_answered",
+          "avg_stability_days"
+        ],
+        "title": "HistoryPoint",
+        "description": "One sample for the progress panel, taken after every attempt, advance and new session."
       },
       "Lesson": {
         "properties": {
@@ -1083,14 +1554,14 @@
         "properties": {
           "concepts": {
             "items": {
-              "$ref": "#/components/schemas/ConceptState"
+              "$ref": "#/components/schemas/ConceptStateOut"
             },
             "type": "array",
             "title": "Concepts"
           },
           "misconceptions": {
             "items": {
-              "$ref": "#/components/schemas/MisconceptionState"
+              "$ref": "#/components/schemas/MisconceptionOut"
             },
             "type": "array",
             "title": "Misconceptions"
@@ -1166,6 +1637,53 @@
             "type": "object",
             "title": "Pace",
             "default": {}
+          },
+          "now": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Now"
+          },
+          "history": {
+            "items": {
+              "$ref": "#/components/schemas/HistoryPoint"
+            },
+            "type": "array",
+            "title": "History",
+            "default": []
+          },
+          "learning_rate": {
+            "type": "number",
+            "title": "Learning Rate",
+            "default": 0.0
+          },
+          "avg_stability_days": {
+            "type": "number",
+            "title": "Avg Stability Days",
+            "default": 0.0
+          },
+          "stability": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Stability",
+            "default": {}
+          },
+          "retention": {
+            "$ref": "#/components/schemas/Retention",
+            "default": {
+              "reviews_total": 0,
+              "reviews_passed": 0,
+              "delayed_reviews_total": 0,
+              "delayed_threshold_days": 7
+            }
           }
         },
         "type": "object",
@@ -1175,7 +1693,7 @@
         ],
         "title": "MasteryOut"
       },
-      "MisconceptionState": {
+      "MisconceptionOut": {
         "properties": {
           "tag": {
             "type": "string",
@@ -1204,6 +1722,35 @@
             "type": "integer",
             "title": "Clean Streak",
             "default": 0
+          },
+          "first_seen_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "First Seen At"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "description": {
+            "type": "string",
+            "title": "Description",
+            "default": ""
           }
         },
         "type": "object",
@@ -1211,7 +1758,7 @@
           "tag",
           "concept_id"
         ],
-        "title": "MisconceptionState"
+        "title": "MisconceptionOut"
       },
       "QuestionPublic": {
         "properties": {
@@ -1243,6 +1790,17 @@
           "options"
         ],
         "title": "QuestionPublic"
+      },
+      "ResetOut": {
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "title": "Ok",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "ResetOut"
       },
       "Resource": {
         "properties": {
@@ -1276,6 +1834,73 @@
         ],
         "title": "Resource",
         "description": "A web article or video the research agent found for a concept."
+      },
+      "Retention": {
+        "properties": {
+          "reviews_total": {
+            "type": "integer",
+            "title": "Reviews Total",
+            "default": 0
+          },
+          "reviews_passed": {
+            "type": "integer",
+            "title": "Reviews Passed",
+            "default": 0
+          },
+          "review_pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Review Pass Rate"
+          },
+          "delayed_reviews_total": {
+            "type": "integer",
+            "title": "Delayed Reviews Total",
+            "default": 0
+          },
+          "delayed_pass_rate": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Delayed Pass Rate"
+          },
+          "delayed_threshold_days": {
+            "type": "integer",
+            "title": "Delayed Threshold Days",
+            "default": 7
+          }
+        },
+        "type": "object",
+        "title": "Retention"
+      },
+      "ReviewMark": {
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "At"
+          },
+          "passed": {
+            "type": "boolean",
+            "title": "Passed"
+          }
+        },
+        "type": "object",
+        "required": [
+          "at",
+          "passed"
+        ],
+        "title": "ReviewMark"
       },
       "StartOut": {
         "properties": {

@@ -117,3 +117,21 @@ def test_video_id_parsing():
     assert tools.video_id_from_url("https://www.youtube.com/watch?v=abcdefghijk&t=3") == "abcdefghijk"
     assert tools.video_id_from_url("https://youtu.be/abcdefghijk") == "abcdefghijk"
     assert tools.video_id_from_url("https://example.com/x") is None
+
+def test_article_search_drops_video_hosts(monkeypatch):
+    rows = [
+        {"title": "Guide", "url": "https://realpython.com/python-lists", "content": "lists"},
+        {"title": "Video", "url": "https://www.youtube.com/watch?v=abcdefghijk", "content": "v"},
+        {"title": "Short", "url": "https://youtu.be/abcdefghijk", "content": "v"},
+        {"title": "Mobile", "url": "https://m.youtube.com/watch?v=abcdefghijk", "content": "v"},
+        {"title": "Lookalike", "url": "https://notyoutube.com/page", "content": "ok"},
+    ]
+
+    class FakeTavily:
+        def invoke(self, args):
+            return {"results": rows}
+
+    monkeypatch.setattr(tools, "_tavily", lambda: FakeTavily())
+    urls = [r["url"] for r in tools.search_articles("python lists")]
+    assert urls == ["https://realpython.com/python-lists", "https://notyoutube.com/page"]
+    assert "youtube.com" in tools.EXCLUDED_ARTICLE_DOMAINS and "facebook.com" in tools.EXCLUDED_ARTICLE_DOMAINS

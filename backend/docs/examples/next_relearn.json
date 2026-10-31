@@ -15,12 +15,31 @@
   "lesson": {
     "concept_id": "clear_instructions",
     "style": "contrast",
-    "explanation": "Here is the right idea set against the belief it replaces. You may think the model knows the goals you leave unstated, such as who the audience is or how long the answer should be. It does not. The model only acts on what is written in your prompt, so anything you omit is a guess. Compare two requests. The vague one says: Write about our product. The clear one says: Write a 100-word product description for busy parents, mentioning price and the free returns policy, in a friendly tone. The vague version forces the model to choose the topic, length, audience, and tone on its own, and each choice is another chance to miss what you wanted. The belief that vague requests get good results breaks here: vagueness does not make the model smarter, it only increases guessing. A specific task removes most of those guesses, so the output is more likely to match your intent. Before you send a prompt, ask yourself what the model would have to guess, then write that answer down.",
+    "explanation": "Here is the first misconception, and the correction. You may believe the model knows what you want but never wrote down, such as your audience, length, or tone. It does not. The model only acts on what is written in your prompt, so an unstated goal is effectively absent. Compare two prompts. The wrong version says: Tell me about dogs. The right version says: In three bullet points, explain how to housetrain a puppy for a beginner owner. The first leaves the model guessing at length, format, and purpose. The second states the task, scope, and format, so the output can match your intent.\n\nThe second misconception is that vague requests produce good results. They usually do not. Vague wording forces the model to fill gaps with assumptions, and those assumptions may not match what you need. Specific tasks reduce that guessing. Sources on prompt engineering describe it as writing clear, specific instructions that help a model produce outputs aligned with your intent. For straightforward tasks, a direct, unambiguous instruction is the best starting point. Before you send a prompt, ask yourself whether a stranger could carry out the task from the words alone.",
     "targets": [
       "clear_instructions__model_reads_intent",
       "clear_instructions__vague_request_is_fine"
     ],
-    "resources": []
+    "resources": [
+      {
+        "kind": "article",
+        "title": "Prompt Engineering Guide - MSU Denver",
+        "url": "https://www.msudenver.edu/ai/prompt-engineering-guide",
+        "snippet": "Prompt engineering is the practice of writing clear, specific instructions or questions that guide a computer program to produce useful outputs. In the context of generative artificial intelligence, prompt engineering helps users communicate effectively with language models so the system can generate responses aligned with the user\u2019s intent. [...] Use Clear Instructions\n\nFor straightforward tasks,"
+      },
+      {
+        "kind": "article",
+        "title": "Best practices for prompt engineering with the OpenAI API | OpenAI Help Center",
+        "url": "https://help.openai.com/en/articles/6654000-best-practices-for-prompt-engineering-with-the-openai-api",
+        "snippet": "Due to the way OpenAI models are trained, there are specific prompt formats that work particularly well and lead to more useful model outputs. The official prompt engineering guide by OpenAI is usually the best place to start for prompting tips.  \n  \nBelow we present a number of prompt formats we find work well, but feel free to explore different formats, which may fit your task better.\n\n# Rules o"
+      },
+      {
+        "kind": "video",
+        "title": "Prompt Engineering Tutorial \u2013 Master ChatGPT and LLM Responses",
+        "url": "https://www.youtube.com/watch?v=_ZvnD73m40o",
+        "snippet": "Learn prompt engineering techniques to get better results from ChatGPT and other LLMs. \u270f\ufe0f Course developed by ..."
+      }
+    ]
   },
   "questions": [
     {

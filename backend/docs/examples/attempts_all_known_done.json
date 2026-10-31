@@ -72,28 +72,28 @@
     }
   ],
   "correct_indices": {
-    "f707cec4-prompt_structure-d1": 1,
     "f707cec4-iterative_refinement-d1": 0,
-    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-prompt_structure-d1": 1,
     "f707cec4-context_window-d1": 2,
-    "f707cec4-output_formatting-d1": 2,
-    "f707cec4-language_model_basics-d1": 1,
-    "f707cec4-clear_instructions-d1": 0,
     "f707cec4-few_shot_examples-d1": 2,
+    "f707cec4-language_model_basics-d1": 1,
     "f707cec4-hallucination_checking-d1": 3,
-    "f707cec4-sampling_temperature-d1": 1
+    "f707cec4-output_formatting-d1": 2,
+    "f707cec4-sampling_temperature-d1": 1,
+    "f707cec4-role_prompting-d1": 1,
+    "f707cec4-clear_instructions-d1": 0
   },
   "explanations": {
-    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or translate. The other parts supply information or shape the reply but do not name the task.",
     "f707cec4-iterative_refinement-d1": "A prompt needs testing across varied inputs to show where it works and where it fails. Revising based on those results is the core of iterative refinement.",
-    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same model. It does not add knowledge the model already lacks, and the task still has to be stated.",
+    "f707cec4-prompt_structure-d1": "The instruction states the task, such as summarize or translate. The other parts supply information or shape the reply but do not name the task.",
     "f707cec4-context_window-d1": "The model only sees the text inside the current request's context window. Earlier chats are not available unless they are included again.",
-    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by software.",
-    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input it receives and patterns learned in training.",
-    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to guess.",
     "f707cec4-few_shot_examples-d1": "Examples demonstrate the output pattern, so labeled examples in the exact format teach the model what to return.",
+    "f707cec4-language_model_basics-d1": "A language model generates text by predicting which text is likely to come next, based on the input it receives and patterns learned in training.",
     "f707cec4-hallucination_checking-d1": "Confident wording does not indicate accuracy, so claims need checking against reliable sources.",
-    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predictable. It does not change accuracy or the model's knowledge."
+    "f707cec4-output_formatting-d1": "Fixed structure lets code extract values directly. Format determines whether output can be used by software.",
+    "f707cec4-sampling_temperature-d1": "Low temperature concentrates sampling on the highest-probability words, so outputs become more predictable. It does not change accuracy or the model's knowledge.",
+    "f707cec4-role_prompting-d1": "A role changes the style, focus and perspective of the same model. It does not add knowledge the model already lacks, and the task still has to be stated.",
+    "f707cec4-clear_instructions-d1": "A specific format and count tells the model exactly what output to produce, so it does not have to guess."
   },
   "mastery": {
     "language_model_basics": 0.85,
@@ -126,5 +126,6 @@
     "reason": "placed as known: language_model_basics, prompt_structure, sampling_temperature, context_window, clear_instructions, role_prompting, few_shot_examples, output_formatting, iterative_refinement, hallucination_checking; every reachable concept is mastered",
     "lesson": null,
     "questions": []
-  }
+  },
+  "skipped": []
 }

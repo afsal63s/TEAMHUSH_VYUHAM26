@@ -6,7 +6,7 @@ from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
-from api import courses, learners
+from api import courses, dashboard, learners
 from api.auth import require_master
 from config import get_settings
 from db import repos
@@ -37,6 +37,7 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["Content-Type", "X-Master-Password"],
 )
+app.include_router(dashboard.router)
 app.include_router(courses.router)
 app.include_router(learners.router)
 

@@ -1,0 +1,74 @@
+[
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "language_model_basics",
+    "concept_name": "Language model basics",
+    "due_at": "2026-11-01T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9486832274876726
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "prompt_structure",
+    "concept_name": "Prompt structure",
+    "due_at": "2026-11-01T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9486832274876726
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "sampling_temperature",
+    "concept_name": "Sampling temperature",
+    "due_at": "2026-11-01T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9486832274876726
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "clear_instructions",
+    "concept_name": "Clear instructions",
+    "due_at": "2026-11-01T22:37:37.210000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9999999378214448
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "few_shot_examples",
+    "concept_name": "Few-shot examples",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "output_formatting",
+    "concept_name": "Output formatting",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "iterative_refinement",
+    "concept_name": "Iterative refinement",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  },
+  {
+    "course_id": "b0dafa63",
+    "topic": "prompt engineering",
+    "concept_id": "hallucination_checking",
+    "concept_name": "Hallucination checking",
+    "due_at": "2026-11-02T22:37:37.139000",
+    "overdue_days": 0.0,
+    "retrievability": 0.9654893367303798
+  }
+]
